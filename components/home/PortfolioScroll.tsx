@@ -82,6 +82,12 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
             trigger: container,
             pin: true,
             scrub: 3, // Increased for smoother scrolling
+            snap: {
+              snapTo: 1 / (panels.length - 1), // Snap to each panel
+              duration: { min: 0.3, max: 0.6 }, // Responsive snap duration
+              delay: 0.1,
+              ease: "power2.inOut"
+            },
             start: 'top top',
             end: () => `+=${window.innerHeight * 12}`,
             anticipatePin: 1,
@@ -166,75 +172,84 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
           // Staggered letter reveal with elastic bounce
           const letters = p.querySelectorAll('.letter-reveal');
 
-          // First panel letters should be visible immediately
+          // Set initial hidden state for all panels
+          gsap.set(letters, {
+            y: 60,
+            opacity: 0,
+            scale: 0.9,
+            rotationX: -20,
+            filter: 'blur(6px)'
+          });
+
           if (isFirst) {
-            gsap.set(letters, {
+            // First panel: Animate immediately on load (no scroll trigger)
+            gsap.to(letters, {
               y: 0,
               opacity: 1,
               scale: 1,
               rotationX: 0,
-              filter: 'blur(0px)'
+              filter: 'blur(0px)',
+              stagger: 0.03,
+              duration: 1,
+              delay: 0.2,
+              ease: 'back.out(1.4)',
+              overwrite: 'auto'
             });
           } else {
-            gsap.set(letters, {
-              y: 80,
-              opacity: 0,
-              scale: 0.85,
-              rotationX: -30,
-              filter: 'blur(8px)'
-            });
-          }
-
-          gsap.to(letters,
-            {
+            // Other panels: Animate when entering via scroll
+            gsap.to(letters, {
               y: 0,
               opacity: 1,
               scale: 1,
               rotationX: 0,
               filter: 'blur(0px)',
               stagger: 0.02,
-              duration: 1,
+              duration: 0.9,
               ease: 'back.out(1.4)',
               immediateRender: false,
               overwrite: 'auto',
               scrollTrigger: {
                 trigger: p,
                 containerAnimation: horizontalTween,
-                start: isFirst ? 'left left' : 'left 90%',
-                toggleActions: isFirst ? 'none none none none' : 'play none none reverse'
+                start: 'left 85%',
+                toggleActions: 'play none none reverse'
               }
-            }
-          );
+            });
+          }
 
           // Content reveal with depth effect
           const content = p.querySelectorAll('.reveal-target');
 
-          // First panel content should be visible immediately
+          // Set initial hidden state for all panels
+          gsap.set(content, {
+            y: 35,
+            opacity: 0,
+            scale: 0.97,
+            rotationY: 6,
+            transformPerspective: 1000
+          });
+
           if (isFirst) {
-            gsap.set(content, {
+            // First panel: Animate immediately on load
+            gsap.to(content, {
               y: 0,
               opacity: 1,
               scale: 1,
               rotationY: 0,
-              transformPerspective: 1000
+              duration: 1.1,
+              delay: 0.35,
+              stagger: 0.12,
+              ease: 'expo.out',
+              overwrite: 'auto'
             });
           } else {
-            gsap.set(content, {
-              y: 40,
-              opacity: 0,
-              scale: 0.96,
-              rotationY: 8,
-              transformPerspective: 1000
-            });
-          }
-
-          gsap.to(content,
-            {
+            // Other panels: Animate when entering via scroll
+            gsap.to(content, {
               y: 0,
               opacity: 1,
               scale: 1,
               rotationY: 0,
-              duration: 1.2,
+              duration: 1,
               stagger: 0.1,
               ease: 'expo.out',
               immediateRender: false,
@@ -242,11 +257,11 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
               scrollTrigger: {
                 trigger: p,
                 containerAnimation: horizontalTween,
-                start: isFirst ? 'left left' : 'left 85%',
-                toggleActions: isFirst ? 'none none none none' : 'play none none reverse'
+                start: 'left 80%',
+                toggleActions: 'play none none reverse'
               }
-            }
-          );
+            });
+          }
 
           // Parallax effect for images within panels
           const images = p.querySelectorAll('img');
@@ -254,7 +269,7 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
             // First panel images should have minimal initial transform
             const initialScale = isFirst ? 1.1 : 1.25;
             const initialX = isFirst ? 30 : 80;
-            
+
             gsap.fromTo(img,
               { scale: initialScale, x: initialX },
               {
@@ -275,28 +290,33 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
 
           // Floating elements within panels
           const floatingElements = p.querySelectorAll('.floating-card, [class*="rounded-[4rem]"], [class*="rounded-[6rem]"]');
-          
-          // First panel floating elements visible immediately
-          if (isFirst) {
-            gsap.set(floatingElements, {
-              y: 0,
-              rotation: 0,
-              opacity: 1
-            });
-          } else {
-            gsap.set(floatingElements, {
-              y: 50,
-              rotation: -3,
-              opacity: 0
-            });
-          }
 
-          gsap.to(floatingElements,
-            {
+          // Set initial hidden state for all
+          gsap.set(floatingElements, {
+            y: 45,
+            rotation: -3,
+            opacity: 0
+          });
+
+          if (isFirst) {
+            // First panel: Animate immediately on load
+            gsap.to(floatingElements, {
               y: 0,
               rotation: 0,
               opacity: 1,
-              duration: 1.4,
+              duration: 1.3,
+              delay: 0.5,
+              stagger: 0.1,
+              ease: 'elastic.out(1, 0.6)',
+              overwrite: 'auto'
+            });
+          } else {
+            // Other panels: Animate on scroll
+            gsap.to(floatingElements, {
+              y: 0,
+              rotation: 0,
+              opacity: 1,
+              duration: 1.2,
               stagger: 0.08,
               ease: 'elastic.out(1, 0.6)',
               immediateRender: false,
@@ -304,27 +324,37 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
               scrollTrigger: {
                 trigger: p,
                 containerAnimation: horizontalTween,
-                start: isFirst ? 'left left' : 'left 80%',
-                toggleActions: isFirst ? 'none none none none' : 'play none none reverse'
+                start: 'left 75%',
+                toggleActions: 'play none none reverse'
               }
-            }
-          );
+            });
+          }
 
           // Counter/stats animation
           const statValues = p.querySelectorAll('.text-4xl, .text-5xl');
-          
-          if (isFirst) {
-            gsap.set(statValues, { scale: 1, opacity: 1, y: 0 });
-          } else {
-            gsap.set(statValues, { scale: 0.6, opacity: 0, y: 25 });
-          }
 
-          gsap.to(statValues,
-            {
+          // Set initial hidden state for all
+          gsap.set(statValues, { scale: 0.7, opacity: 0, y: 20 });
+
+          if (isFirst) {
+            // First panel: Animate on load
+            gsap.to(statValues, {
               scale: 1,
               opacity: 1,
               y: 0,
-              duration: 0.9,
+              duration: 0.85,
+              delay: 0.6,
+              stagger: 0.1,
+              ease: 'elastic.out(1, 0.7)',
+              overwrite: 'auto'
+            });
+          } else {
+            // Other panels: Animate on scroll
+            gsap.to(statValues, {
+              scale: 1,
+              opacity: 1,
+              y: 0,
+              duration: 0.8,
               stagger: 0.08,
               ease: 'elastic.out(1, 0.7)',
               immediateRender: false,
@@ -332,11 +362,11 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
               scrollTrigger: {
                 trigger: p,
                 containerAnimation: horizontalTween,
-                start: isFirst ? 'left left' : 'left 75%',
-                toggleActions: isFirst ? 'none none none none' : 'play none none reverse'
+                start: 'left 70%',
+                toggleActions: 'play none none reverse'
               }
-            }
-          );
+            });
+          }
         });
 
         // Horizontal direction indicator animation

@@ -24,6 +24,25 @@ const IdentitySection: React.FC = () => {
     const ctx = gsap.context(() => {
       const mm = gsap.matchMedia();
 
+      // Section entrance - smooth emergence from below
+      gsap.fromTo(sectionRef.current,
+        {
+          opacity: 0,
+          y: 100
+        },
+        {
+          opacity: 1,
+          y: 0,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top 95%',
+            end: 'top 60%',
+            scrub: 0.5
+          }
+        }
+      );
+
       mm.add("(min-width: 768px)", () => {
         // Desktop: High-end Parallax & Hover
         gsap.to('.identity-parallax-bg', {
@@ -49,19 +68,21 @@ const IdentitySection: React.FC = () => {
         });
       });
 
-      // Character Reveal for Header - Optimized with fromTo for absolute state control
+      // Character Reveal for Header - Coordinated with Hero exit
       gsap.fromTo('.identity-title .letter-reveal',
         {
-          y: '110%',
+          y: '80%',
           opacity: 0,
-          rotateX: -45,
-          scale: 0.8,
-          filter: 'blur(10px)'
+          rotateX: -30,
+          scale: 0.9,
+          filter: 'blur(8px)'
         },
         {
           scrollTrigger: {
             trigger: '.identity-title',
-            start: 'top 90%',
+            start: 'top 88%',
+            end: 'top 60%',
+            scrub: 0.6,
             toggleActions: 'play none none reverse'
           },
           y: '0%',
@@ -69,53 +90,128 @@ const IdentitySection: React.FC = () => {
           rotateX: 0,
           scale: 1,
           filter: 'blur(0px)',
-          stagger: 0.02,
-          duration: 1.2,
-          ease: 'expo.out',
+          stagger: 0.015,
+          ease: 'power3.out',
           overwrite: 'auto'
         }
       );
 
-      // Feature Items Staggered Slide-in
-      gsap.from('.feature-item', {
-        scrollTrigger: {
-          trigger: '.feature-list',
-          start: 'top 85%',
-        },
-        x: -30,
-        opacity: 0,
-        filter: 'blur(10px)',
-        stagger: 0.15,
-        duration: 1,
-        ease: 'power3.out'
-      });
-
-      // Image Reveal with Masking
-      gsap.fromTo('.image-reveal-wrapper',
-        { clipPath: 'inset(10% 10% 10% 10% round 3rem)' },
+      // Intro badge reveal - staggered with title
+      gsap.fromTo('.identity-intro-badge',
         {
-          clipPath: 'inset(0% 0% 0% 0% round 3rem)',
-          duration: 1.5,
-          ease: 'expo.inOut',
+          opacity: 0,
+          x: -30
+        },
+        {
+          opacity: 1,
+          x: 0,
+          duration: 0.8,
+          ease: 'power2.out',
           scrollTrigger: {
-            trigger: '.image-reveal-wrapper',
-            start: 'top 80%',
+            trigger: sectionRef.current,
+            start: 'top 75%',
+            toggleActions: 'play none none reverse'
           }
         }
       );
 
-      // Inner Image Scale Parallax
+      // Description text reveal
+      gsap.fromTo('.identity-description',
+        {
+          opacity: 0,
+          y: 30,
+          filter: 'blur(5px)'
+        },
+        {
+          opacity: 1,
+          y: 0,
+          filter: 'blur(0px)',
+          duration: 0.8,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: '.identity-description',
+            start: 'top 90%',
+            toggleActions: 'play none none reverse'
+          }
+        }
+      );
+
+      // Feature Items Staggered Slide-in with better timing
+      gsap.fromTo('.feature-item',
+        {
+          opacity: 0,
+          x: -40,
+          filter: 'blur(8px)'
+        },
+        {
+          scrollTrigger: {
+            trigger: '.feature-list',
+            start: 'top 85%',
+            toggleActions: 'play none none reverse'
+          },
+          opacity: 1,
+          x: 0,
+          filter: 'blur(0px)',
+          stagger: 0.12,
+          duration: 0.8,
+          ease: 'power3.out'
+        }
+      );
+
+      // Image Reveal with cinematic masking
+      gsap.fromTo('.image-reveal-wrapper',
+        {
+          clipPath: 'inset(15% 15% 15% 15% round 3rem)',
+          opacity: 0.5,
+          scale: 0.95
+        },
+        {
+          clipPath: 'inset(0% 0% 0% 0% round 3rem)',
+          opacity: 1,
+          scale: 1,
+          duration: 1.2,
+          ease: 'expo.out',
+          scrollTrigger: {
+            trigger: '.image-reveal-wrapper',
+            start: 'top 85%',
+            toggleActions: 'play none none reverse'
+          }
+        }
+      );
+
+      // Inner Image Scale Parallax - smoother
       gsap.to('.inner-image', {
-        scale: 1.2,
-        y: 50,
+        scale: 1.15,
+        y: 40,
         ease: 'none',
         scrollTrigger: {
           trigger: '.image-reveal-wrapper',
           start: 'top bottom',
           end: 'bottom top',
-          scrub: true
+          scrub: 0.8
         }
       });
+
+      // Stats badge entrance
+      gsap.fromTo(badgeRef.current,
+        {
+          opacity: 0,
+          y: 50,
+          scale: 0.9
+        },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.8,
+          ease: 'back.out(1.5)',
+          scrollTrigger: {
+            trigger: badgeRef.current,
+            start: 'top 95%',
+            toggleActions: 'play none none reverse'
+          }
+        }
+      );
 
     }, sectionRef);
 
@@ -127,6 +223,7 @@ const IdentitySection: React.FC = () => {
       id="who-we-are"
       ref={sectionRef}
       className="reveal-on-scroll relative z-10 py-24 md:py-48 lg:py-64 px-6 border-t border-gray-100 dark:border-gray-900/30 overflow-hidden"
+      style={{ willChange: 'transform, opacity' }}
     >
       {/* Dynamic Background ID */}
       <div className="identity-parallax-bg absolute top-0 -left-10 text-[35vw] font-black text-blue-600/[0.04] dark:text-white/[0.02] select-none pointer-events-none tracking-tighter leading-none">
@@ -135,7 +232,7 @@ const IdentitySection: React.FC = () => {
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 md:gap-32 items-center relative z-10">
         <div className=""> {/* Handled independently to avoid conflicts */}
-          <div className="reveal-child flex items-center space-x-4 mb-8">
+          <div className="identity-intro-badge flex items-center space-x-4 mb-8">
             <div className="h-px w-12 bg-blue-600"></div>
             <h2 className="text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-[0.7em]">INTRO</h2>
           </div>
@@ -147,8 +244,8 @@ const IdentitySection: React.FC = () => {
             </span>
           </h3>
 
-          <p className="reveal-child text-gray-500 dark:text-gray-400 text-lg lg:text-xl leading-relaxed mb-16 font-light max-w-xl">
-              We build intelligent systems that deliver value to our clients and evolve with human ambition.
+          <p className="identity-description text-gray-500 dark:text-gray-400 text-lg lg:text-xl leading-relaxed mb-16 font-light max-w-xl">
+            We build intelligent systems that deliver value to our clients and evolve with human ambition.
           </p>
 
           <div className="feature-list space-y-8 md:space-y-12">

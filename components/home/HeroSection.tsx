@@ -16,18 +16,65 @@ const HeroSection: React.FC = () => {
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.to(contentRef.current, {
+      // Cinematic exit animation with smooth scrub for handoff to IdentitySection
+      const tl = gsap.timeline({
         scrollTrigger: {
           trigger: sectionRef.current,
-          start: "top top",
-          end: "bottom 60%",
-          scrub: true,
-        },
-        filter: "blur(12px)",
+          start: 'top top',
+          end: 'bottom 40%',
+          scrub: 0.8, // Smooth scrub for fluid motion
+          onUpdate: (self) => {
+            // Progressive blur for cinematic depth
+            const blur = self.progress * 16;
+            if (contentRef.current) {
+              contentRef.current.style.filter = `blur(${blur}px)`;
+            }
+          }
+        }
+      });
+
+      tl.to(contentRef.current, {
         opacity: 0,
-        scale: 0.95,
-        y: 50,
-        ease: "none"
+        scale: 0.92,
+        y: -80, // Move up to create "rising" handoff
+        ease: 'none'
+      });
+
+      // Parallax effect for individual elements
+      gsap.to('.hero-badge', {
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: 'top top',
+          end: 'bottom 60%',
+          scrub: 0.5
+        },
+        y: -60,
+        opacity: 0,
+        ease: 'none'
+      });
+
+      gsap.to('.hero-desc', {
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: 'top top',
+          end: 'bottom 65%',
+          scrub: 0.6
+        },
+        y: -40,
+        opacity: 0,
+        ease: 'none'
+      });
+
+      gsap.to('.hero-btns', {
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: 'top top',
+          end: 'bottom 70%',
+          scrub: 0.7
+        },
+        y: -30,
+        opacity: 0,
+        ease: 'none'
       });
     }, sectionRef);
 

@@ -126,7 +126,7 @@ const IdentitySection: React.FC = () => {
         <div className=""> {/* Handled independently to avoid conflicts */}
           <div className="reveal-child flex items-center space-x-4 mb-8">
             <div className="h-px w-12 bg-blue-600"></div>
-            <h2 className="text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-[0.7em]">IDENTITY</h2>
+            <h2 className="text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-[0.7em]">WHO WE ARE</h2>
           </div>
           
           <h3 className="identity-title text-5xl md:text-7xl lg:text-[7.5rem] font-heading font-bold mb-10 leading-[0.85] text-gray-900 dark:text-white tracking-tighter overflow-visible">

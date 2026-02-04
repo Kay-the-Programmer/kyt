@@ -35,20 +35,27 @@ const Home: React.FC = () => {
       window.addEventListener('mousemove', handleMouseMove);
 
       // Hero Entrance Sequence
-      // If it's a page transition, wait 0.8s for the curtain. If initial load, start immediately (0s).
-      const tl = gsap.timeline({ delay: isPageTransition ? 0.8 : 0 });
-      tl.to('.hero-section .letter-reveal', {
-        y: 0,
-        opacity: 1,
-        scale: 1,
-        filter: 'blur(0px)',
-        stagger: 0.02,
-        duration: 1,
-        ease: 'power4.out',
-      })
-        .from('.hero-badge', { y: 20, opacity: 0, duration: 0.8 }, '-=0.8')
-        .from('.hero-desc', { opacity: 0, y: 15, duration: 1 }, '-=0.6')
-        .from('.hero-btns', { y: 15, opacity: 0, duration: 0.8 }, '-=0.5');
+      // If it's a page transition, wait 0.8s for the curtain. If initial load, sync with preloader exit (1.2s delay).
+      const tl = gsap.timeline({ delay: isPageTransition ? 0.8 : 1.2 });
+      tl.fromTo('.hero-section .letter-reveal',
+        {
+          y: 100,
+          opacity: 0,
+          filter: 'blur(20px)'
+        },
+        {
+          y: 0,
+          opacity: 1,
+          scale: 1,
+          filter: 'blur(0px)',
+          stagger: 0.02,
+          duration: 1,
+          ease: 'power4.out',
+        }
+      )
+        .to('.hero-badge', { y: 0, opacity: 1, duration: 0.8 }, '-=0.8')
+        .to('.hero-desc', { opacity: 1, y: 0, duration: 1 }, '-=0.6')
+        .to('.hero-btns', { y: 0, opacity: 1, duration: 0.8 }, '-=0.5');
 
       // Global Reveal orchestration
       gsap.utils.toArray<HTMLElement>('.reveal-on-scroll').forEach((el) => {

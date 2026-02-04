@@ -117,7 +117,7 @@ const Preloader = () => (
       </div>
 
       <div className="mt-4 overflow-hidden h-4">
-        <span className="preloader-status text-[10px] font-black uppercase tracking-[0.4em] text-blue-500/60 block">Initializing Systems</span>
+        <span className="preloader-status text-[10px] font-black uppercase tracking-[0.4em] text-blue-500/60 block">Initializing System</span>
       </div>
     </div>
   </div>
@@ -179,9 +179,7 @@ const AppContent: React.FC = () => {
     window.addEventListener('mousedown', handleMouseDown);
     window.addEventListener('mouseup', handleMouseUp);
 
-    const tl = gsap.timeline({
-      onComplete: () => setIsLoading(false)
-    });
+    const tl = gsap.timeline();
 
     tl.set('.preloader-char', { y: 100, opacity: 0 })
       .to('.preloader-char', {
@@ -192,6 +190,7 @@ const AppContent: React.FC = () => {
         ease: 'expo.out'
       })
       .to('.preloader-progress', { width: '100%', duration: 1.5, ease: 'power2.inOut' }, '-=0.5')
+      .call(() => setIsLoading(false))
       .to('#preloader', {
         clipPath: 'circle(0% at 50% 50%)',
         duration: 1.2,

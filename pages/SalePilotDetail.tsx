@@ -336,7 +336,7 @@ const SalePilotDetail: React.FC = () => {
               Let's Build your <br /> <span className="gradient-text">Masterpiece.</span>
            </h2>
            <Link to="/contact" className="magnetic-area px-20 py-8 bg-blue-600 text-white rounded-full font-bold text-2xl shadow-3xl shadow-blue-600/30 hover:scale-105 transition-all inline-block active:scale-95">
-              Initiate Inquiry
+              Send Inquiry
            </Link>
         </section>
 

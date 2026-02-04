@@ -20,7 +20,7 @@ gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 const ScrollToTop = () => {
   const { pathname, hash } = useLocation();
   const isFirstRender = useRef(true);
-  
+
   useEffect(() => {
     if (!hash) {
       // Basic page navigation - jump to top
@@ -29,11 +29,11 @@ const ScrollToTop = () => {
       // Anchor link navigation
       const id = hash.replace('#', '');
       const element = document.getElementById(id);
-      
+
       if (element) {
         // We delay the scroll to wait for the TransitionOverlay and route animations
         const delay = isFirstRender.current ? 0.1 : 0.8;
-        
+
         gsap.to(window, {
           duration: 1.5,
           scrollTo: {
@@ -48,7 +48,7 @@ const ScrollToTop = () => {
     }
     isFirstRender.current = false;
   }, [pathname, hash]);
-  
+
   return null;
 };
 
@@ -67,27 +67,27 @@ const TransitionOverlay = () => {
     }
 
     const tl = gsap.timeline();
-    
+
     // Smooth futuristic curtain sweep that acts as the "fade out" mask
     tl.set(overlayRef.current, { xPercent: -100, autoAlpha: 1 })
-      .to(overlayRef.current, { 
-        xPercent: 0, 
-        duration: 0.5, 
-        ease: 'power4.in' 
+      .to(overlayRef.current, {
+        xPercent: 0,
+        duration: 0.5,
+        ease: 'power4.in'
       })
-      .to(overlayRef.current, { 
-        xPercent: 100, 
-        duration: 0.6, 
+      .to(overlayRef.current, {
+        xPercent: 100,
+        duration: 0.5,
         ease: 'power4.out',
-        delay: 0.1 
+        delay: 0
       })
       .set(overlayRef.current, { autoAlpha: 0 });
 
   }, [location.pathname]);
 
   return (
-    <div 
-      ref={overlayRef} 
+    <div
+      ref={overlayRef}
       className="fixed inset-0 bg-blue-600 z-[9999] pointer-events-none invisible opacity-0 flex items-center justify-center"
       style={{ willChange: 'transform' }}
     >
@@ -101,7 +101,7 @@ const Preloader = () => (
     <div className="relative flex flex-col items-center">
       <div className="preloader-circle w-48 h-48 border border-blue-500/20 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
       <div className="preloader-circle-inner w-32 h-32 border border-blue-500/40 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
-      
+
       <div className="preloader-text-wrap overflow-hidden h-16 flex items-center justify-center">
         <div className="preloader-text flex font-heading text-4xl md:text-5xl font-black tracking-tighter text-white">
           {"KYTRIQ".split("").map((char, i) => (
@@ -109,13 +109,13 @@ const Preloader = () => (
           ))}
         </div>
       </div>
-      
+
       <div className="relative w-64 h-1.5 bg-white/5 mt-8 rounded-full overflow-hidden">
         <div className="preloader-progress h-full bg-blue-600 w-0 relative">
           <div className="absolute right-0 top-0 h-full w-8 bg-gradient-to-r from-transparent to-white/50 blur-sm"></div>
         </div>
       </div>
-      
+
       <div className="mt-4 overflow-hidden h-4">
         <span className="preloader-status text-[10px] font-black uppercase tracking-[0.4em] text-blue-500/60 block">Initializing Systems</span>
       </div>
@@ -143,7 +143,7 @@ const AppContent: React.FC = () => {
       if (isMobile) return;
       const target = e.target as HTMLElement;
       const isHoverable = target.closest('a, button, input, textarea, [role="button"], .magnetic-area');
-      
+
       if (isHoverable) {
         gsap.to(cursor, { scale: 3, backgroundColor: 'transparent', border: '1px solid #2563eb', duration: 0.3 });
         gsap.to(follower, { scale: 0.5, opacity: 0.1, duration: 0.3 });
@@ -175,17 +175,17 @@ const AppContent: React.FC = () => {
     });
 
     tl.set('.preloader-char', { y: 100, opacity: 0 })
-      .to('.preloader-char', { 
-        y: 0, 
-        opacity: 1, 
-        duration: 1.2, 
-        stagger: 0.08, 
-        ease: 'expo.out' 
+      .to('.preloader-char', {
+        y: 0,
+        opacity: 1,
+        duration: 1.2,
+        stagger: 0.08,
+        ease: 'expo.out'
       })
       .to('.preloader-progress', { width: '100%', duration: 1.5, ease: 'power2.inOut' }, '-=0.5')
-      .to('#preloader', { 
+      .to('#preloader', {
         clipPath: 'circle(0% at 50% 50%)',
-        duration: 1.2, 
+        duration: 1.2,
         ease: 'expo.inOut'
       });
 
@@ -203,14 +203,14 @@ const AppContent: React.FC = () => {
       // Create a timeline to manage the fade-in of the new page
       const tl = gsap.timeline();
 
-      tl.fromTo(mainRef.current, 
+      tl.fromTo(mainRef.current,
         { opacity: 0, y: 20, filter: 'blur(10px)' },
-        { 
-          opacity: 1, 
-          y: 0, 
+        {
+          opacity: 1,
+          y: 0,
           filter: 'blur(0px)',
-          duration: 1.2, 
-          delay: 0.35, // Sync with the TransitionOverlay curtain wipe
+          duration: 0.8,
+          delay: 0.5, // Sync with the TransitionOverlay curtain wipe (0.5s in)
           ease: 'expo.out',
           clearProps: 'all'
         }

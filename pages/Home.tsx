@@ -22,10 +22,10 @@ const Home: React.FC = () => {
       const handleMouseMove = (e: MouseEvent) => {
         const xPos = (e.clientX / window.innerWidth - 0.5);
         const yPos = (e.clientY / window.innerHeight - 0.5);
-        gsap.to('.hero-bg-glow', { 
-          x: xPos * 60, 
-          y: yPos * 60, 
-          duration: 2.5, 
+        gsap.to('.hero-bg-glow', {
+          x: xPos * 60,
+          y: yPos * 60,
+          duration: 2.5,
           ease: 'sine.out',
           overwrite: 'auto'
         });
@@ -33,7 +33,7 @@ const Home: React.FC = () => {
       window.addEventListener('mousemove', handleMouseMove);
 
       // Hero Entrance Sequence
-      const tl = gsap.timeline();
+      const tl = gsap.timeline({ delay: 0.8 });
       tl.to('.hero-section .letter-reveal', {
         y: 0,
         opacity: 1,
@@ -43,9 +43,9 @@ const Home: React.FC = () => {
         duration: 1,
         ease: 'power4.out',
       })
-      .from('.hero-badge', { y: 20, opacity: 0, duration: 0.8 }, '-=0.8')
-      .from('.hero-desc', { opacity: 0, y: 15, duration: 1 }, '-=0.6')
-      .from('.hero-btns', { y: 15, opacity: 0, duration: 0.8 }, '-=0.5');
+        .from('.hero-badge', { y: 20, opacity: 0, duration: 0.8 }, '-=0.8')
+        .from('.hero-desc', { opacity: 0, y: 15, duration: 1 }, '-=0.6')
+        .from('.hero-btns', { y: 15, opacity: 0, duration: 0.8 }, '-=0.5');
 
       // Global Reveal orchestration
       gsap.utils.toArray<HTMLElement>('.reveal-on-scroll').forEach((el) => {

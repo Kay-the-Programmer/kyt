@@ -273,14 +273,6 @@ const Projects: React.FC = () => {
                   <div className="absolute top-0 left-0 w-full h-1/5 bg-gradient-to-b from-emerald-500/0 via-emerald-500/20 to-transparent -translate-y-full animate-[scan_6s_linear_infinite] pointer-events-none"></div>
                 </div>
 
-                <div className="absolute top-12 right-12 md:top-20 md:right-20 pointer-events-none">
-                  <div className="text-[11px] font-mono text-emerald-400/60 uppercase tracking-[0.3em] text-right space-y-1">
-                    <p>LINES OF CODE: 100K+</p>
-                    <p>: 0.14_RMS</p>
-                    <p>CORE_STATE: STABLE</p>
-                  </div>
-                </div>
-
                 <div className="content-layer relative h-full flex flex-col justify-end p-12 md:p-20 lg:p-32 text-white z-20" style={{ transformStyle: 'preserve-3d' }}>
                   <div className="reveal-item absolute top-12 left-12 md:top-20 md:left-32 text-[12rem] md:text-[24rem] font-black opacity-[0.05] font-heading tracking-tighter pointer-events-none select-none text-emerald-500">
                     {project.id}

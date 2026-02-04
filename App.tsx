@@ -57,41 +57,57 @@ const ScrollToTop = () => {
  * TransitionOverlay handles the visual wipe between pages.
  */
 const TransitionOverlay = ({ isPageTransition }: { isPageTransition: boolean }) => {
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
 
   useLayoutEffect(() => {
-    // Only run animation if we are in a valid page transition state
-    if (!isPageTransition) {
-      return;
-    }
+    if (!isPageTransition) return;
+
+    const panels = containerRef.current?.querySelectorAll('.transition-panel');
+    if (!panels) return;
 
     const tl = gsap.timeline();
 
-    // Smooth futuristic curtain sweep that acts as the "fade out" mask
-    tl.set(overlayRef.current, { xPercent: -100, autoAlpha: 1 })
-      .to(overlayRef.current, {
-        xPercent: 0,
+    // Multi-panel shutter effect
+    tl.set(containerRef.current, { autoAlpha: 1 })
+      .fromTo(panels,
+        { scaleY: 0, transformOrigin: (i) => i % 2 === 0 ? 'top' : 'bottom' },
+        {
+          scaleY: 1,
+          duration: 0.5,
+          stagger: 0.05,
+          ease: 'expo.inOut'
+        }
+      )
+      .to(panels, {
+        scaleY: 0,
+        transformOrigin: (i) => i % 2 === 0 ? 'bottom' : 'top',
         duration: 0.5,
-        ease: 'power4.in'
+        stagger: 0.05,
+        ease: 'expo.inOut',
+        delay: 0.1
       })
-      .to(overlayRef.current, {
-        xPercent: 100,
-        duration: 0.5,
-        ease: 'power4.out',
-        delay: 0
-      })
-      .set(overlayRef.current, { autoAlpha: 0 });
+      .set(containerRef.current, { autoAlpha: 0 });
 
   }, [location.pathname, isPageTransition]);
 
   return (
     <div
-      ref={overlayRef}
-      className="fixed inset-0 bg-blue-600 z-[9999] pointer-events-none invisible opacity-0 flex items-center justify-center"
-      style={{ willChange: 'transform' }}
+      ref={containerRef}
+      className="fixed inset-0 z-[9999] pointer-events-none invisible pointer-events-none flex"
     >
-      <div className="w-24 h-24 border-t-2 border-white rounded-full animate-spin opacity-20"></div>
+      {[...Array(5)].map((_, i) => (
+        <div
+          key={i}
+          className="transition-panel relative flex-grow bg-blue-600 dark:bg-blue-700 h-full"
+          style={{ willChange: 'transform' }}
+        >
+          {/* Accent line for digital feel */}
+          <div className="absolute inset-y-0 right-0 w-[1px] bg-white/10" />
+          {/* Scanline effect */}
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.05)_50%),linear-gradient(90deg,rgba(255,0,0,0.02),rgba(0,255,0,0.01),rgba(0,0,255,0.02))] bg-[length:100%_2px,3px_100%] pointer-events-none opacity-20" />
+        </div>
+      ))}
     </div>
   );
 };
@@ -232,17 +248,23 @@ const AppContent: React.FC = () => {
       })
       // Glow expands outward
       .to('.preloader-glow', {
-        scale: 2.5,
+        scale: 3,
         opacity: 0,
-        duration: 0.8,
-        ease: 'power2.out'
+        filter: 'blur(100px)',
+        duration: 1,
+        ease: 'power4.out'
       }, '-=0.2')
-      // Circle reveal with faster timing
+      // Advanced reveal using clip-path with expansion
       .to('#preloader', {
-        clipPath: 'circle(0% at 50% 50%)',
-        duration: 0.9,
+        clipPath: 'circle(150% at 50% 50%)',
+        duration: 1.2,
         ease: 'expo.inOut'
-      }, '-=0.6');
+      }, '-=0.8')
+      .to('#preloader', {
+        opacity: 0,
+        autoAlpha: 0,
+        duration: 0.5
+      }, '-=0.4');
 
     return () => {
       window.removeEventListener('mousemove', moveCursor);

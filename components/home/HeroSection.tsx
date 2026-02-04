@@ -16,15 +16,47 @@ const HeroSection: React.FC = () => {
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      // Cinematic exit animation with smooth scrub for handoff to IdentitySection
-      const tl = gsap.timeline({
+      // 1. Entrance Animation
+      const entranceTl = gsap.timeline({ defaults: { ease: 'power4.out' } });
+
+      entranceTl
+        .to('.hero-badge', { opacity: 1, y: 0, duration: 1.2 }, 0.5)
+        .to('.letter-reveal', {
+          opacity: 1,
+          y: 0,
+          rotateX: 0,
+          filter: 'blur(0px)',
+          duration: 1.5,
+          stagger: 0.015,
+          ease: 'expo.out'
+        }, 0.7)
+        .to('.hero-desc', { opacity: 1, y: 0, duration: 1.2 }, '-=1')
+        .to('.hero-btns', { opacity: 1, y: 0, duration: 1.2 }, '-=1');
+
+      // 2. Subtle Parallax effect on mouse move
+      const handleMouseMove = (e: MouseEvent) => {
+        const { clientX, clientY } = e;
+        const x = (clientX - window.innerWidth / 2) / 50;
+        const y = (clientY - window.innerHeight / 2) / 50;
+
+        gsap.to(contentRef.current, {
+          x: x,
+          y: y,
+          duration: 1,
+          ease: 'power2.out'
+        });
+      };
+
+      window.addEventListener('mousemove', handleMouseMove);
+
+      // 3. Cinematic exit animation with smooth scrub for handoff to IdentitySection
+      const exitTl = gsap.timeline({
         scrollTrigger: {
           trigger: sectionRef.current,
           start: 'top top',
           end: 'bottom 40%',
-          scrub: 0.8, // Smooth scrub for fluid motion
+          scrub: 0.8,
           onUpdate: (self) => {
-            // Progressive blur for cinematic depth
             const blur = self.progress * 16;
             if (contentRef.current) {
               contentRef.current.style.filter = `blur(${blur}px)`;
@@ -33,12 +65,16 @@ const HeroSection: React.FC = () => {
         }
       });
 
-      tl.to(contentRef.current, {
+      exitTl.to(contentRef.current, {
         opacity: 0,
         scale: 0.92,
-        y: -80, // Move up to create "rising" handoff
+        y: -120,
         ease: 'none'
       });
+
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+      };
     }, sectionRef);
 
     return () => ctx.revert();
@@ -51,7 +87,7 @@ const HeroSection: React.FC = () => {
           <span className="text-[10px] font-black uppercase tracking-[0.5em] text-blue-600 dark:text-blue-400">KYTRIQ TECHNOLOGIES</span>
         </div>
 
-        <h1 ref={titleRef} className="magnetic-area text-4xl sm:text-6xl md:text-7xl lg:text-[8rem] font-heading font-extrabold tracking-tighter leading-[0.95] text-gray-900 dark:text-white select-none overflow-visible flex flex-col items-center [&_.letter-reveal]:opacity-0 [&_.letter-reveal]:translate-y-[100px] [&_.letter-reveal]:blur-[20px]">
+        <h1 ref={titleRef} className="magnetic-area text-4xl sm:text-6xl md:text-7xl lg:text-[8rem] font-heading font-extrabold tracking-tighter leading-[0.95] text-gray-900 dark:text-white select-none overflow-visible flex flex-col items-center [&_.letter-reveal]:opacity-0 [&_.letter-reveal]:translate-y-[60px] [&_.letter-reveal]:rotate-x-[45deg] [&_.letter-reveal]:blur-[10px]">
           <SplitText text="Bringing Digital Ideas" className="block mb-2 md:mb-4" />
           <SplitText text="To Life." className="block" isGradient={true} />
         </h1>

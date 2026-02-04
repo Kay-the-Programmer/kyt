@@ -212,8 +212,8 @@ const Navbar: React.FC = () => {
       {/* Mobile Menu Overlay */}
       <div
         ref={mobileMenuRef}
-        className="md:hidden absolute top-20 left-0 right-0 bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800 p-8 flex flex-col space-y-6 shadow-2xl invisible pointer-events-none"
-        style={{ pointerEvents: isOpen ? 'auto' : 'none' }}
+        className="md:hidden absolute top-20 left-0 right-0 bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800 p-8 flex flex-col space-y-6 shadow-2xl"
+        style={{ pointerEvents: isOpen ? 'auto' : 'none', visibility: 'hidden', opacity: 0 }}
       >
         {navLinks.map((link) => (
           <Link

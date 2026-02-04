@@ -815,11 +815,6 @@ const Services: React.FC = () => {
           </div>
         </section>
 
-        {/* Featured Interactive Portfolio Scroller */}
-        <div className="mt-20 sm:mt-32 md:mt-48 mb-16 sm:mb-24">
-          <PortfolioScroll />
-        </div>
-
         {/* CTA SECTION */}
         <section ref={ctaRef} className="cta-section mt-16 sm:mt-24 md:mt-48 p-8 sm:p-12 md:p-20 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 rounded-[2rem] sm:rounded-[3rem] md:rounded-[5rem] text-center relative overflow-hidden group mb-16 sm:mb-24">
           {/* Animated gradient overlay */}

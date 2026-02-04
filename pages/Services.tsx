@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback, memo } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import PortfolioScroll from '../components/home/PortfolioScroll';
@@ -7,24 +7,28 @@ import Footer from '../components/Footer';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Floating Orb Component
-const FloatingOrb: React.FC<{ delay: number; size: number; color: string; position: { x: string; y: string } }> = ({ delay, size, color, position }) => (
-  <div
-    className="floating-orb absolute rounded-full pointer-events-none blur-3xl"
-    style={{
-      width: size,
-      height: size,
-      background: color,
-      left: position.x,
-      top: position.y,
-      opacity: 0.4,
-      animationDelay: `${delay}s`,
-    }}
-  />
+// Memoized Floating Orb Component for performance
+const FloatingOrb = memo<{ delay: number; size: number; color: string; position: { x: string; y: string } }>(
+  ({ delay, size, color, position }) => (
+    <div
+      className="floating-orb absolute rounded-full pointer-events-none blur-3xl"
+      style={{
+        width: size,
+        height: size,
+        background: color,
+        left: position.x,
+        top: position.y,
+        opacity: 0.4,
+        animationDelay: `${delay}s`,
+        willChange: 'transform, opacity',
+      }}
+    />
+  )
 );
+FloatingOrb.displayName = 'FloatingOrb';
 
-// Cursor Glow Component
-const CursorGlow: React.FC<{ glowRef: React.RefObject<HTMLDivElement | null> }> = ({ glowRef }) => (
+// Memoized Cursor Glow Component (Desktop only)
+const CursorGlow = memo<{ glowRef: React.RefObject<HTMLDivElement | null> }>(({ glowRef }) => (
   <div
     ref={glowRef}
     className="cursor-glow fixed w-64 h-64 rounded-full pointer-events-none z-50 mix-blend-screen hidden lg:block"
@@ -34,7 +38,149 @@ const CursorGlow: React.FC<{ glowRef: React.RefObject<HTMLDivElement | null> }> 
       willChange: 'left, top',
     }}
   />
-);
+));
+CursorGlow.displayName = 'CursorGlow';
+
+// Memoized Service Card for performance
+const ServiceCard = memo<{
+  service: typeof services[number];
+  idx: number;
+  activeCard: number | null;
+  cardRef: (el: HTMLDivElement | null) => void;
+  isMobile: boolean;
+}>(({ service, idx, activeCard, cardRef, isMobile }) => (
+  <div
+    id={service.id}
+    ref={cardRef}
+    className={`service-card group p-4 sm:p-6 md:p-8 lg:p-12 bg-gray-50/80 dark:bg-gray-900/60 border border-gray-200/50 dark:border-white/5 rounded-2xl sm:rounded-[2rem] md:rounded-[3rem] flex flex-col min-h-[280px] sm:min-h-[360px] md:min-h-[420px] lg:h-[520px] relative overflow-hidden cursor-pointer backdrop-blur-xl shadow-lg ${activeCard === idx ? 'z-20' : 'z-10'}`}
+    style={{
+      transformStyle: 'preserve-3d',
+      willChange: isMobile ? 'auto' : 'transform, box-shadow',
+      contain: 'layout style paint',
+    }}
+  >
+    {/* Animated Border Glow */}
+    <div
+      className="card-border-glow absolute inset-0 rounded-2xl sm:rounded-[2rem] md:rounded-[3rem] pointer-events-none opacity-0 transition-opacity duration-500"
+      style={{
+        background: `linear-gradient(135deg, ${service.accent.includes('violet') ? 'rgba(139, 92, 246, 0.5)' : 'rgba(59, 130, 246, 0.5)'} 0%, transparent 50%)`,
+        padding: '2px',
+        mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+        maskComposite: 'exclude',
+      }}
+    />
+
+    {/* Background Parallax Image - Lazy loaded */}
+    <div
+      className="card-parallax-bg absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-700 -z-10"
+      style={{
+        backgroundImage: `url(${service.bgImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        transform: 'scale(1.2)',
+      }}
+    />
+
+    {/* Spotlight Glow - Hidden on mobile for performance */}
+    {!isMobile && (
+      <div className="card-glow absolute pointer-events-none w-64 sm:w-80 h-64 sm:h-80 bg-gradient-to-br from-blue-500/20 to-purple-500/10 rounded-full blur-3xl opacity-0 transition-opacity duration-300 -z-10" />
+    )}
+
+    {/* Glass Glare Overlay - Desktop only */}
+    {!isMobile && (
+      <div className="card-glare absolute inset-[-100%] bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none opacity-0 rotate-[25deg] -z-10" />
+    )}
+
+    {/* Parallax Ghost Icon */}
+    <div className="card-bg-icon absolute -top-6 sm:-top-10 -right-6 sm:-right-10 text-[6rem] sm:text-[10rem] md:text-[14rem] text-blue-600/[0.03] dark:text-white/[0.02] pointer-events-none select-none -z-20">
+      <i className={`fa-solid ${service.icon}`} />
+    </div>
+
+    {/* Icon with gradient background */}
+    <div
+      className={`service-icon w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 bg-gradient-to-br ${service.accent} rounded-xl sm:rounded-2xl md:rounded-[1.5rem] flex items-center justify-center mb-4 sm:mb-6 md:mb-8 shadow-xl shadow-blue-500/30 group-hover:shadow-blue-500/50 transition-all shrink-0`}
+      style={{ transformStyle: 'preserve-3d' }}
+    >
+      <i className={`fa-solid ${service.icon} text-lg sm:text-xl md:text-2xl lg:text-3xl text-white drop-shadow-lg`} />
+    </div>
+
+    <h3 className="service-title text-lg sm:text-xl md:text-2xl lg:text-3xl font-heading font-bold mb-2 sm:mb-3 md:mb-4 text-gray-900 dark:text-white transition-transform duration-300">
+      {service.title}
+    </h3>
+    <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm md:text-base leading-relaxed mb-4 sm:mb-6 md:mb-8 flex-grow line-clamp-3 sm:line-clamp-none">
+      {service.description}
+    </p>
+
+    {/* Feature Pills */}
+    <div className="space-y-1.5 sm:space-y-2 md:space-y-3">
+      {service.features.map(feature => (
+        <div key={feature} className="feature-pill flex items-center space-x-2 sm:space-x-3 text-[7px] sm:text-[8px] md:text-[9px] lg:text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+          <div className={`w-1 sm:w-1.5 md:w-2 h-1 sm:h-1.5 md:h-2 rounded-full bg-gradient-to-r ${service.accent}`} />
+          <span>{feature}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+));
+ServiceCard.displayName = 'ServiceCard';
+
+// Services data (moved outside component to prevent re-creation)
+const services = [
+  {
+    id: 'ai-engineering',
+    icon: 'fa-brain',
+    title: 'AI Integration',
+    description: 'Implementing AI features in your existing products or creating custom AI solutions.',
+    features: ['Predictive Logic', 'LLM Fine-tuning', 'Computer Vision'],
+    bgImage: 'https://images.unsplash.com/photo-1620712943543-bcc4628c9457?auto=format&fit=crop&q=60&w=800',
+    accent: 'from-violet-500 to-purple-600',
+  },
+  {
+    id: 'scalable-systems',
+    icon: 'fa-code-branch',
+    title: 'Web & Mobile Apps',
+    description: 'Creating seamless and intuitive user experiences across web and mobile platforms.',
+    features: ['Cross-Platform', 'Responsive Design', 'User-Centric'],
+    bgImage: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc51?auto=format&fit=crop&q=60&w=800',
+    accent: 'from-blue-500 to-cyan-500',
+  },
+  {
+    id: 'unified-ecosystems',
+    icon: 'fa-layer-group',
+    title: 'Software Development',
+    description: 'Building robust, scalable software solutions tailored to your business needs.',
+    features: ['Enterprise Grade', 'Microservices', 'Cloud Native'],
+    bgImage: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=60&w=800',
+    accent: 'from-emerald-500 to-teal-500',
+  },
+  {
+    id: 'strategic-design',
+    icon: 'fa-compass-drafting',
+    title: 'Strategic Design',
+    description: 'Minimalistic, high-end UI/UX that prioritizes user intuition and brand trustworthiness.',
+    features: ['Prototyping', 'Design Systems', 'Behavioral UX'],
+    bgImage: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&q=60&w=800',
+    accent: 'from-pink-500 to-rose-500',
+  },
+  {
+    id: 'native-performance',
+    icon: 'fa-terminal',
+    title: 'Native Performance',
+    description: 'Building ultra-fast desktop and mobile experiences that utilize full hardware potential.',
+    features: ['Multi-platform', 'Low Latency', 'Offline-First'],
+    bgImage: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=60&w=800',
+    accent: 'from-orange-500 to-amber-500',
+  },
+  {
+    id: 'security-core',
+    icon: 'fa-shield-halved',
+    title: 'Security Core',
+    description: 'Fortifying your digital assets with cutting-edge encryption and biometric authentication.',
+    features: ['Zero Trust', 'End-to-End Encryption', 'Audit Ready'],
+    bgImage: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&q=60&w=800',
+    accent: 'from-red-500 to-rose-600',
+  }
+] as const;
 
 const Services: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -46,10 +192,30 @@ const Services: React.FC = () => {
   const headerRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLElement>(null);
   const [activeCard, setActiveCard] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile on mount and resize
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile, { passive: true });
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Memoized floating orbs - reduced on mobile for performance
+  const floatingOrbs = useMemo(() => {
+    const allOrbs = [
+      { delay: 0, size: 300, color: 'radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, transparent 70%)', position: { x: '10%', y: '20%' } },
+      { delay: 2, size: 250, color: 'radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, transparent 70%)', position: { x: '80%', y: '30%' } },
+      { delay: 4, size: 280, color: 'radial-gradient(circle, rgba(236, 72, 153, 0.15) 0%, transparent 70%)', position: { x: '60%', y: '70%' } },
+      { delay: 6, size: 200, color: 'radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, transparent 70%)', position: { x: '20%', y: '80%' } },
+    ];
+    // Reduce orbs on mobile for better performance
+    return isMobile ? allOrbs.slice(0, 2) : allOrbs;
+  }, [isMobile]);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      const isMobile = window.innerWidth < 768;
       const isTablet = window.innerWidth >= 768 && window.innerWidth < 1024;
 
       // ========================================
@@ -65,26 +231,28 @@ const Services: React.FC = () => {
           yTo(e.clientY);
         };
 
-        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mousemove', handleMouseMove, { passive: true });
       }
 
       // ========================================
-      // 2. FLOATING ORBS AMBIENT ANIMATION
+      // 2. FLOATING ORBS AMBIENT ANIMATION (Reduced on mobile)
       // ========================================
-      const orbs = document.querySelectorAll('.floating-orb');
-      orbs.forEach((orb, i) => {
-        gsap.to(orb, {
-          x: `random(-100, 100)`,
-          y: `random(-80, 80)`,
-          scale: `random(0.8, 1.3)`,
-          opacity: `random(0.2, 0.5)`,
-          duration: `random(8, 15)`,
-          repeat: -1,
-          yoyo: true,
-          ease: 'sine.inOut',
-          delay: i * 0.5,
+      if (!isMobile) {
+        const orbs = document.querySelectorAll('.floating-orb');
+        orbs.forEach((orb, i) => {
+          gsap.to(orb, {
+            x: `random(-80, 80)`,
+            y: `random(-60, 60)`,
+            scale: `random(0.9, 1.2)`,
+            opacity: `random(0.2, 0.4)`,
+            duration: `random(10, 18)`,
+            repeat: -1,
+            yoyo: true,
+            ease: 'sine.inOut',
+            delay: i * 0.8,
+          });
         });
-      });
+      }
 
       // ========================================
       // 3. CINEMATIC HEADER ENTRANCE
@@ -516,71 +684,7 @@ const Services: React.FC = () => {
     }, containerRef);
 
     return () => ctx.revert();
-  }, []);
-
-  const services = [
-    {
-      id: 'ai-engineering',
-      icon: 'fa-brain',
-      title: 'AI Integration',
-      description: 'Implementing AI features in your existing products or creating custom AI solutions.',
-      features: ['Predictive Logic', 'LLM Fine-tuning', 'Computer Vision'],
-      bgImage: 'https://images.unsplash.com/photo-1620712943543-bcc4628c9457?auto=format&fit=crop&q=60&w=800',
-      accent: 'from-violet-500 to-purple-600',
-    },
-    {
-      id: 'scalable-systems',
-      icon: 'fa-code-branch',
-      title: 'Web & Mobile Apps',
-      description: 'Creating seamless and intuitive user experiences across web and mobile platforms.',
-      features: ['Cross-Platform', 'Responsive Design', 'User-Centric'],
-      bgImage: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc51?auto=format&fit=crop&q=60&w=800',
-      accent: 'from-blue-500 to-cyan-500',
-    },
-    {
-      id: 'unified-ecosystems',
-      icon: 'fa-layer-group',
-      title: 'Software Development',
-      description: 'Building robust, scalable software solutions tailored to your business needs.',
-      features: ['Enterprise Grade', 'Microservices', 'Cloud Native'],
-      bgImage: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=60&w=800',
-      accent: 'from-emerald-500 to-teal-500',
-    },
-    {
-      id: 'strategic-design',
-      icon: 'fa-compass-drafting',
-      title: 'Strategic Design',
-      description: 'Minimalistic, high-end UI/UX that prioritizes user intuition and brand trustworthiness.',
-      features: ['Prototyping', 'Design Systems', 'Behavioral UX'],
-      bgImage: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&q=60&w=800',
-      accent: 'from-pink-500 to-rose-500',
-    },
-    {
-      id: 'native-performance',
-      icon: 'fa-terminal',
-      title: 'Native Performance',
-      description: 'Building ultra-fast desktop and mobile experiences that utilize full hardware potential.',
-      features: ['Multi-platform', 'Low Latency', 'Offline-First'],
-      bgImage: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=60&w=800',
-      accent: 'from-orange-500 to-amber-500',
-    },
-    {
-      id: 'security-core',
-      icon: 'fa-shield-halved',
-      title: 'Security Core',
-      description: 'Fortifying your digital assets with cutting-edge encryption and biometric authentication.',
-      features: ['Zero Trust', 'End-to-End Encryption', 'Audit Ready'],
-      bgImage: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&q=60&w=800',
-      accent: 'from-red-500 to-rose-600',
-    }
-  ];
-
-  const floatingOrbs = [
-    { delay: 0, size: 400, color: 'radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%)', position: { x: '10%', y: '20%' } },
-    { delay: 2, size: 300, color: 'radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, transparent 70%)', position: { x: '80%', y: '30%' } },
-    { delay: 4, size: 350, color: 'radial-gradient(circle, rgba(236, 72, 153, 0.2) 0%, transparent 70%)', position: { x: '60%', y: '70%' } },
-    { delay: 6, size: 250, color: 'radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, transparent 70%)', position: { x: '20%', y: '80%' } },
-  ];
+  }, [isMobile]);
 
   return (
     <div ref={containerRef} className="services-page min-h-screen pt-24 sm:pt-32 md:pt-40 lg:pt-48 pb-20 sm:pb-32 px-4 sm:px-6 bg-white dark:bg-brand-dark transition-colors duration-500 overflow-x-hidden relative">
@@ -631,20 +735,21 @@ const Services: React.FC = () => {
           </div>
 
           {/* SERVICES CARDS */}
-          <div className="services-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 relative z-10">
+          <div className="services-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 relative z-10">
             {services.map((service, idx) => (
               <div
-                key={idx}
+                key={service.id}
                 id={service.id}
                 ref={(el) => { if (el) cardsRef.current[idx] = el; }}
-                className={`service-card group p-6 sm:p-8 md:p-10 lg:p-12 bg-gray-50/80 dark:bg-gray-900/60 border border-gray-200/50 dark:border-white/5 rounded-[2rem] sm:rounded-[2.5rem] md:rounded-[3.5rem] flex flex-col min-h-[320px] sm:min-h-[420px] md:h-[520px] relative overflow-hidden cursor-pointer backdrop-blur-xl shadow-lg ${activeCard === idx ? 'z-20' : 'z-10'}`}
+                className={`service-card group p-4 sm:p-6 md:p-8 lg:p-10 bg-gray-50/80 dark:bg-gray-900/60 border border-gray-200/50 dark:border-white/5 rounded-2xl sm:rounded-[2rem] md:rounded-[3rem] flex flex-col min-h-[280px] sm:min-h-[360px] md:min-h-[420px] lg:h-[500px] relative overflow-hidden cursor-pointer backdrop-blur-xl shadow-lg ${activeCard === idx ? 'z-20' : 'z-10'}`}
                 style={{
                   transformStyle: 'preserve-3d',
-                  willChange: 'transform, box-shadow',
+                  willChange: isMobile ? 'auto' : 'transform, box-shadow',
+                  contain: 'layout style paint',
                 }}
               >
                 {/* Animated Border Glow */}
-                <div className="card-border-glow absolute inset-0 rounded-[2rem] sm:rounded-[2.5rem] md:rounded-[3.5rem] pointer-events-none opacity-0 transition-opacity duration-500"
+                <div className="card-border-glow absolute inset-0 rounded-2xl sm:rounded-[2rem] md:rounded-[3rem] pointer-events-none opacity-0 transition-opacity duration-500"
                   style={{
                     background: `linear-gradient(135deg, ${service.accent.includes('violet') ? 'rgba(139, 92, 246, 0.5)' : 'rgba(59, 130, 246, 0.5)'} 0%, transparent 50%)`,
                     padding: '2px',
@@ -653,48 +758,54 @@ const Services: React.FC = () => {
                   }}
                 />
 
-                {/* Background Parallax Image */}
-                <div
-                  className="card-parallax-bg absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-700 -z-10"
-                  style={{
-                    backgroundImage: `url(${service.bgImage})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    transform: 'scale(1.2)'
-                  }}
-                />
+                {/* Background Parallax Image - Desktop only for performance */}
+                {!isMobile && (
+                  <div
+                    className="card-parallax-bg absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-700 -z-10"
+                    style={{
+                      backgroundImage: `url(${service.bgImage})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      transform: 'scale(1.2)'
+                    }}
+                  />
+                )}
 
-                {/* Spotlight Glow */}
-                <div className="card-glow absolute pointer-events-none w-80 h-80 bg-gradient-to-br from-blue-500/20 to-purple-500/10 rounded-full blur-3xl opacity-0 transition-opacity duration-300 -z-10" />
+                {/* Spotlight Glow - Desktop only */}
+                {!isMobile && (
+                  <div className="card-glow absolute pointer-events-none w-64 sm:w-80 h-64 sm:h-80 bg-gradient-to-br from-blue-500/20 to-purple-500/10 rounded-full blur-3xl opacity-0 transition-opacity duration-300 -z-10" />
+                )}
 
-                {/* Glass Glare Overlay */}
-                <div className="card-glare absolute inset-[-100%] bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none opacity-0 rotate-[25deg] -z-10" />
+                {/* Glass Glare Overlay - Desktop only */}
+                {!isMobile && (
+                  <div className="card-glare absolute inset-[-100%] bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none opacity-0 rotate-[25deg] -z-10" />
+                )}
 
                 {/* Parallax Ghost Icon */}
-                <div className="card-bg-icon absolute -top-10 -right-10 text-[8rem] sm:text-[14rem] text-blue-600/[0.03] dark:text-white/[0.02] pointer-events-none select-none -z-20">
+                <div className="card-bg-icon absolute -top-6 sm:-top-10 -right-6 sm:-right-10 text-[5rem] sm:text-[10rem] md:text-[12rem] text-blue-600/[0.03] dark:text-white/[0.02] pointer-events-none select-none -z-20">
                   <i className={`fa-solid ${service.icon}`} />
                 </div>
 
                 {/* Icon with gradient background */}
                 <div
-                  className={`service-icon w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gradient-to-br ${service.accent} rounded-[1.2rem] sm:rounded-[1.5rem] md:rounded-[2rem] flex items-center justify-center mb-6 sm:mb-8 md:mb-10 shadow-xl shadow-blue-500/30 group-hover:shadow-blue-500/50 transition-all shrink-0`}
+                  className={`service-icon w-11 h-11 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-18 lg:h-18 bg-gradient-to-br ${service.accent} rounded-xl sm:rounded-2xl md:rounded-[1.5rem] flex items-center justify-center mb-4 sm:mb-6 md:mb-8 shadow-xl shadow-blue-500/30 group-hover:shadow-blue-500/50 transition-shadow shrink-0`}
                   style={{ transformStyle: 'preserve-3d' }}
                 >
-                  <i className={`fa-solid ${service.icon} text-xl sm:text-2xl md:text-3xl text-white drop-shadow-lg`} />
+                  <i className={`fa-solid ${service.icon} text-base sm:text-xl md:text-2xl text-white drop-shadow-lg`} />
                 </div>
 
-                <h3 className="service-title text-xl sm:text-2xl md:text-3xl font-heading font-bold mb-3 sm:mb-4 md:mb-6 text-gray-900 dark:text-white transition-transform duration-300">
+                <h3 className="service-title text-base sm:text-xl md:text-2xl font-heading font-bold mb-2 sm:mb-3 md:mb-4 text-gray-900 dark:text-white transition-transform duration-300">
                   {service.title}
                 </h3>
-                <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm md:text-base leading-relaxed mb-6 sm:mb-8 md:mb-10 flex-grow">
+                <p className="text-gray-500 dark:text-gray-400 text-[11px] sm:text-sm md:text-base leading-relaxed mb-4 sm:mb-6 md:mb-8 flex-grow line-clamp-3 sm:line-clamp-none">
                   {service.description}
                 </p>
 
                 {/* Feature Pills */}
-                <div className="space-y-2 sm:space-y-3">
+                <div className="space-y-1 sm:space-y-2 md:space-y-2.5">
                   {service.features.map(feature => (
-                    <div key={feature} className="feature-pill flex items-center space-x-3 text-[8px] sm:text-[9px] md:text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
-                      <div className={`w-1.5 md:w-2 h-1.5 md:h-2 rounded-full bg-gradient-to-r ${service.accent}`} />
+                    <div key={feature} className="feature-pill flex items-center space-x-2 text-[7px] sm:text-[8px] md:text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+                      <div className={`w-1 sm:w-1.5 h-1 sm:h-1.5 rounded-full bg-gradient-to-r ${service.accent}`} />
                       <span>{feature}</span>
                     </div>
                   ))}
@@ -744,7 +855,7 @@ const Services: React.FC = () => {
 
       <Footer />
 
-      {/* Custom Styles */}
+      {/* Custom Styles - Mobile Optimized */}
       <style dangerouslySetInnerHTML={{
         __html: `
           :root {
@@ -766,7 +877,7 @@ const Services: React.FC = () => {
           }
           
           .service-card {
-            transition: transform 0.1s ease-out, box-shadow 0.3s ease;
+            transition: transform 0.15s ease-out, box-shadow 0.3s ease;
           }
           
           .services-page {
@@ -791,6 +902,33 @@ const Services: React.FC = () => {
           
           .services-page:hover .cursor-glow {
             opacity: 1;
+          }
+          
+          /* Mobile-specific optimizations */
+          @media (max-width: 767px) {
+            .service-card {
+              transition: transform 0.2s ease-out, box-shadow 0.2s ease;
+            }
+            
+            .floating-orb {
+              animation-duration: 30s;
+            }
+            
+            .gradient-text-animated {
+              animation-duration: 8s;
+            }
+          }
+          
+          /* Reduced motion preference */
+          @media (prefers-reduced-motion: reduce) {
+            .floating-orb,
+            .gradient-text-animated {
+              animation: none;
+            }
+            
+            .service-card {
+              transition: none;
+            }
           }
         `
       }} />

@@ -209,25 +209,25 @@ const Services: React.FC = () => {
     {
       id: 'ai-engineering',
       icon: 'fa-brain',
-      title: 'AI Engineering',
-      description: 'Implementing custom machine learning models and neural agents that integrate directly into your workflow.',
+      title: 'AI Integration',
+      description: 'Implementing ai features in your existing products or creating custom ai solutions.',
       features: ['Predictive Logic', 'LLM Fine-tuning', 'Computer Vision'],
       bgImage: 'https://images.unsplash.com/photo-1620712943543-bcc4628c9457?auto=format&fit=crop&q=60&w=800'
     },
     {
       id: 'scalable-systems',
       icon: 'fa-code-branch',
-      title: 'Scalable Systems',
-      description: 'Architecting distributed backends capable of handling millions of concurrent requests with zero downtime.',
-      features: ['Microservices', 'Event-Driven Architecture', 'Cloud-Native'],
+      title: 'Web & Mobile Apps',
+      description: 'Creating seamless and intuitive user experiences across web and mobile platforms.',
+      features: ['Cross-Platform', 'Responsive Design', 'User-Centric'],
       bgImage: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc51?auto=format&fit=crop&q=60&w=800'
     },
     {
       id: 'unified-ecosystems',
       icon: 'fa-layer-group',
-      title: 'Unified Ecosystems',
-      description: 'Bridging the gap between legacy hardware and modern software through robust, high-speed API layers.',
-      features: ['Hardware Integrations', 'Real-time Sync', 'Legacy Migration'],
+      title: 'Software Development',
+      description: 'Creating seamless and intuitive user experiences across web and mobile platforms.',
+      features: ['Cross-Platform', 'Responsive Design', 'User-Centric'],
       bgImage: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=60&w=800'
     },
     {
@@ -339,10 +339,6 @@ const Services: React.FC = () => {
 
         {/* Featured Interactive Portfolio Scroller */}
         <div className="mt-20 sm:mt-32 md:mt-48 mb-16 sm:mb-24">
-          <div className="flex items-center space-x-4 mb-8 sm:mb-12">
-            <div className="h-px w-8 sm:w-12 bg-blue-600"></div>
-            <h2 className="text-[9px] sm:text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-[0.7em]">Featured Ecosystem</h2>
-          </div>
           <PortfolioScroll />
         </div>
 

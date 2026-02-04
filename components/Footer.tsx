@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import logo from '../assets/logo.png';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -62,7 +63,7 @@ const Footer: React.FC = () => {
     const isMobile = window.innerWidth < 768;
     const count = isMobile ? 8 : 16;
     const colors = ['#2563eb', '#3b82f6', '#60a5fa', '#1d4ed8', '#7c3aed'];
-    
+
     // Initialize shapes
     const initialShapes: Shape[] = Array.from({ length: count }).map((_, i) => {
       const radius = isMobile ? 20 + Math.random() * 20 : 30 + Math.random() * 30;
@@ -130,7 +131,7 @@ const Footer: React.FC = () => {
 
       for (let i = 0; i < shapes.length; i++) {
         const s = shapes[i];
-        
+
         if (draggedShapeId.current === s.id) {
           s.x = mousePos.current.x;
           s.y = mousePos.current.y;
@@ -196,7 +197,7 @@ const Footer: React.FC = () => {
             const overlap = minDist - dist;
             const cx = (overlap * cos) / 2;
             const cy = (overlap * sin) / 2;
-            
+
             if (draggedShapeId.current !== s.id) {
               s.x -= cx;
               s.y -= cy;
@@ -222,7 +223,7 @@ const Footer: React.FC = () => {
     if (marqueeRef.current) {
       const marqueeContent = marqueeRef.current.querySelector('.marquee-content');
       const words = marqueeRef.current.querySelectorAll('.marquee-word');
-      
+
       // Infinite horizontal scroll
       gsap.to(marqueeContent, {
         xPercent: -50,
@@ -251,10 +252,10 @@ const Footer: React.FC = () => {
         start: "top bottom",
         end: "bottom top",
         onUpdate: (self) => {
-          gsap.to(pulseTl, { 
-            timeScale: 1 + self.progress * 2.5, 
-            duration: 0.4, 
-            ease: "power2.out" 
+          gsap.to(pulseTl, {
+            timeScale: 1 + self.progress * 2.5,
+            duration: 0.4,
+            ease: "power2.out"
           });
         }
       });
@@ -267,9 +268,9 @@ const Footer: React.FC = () => {
         w.addEventListener('mouseenter', () => {
           // Stop global pulse for this word momentarily
           gsap.killTweensOf(w, 'scale');
-          
+
           // Trigger faster, significantly higher scale pulse on hover for extreme "pronounced" effect
-          hoverPulse = gsap.fromTo(w, 
+          hoverPulse = gsap.fromTo(w,
             { scale: 1.9, filter: 'brightness(2.0) drop-shadow(0 0 40px rgba(37, 99, 235, 0.6))' },
             {
               scale: 2.1,
@@ -286,7 +287,7 @@ const Footer: React.FC = () => {
           if (hoverPulse) {
             hoverPulse.kill();
           }
-          
+
           gsap.to(w, {
             scale: 1.0,
             filter: 'brightness(1.0) drop-shadow(0 0 0px rgba(37, 99, 235, 0))',
@@ -321,7 +322,7 @@ const Footer: React.FC = () => {
   const handleMouseDown = (e: React.MouseEvent | React.TouchEvent, id: number) => {
     draggedShapeId.current = id;
     updateMousePosition(e);
-    
+
     const shape = shapesRef.current.find(s => s.id === id);
     if (shape) {
       shape.vx = (Math.random() - 0.5) * 20;
@@ -346,15 +347,15 @@ const Footer: React.FC = () => {
   };
 
   return (
-    <footer 
-      ref={footerRef} 
+    <footer
+      ref={footerRef}
       onMouseUp={handleGlobalMouseUp}
       onTouchEnd={handleGlobalMouseUp}
       onMouseMove={updateMousePosition}
       onTouchMove={updateMousePosition}
       className="relative bg-gray-50 dark:bg-brand-dark border-t border-gray-100 dark:border-gray-900 pt-0 pb-16 px-6 transition-colors duration-300 overflow-hidden"
     >
-      
+
       {/* HUGE TEXT MARQUEE */}
       <div ref={marqueeRef} className="w-full py-16 md:py-32 border-b border-gray-100 dark:border-gray-900 overflow-hidden select-none">
         <div className="marquee-content flex whitespace-nowrap will-change-transform">
@@ -363,8 +364,8 @@ const Footer: React.FC = () => {
               <span className="marquee-word animated-gradient-text inline-block text-7xl md:text-[15rem] font-heading font-black tracking-tighter uppercase mr-16 transition-all duration-1000 cursor-default">
                 Kytriq Technologies
               </span>
-              <span 
-                className="marquee-word inline-block text-7xl md:text-[15rem] font-heading font-black tracking-tighter text-transparent uppercase mr-16 transition-all duration-1000 cursor-default" 
+              <span
+                className="marquee-word inline-block text-7xl md:text-[15rem] font-heading font-black tracking-tighter text-transparent uppercase mr-16 transition-all duration-1000 cursor-default"
                 style={{ WebkitTextStroke: '2px rgba(37, 99, 235, 0.2)' }}
               >
                 Kytriq Technologies
@@ -380,13 +381,13 @@ const Footer: React.FC = () => {
           <div className="h-px w-10 bg-blue-600"></div>
           <span className="text-[10px] font-black uppercase tracking-[0.6em] text-blue-600">Digital Playground</span>
         </div>
-        
-        <div 
-          ref={arenaRef} 
+
+        <div
+          ref={arenaRef}
           className="relative w-full h-[350px] md:h-[500px] rounded-[3rem] border border-gray-100 dark:border-gray-800 bg-white/50 dark:bg-gray-950/30 overflow-hidden group cursor-crosshair backdrop-blur-sm"
         >
           {/* TRAIL CANVAS */}
-          <canvas 
+          <canvas
             ref={canvasRef}
             className="absolute inset-0 pointer-events-none z-0"
             style={{ width: '100%', height: '100%' }}
@@ -395,7 +396,7 @@ const Footer: React.FC = () => {
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-40 transition-opacity duration-1000 pointer-events-none select-none">
             <span className="text-[10px] md:text-xs font-black uppercase tracking-[1em] text-blue-600">Grab & Toss Objects</span>
           </div>
-          
+
           {shapesRef.current.map((s) => (
             <div
               key={s.id}
@@ -423,11 +424,12 @@ const Footer: React.FC = () => {
 
       {/* SIMPLIFIED BRAND & SOCIAL SECTION */}
       <div className="footer-identity max-w-7xl mx-auto mt-16 md:mt-24 text-center">
-        <Link to="/" className="inline-flex items-center space-x-3 mb-8 group">
-          <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:rotate-12 transition-transform">
-            <span className="text-white font-bold text-2xl">K</span>
-          </div>
-          <span className="text-3xl font-heading font-bold text-gray-900 dark:text-white tracking-tighter">Kytriq.</span>
+        <Link to="/" className="inline-flex items-center mb-8 group">
+          <img
+            src={logo}
+            alt="Kytriq Logo"
+            className="h-12 md:h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+          />
         </Link>
         <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base leading-relaxed max-w-xl mx-auto mb-10 font-light">
           Bringing digital ideas to life through intelligent systems and premium software engineering. Architects of the future, today.
@@ -439,9 +441,9 @@ const Footer: React.FC = () => {
             { icon: 'fa-github', href: '#', label: 'GitHub' },
             { icon: 'fa-instagram', href: '#', label: 'Instagram' }
           ].map((social, i) => (
-            <a 
-              key={i} 
-              href={social.href} 
+            <a
+              key={i}
+              href={social.href}
               className="group flex flex-col items-center space-y-3"
             >
               <div className="w-12 h-12 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-400 group-hover:border-blue-600 group-hover:text-blue-600 dark:group-hover:border-blue-500 dark:group-hover:text-blue-500 transition-all duration-300 group-hover:shadow-xl group-hover:shadow-blue-500/10">
@@ -452,7 +454,7 @@ const Footer: React.FC = () => {
           ))}
         </div>
       </div>
-      
+
       {/* BOTTOM BAR */}
       <div className="max-w-7xl mx-auto mt-24 pt-10 border-t border-gray-100 dark:border-gray-900 flex flex-col md:flex-row items-center justify-between text-[11px] text-gray-400 font-bold uppercase tracking-[0.2em] space-y-6 md:space-y-0">
         <p>&copy; 2024 Kytriq Technologies. All Rights Reserved.</p>

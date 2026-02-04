@@ -3,6 +3,8 @@ import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { gsap } from 'gsap';
 
+import logo from '../assets/logo.png';
+
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDark, setIsDark] = useState(document.documentElement.classList.contains('dark'));
@@ -153,11 +155,12 @@ const Navbar: React.FC = () => {
   return (
     <nav ref={navRef} className="fixed top-0 left-0 right-0 z-50 glass-nav transition-colors duration-500">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <Link to="/" className="flex items-center space-x-2 group magnetic-area nav-item">
-          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:rotate-12 group-hover:bg-blue-500 transition-all duration-300">
-            <span className="text-white font-bold text-xl">K</span>
-          </div>
-          <span className="text-2xl font-heading font-bold tracking-tight text-gray-900 dark:text-white">Kytriq</span>
+        <Link to="/" className="flex items-center group magnetic-area nav-item">
+          <img
+            src={logo}
+            alt="Kytriq Logo"
+            className="h-10 md:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+          />
         </Link>
 
         {/* Desktop Menu */}

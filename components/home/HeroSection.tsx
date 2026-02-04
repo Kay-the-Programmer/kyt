@@ -1,4 +1,5 @@
 import React, { useRef, useLayoutEffect } from 'react';
+import logo from '../../assets/logo.png';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -51,7 +52,7 @@ const HeroSection: React.FC = () => {
 
         <div className="hero-btns opacity-0 translate-y-4 mt-10 magnetic-area md:mt-12 lg:mt-16 flex flex-col sm:flex-row items-center justify-center space-y-6 sm:space-y-0 sm:space-x-8 lg:space-x-12">
           <Link to="/contact" className="group relative overflow-hidden inline-block w-full sm:w-auto px-10 md:px-16 py-4 md:py-5 bg-blue-600 text-white rounded-full font-bold transition-all duration-700 text-center shadow-xl shadow-blue-500/20">
-            <span className="relative z-10 text-lg">Initiate Inquiry</span>
+            <span className="relative z-10 text-lg">Let's Build Together</span>
             <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-in-out"></div>
           </Link>
 

@@ -1,8 +1,9 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useLayoutEffect, useRef } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { gsap } from 'gsap';
 import Footer from '../components/Footer';
+import SplitText from '../components/SplitText';
 
 const Contact: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -14,28 +15,33 @@ const Contact: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
-  
+
   const headerRef = useRef<HTMLHeadingElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     // Header Reveal
+    // Use .to() instead of .from() to avoid initial state locking issues
     if (headerRef.current) {
-      gsap.from(headerRef.current.querySelectorAll('.char'), {
-        y: 100,
-        opacity: 0,
-        rotate: 10,
+      const chars = headerRef.current.querySelectorAll('.letter-reveal');
+      gsap.set(chars, { y: 100, opacity: 0, rotate: 10 });
+      gsap.to(chars, {
+        y: 0,
+        opacity: 1,
+        rotate: 0,
         duration: 1,
         stagger: 0.03,
+        delay: 1.2, // Wait for TransitionOverlay
         ease: 'power4.out'
       });
     }
 
-    gsap.from(formRef.current, {
-      opacity: 0,
-      y: 40,
+    gsap.set(formRef.current, { opacity: 0, y: 40 });
+    gsap.to(formRef.current, {
+      opacity: 1,
+      y: 0,
       duration: 1.2,
-      delay: 0.5,
+      delay: 1.4,
       ease: 'power3.out'
     });
   }, []);
@@ -43,10 +49,11 @@ const Contact: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+
     // Simulate API call for contact form
     setTimeout(() => {
       setLoading(false);
+      console.log('Form Submission:', JSON.stringify(formData, null, 2)); // Log data for debugging
       setStatus({ type: 'success', message: 'Thank you for your message. We will be in touch shortly!' });
       setFormData({ name: '', email: '', subject: '', message: '' });
     }, 1500);
@@ -65,23 +72,20 @@ const Contact: React.FC = () => {
         }
       });
       setFormData(prev => ({ ...prev, message: response.text || '' }));
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setStatus({
+        type: 'error',
+        message: 'AI Service Temporarily Unavailable. Please write your message manually.'
+      });
+      // Clear error after 5 seconds
+      setTimeout(() => setStatus(null), 5000);
     } finally {
       setAiLoading(false);
     }
   };
 
-  // Utility to split text into characters
-  const SplitText = ({ text }: { text: string }) => {
-    return (
-      <>
-        {text.split('').map((char, i) => (
-          <span key={i} className="char inline-block">{char === ' ' ? '\u00A0' : char}</span>
-        ))}
-      </>
-    );
-  };
+
 
   return (
     <div className="min-h-screen pt-32 md:pt-40 pb-20 bg-white dark:bg-brand-dark transition-colors duration-300 overflow-hidden relative">
@@ -91,8 +95,9 @@ const Contact: React.FC = () => {
 
       <div className="max-w-7xl mx-auto relative z-10 mb-20">
         <header className="mb-16 md:mb-20 px-6">
-          <h1 ref={headerRef} className="text-5xl md:text-[6rem] font-heading font-extrabold mb-6 md:mb-8 tracking-tighter text-gray-900 dark:text-white leading-none overflow-hidden">
-            <SplitText text="Let's " /> <span className="gradient-text"><SplitText text="Talk." /></span>
+          {/* Removed overflow-hidden to ensure animated chars are visible */}
+          <h1 ref={headerRef} className="text-5xl md:text-[6rem] font-heading font-extrabold mb-6 md:mb-8 tracking-tighter text-gray-900 dark:text-white leading-none">
+            <SplitText text="Let's " /> <SplitText text="Talk." isGradient={true} className="inline-block" />
           </h1>
           <p className="text-gray-500 dark:text-gray-400 text-lg md:text-xl max-w-2xl font-light leading-relaxed">
             Whether you have a specific project in mind or just want to explore how AI can help your business, we're here to help.
@@ -106,7 +111,7 @@ const Contact: React.FC = () => {
               <div className={`p-8 rounded-3xl text-center ${status.type === 'success' ? 'bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400' : 'bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400'}`}>
                 <i className={`fa-solid ${status.type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'} text-4xl mb-4`}></i>
                 <p className="text-lg font-bold">{status.message}</p>
-                <button 
+                <button
                   onClick={() => setStatus(null)}
                   className="mt-6 text-sm font-bold underline hover:no-underline"
                 >
@@ -118,50 +123,51 @@ const Contact: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Name</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       required
                       value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white focus:border-blue-500 outline-none transition-colors"
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white focus:border-blue-500 outline-none transition-colors"
                       placeholder="John Doe"
                     />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Email</label>
-                    <input 
-                      type="email" 
+                    <input
+                      type="email"
                       required
                       value={formData.email}
-                      onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white focus:border-blue-500 outline-none transition-colors"
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white focus:border-blue-500 outline-none transition-colors"
                       placeholder="john@example.com"
                     />
                   </div>
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Subject</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     required
                     value={formData.subject}
-                    onChange={(e) => setFormData({...formData, subject: e.target.value})}
-                    className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white focus:border-blue-500 outline-none transition-colors"
+                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                    className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white focus:border-blue-500 outline-none transition-colors"
                     placeholder="Project Inquiry"
                   />
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Message</label>
-                  <textarea 
+                  <textarea
                     rows={5}
                     required
                     value={formData.message}
-                    onChange={(e) => setFormData({...formData, message: e.target.value})}
-                    className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white focus:border-blue-500 outline-none transition-colors resize-none"
-                    placeholder="Tell us about your project..."
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white focus:border-blue-500 outline-none transition-colors resize-none"
+                    placeholder="Tell us about your project... (min 10 characters)"
+                    minLength={10}
                   />
                 </div>
-                <button 
+                <button
                   type="submit"
                   disabled={loading}
                   className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/20"
@@ -199,7 +205,7 @@ const Contact: React.FC = () => {
                     "Custom Mobile App",
                     "Cloud Architecture"
                   ].map(q => (
-                    <button 
+                    <button
                       key={q}
                       onClick={() => getAiHelp(q)}
                       disabled={aiLoading}
@@ -214,18 +220,18 @@ const Contact: React.FC = () => {
               <div>
                 <h3 className="text-xl md:text-2xl font-heading font-bold mb-6 md:mb-8 text-gray-900 dark:text-white">Contact Info</h3>
                 <div className="space-y-6">
-                   <div className="flex items-center space-x-4 group cursor-pointer">
-                      <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-50 dark:bg-gray-900 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-500 border border-gray-100 dark:border-gray-800 shadow-sm shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                        <i className="fa-solid fa-location-dot text-sm"></i>
-                      </div>
-                      <p className="text-gray-500 dark:text-gray-400 text-sm group-hover:text-blue-600 transition-colors">Tech Hub Central, Palo Alto, CA</p>
-                   </div>
-                   <div className="flex items-center space-x-4 group cursor-pointer">
-                      <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-50 dark:bg-gray-900 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-500 border border-gray-100 dark:border-gray-800 shadow-sm shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                        <i className="fa-solid fa-envelope text-sm"></i>
-                      </div>
-                      <p className="text-gray-500 dark:text-gray-400 text-sm group-hover:text-blue-600 transition-colors">hello@kytriq.com</p>
-                   </div>
+                  <div className="flex items-center space-x-4 group cursor-pointer">
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-50 dark:bg-gray-900 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-500 border border-gray-100 dark:border-gray-800 shadow-sm shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                      <i className="fa-solid fa-location-dot text-sm"></i>
+                    </div>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm group-hover:text-blue-600 transition-colors">Tech Hub Central, Palo Alto, CA</p>
+                  </div>
+                  <div className="flex items-center space-x-4 group cursor-pointer">
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-50 dark:bg-gray-900 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-500 border border-gray-100 dark:border-gray-800 shadow-sm shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                      <i className="fa-solid fa-envelope text-sm"></i>
+                    </div>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm group-hover:text-blue-600 transition-colors">hello@kytriq.com</p>
+                  </div>
                 </div>
               </div>
             </div>

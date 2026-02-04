@@ -43,18 +43,18 @@ const Navbar: React.FC = () => {
     const ctx = gsap.context(() => {
       // Setup Mobile Menu
       mobileMenuTl.current = gsap.timeline({ paused: true })
-        .fromTo(mobileMenuRef.current, 
-          { 
-            autoAlpha: 0, 
-            y: -20, 
-            clipPath: 'inset(0% 0% 100% 0%)' 
-          }, 
-          { 
-            autoAlpha: 1, 
-            y: 0, 
+        .fromTo(mobileMenuRef.current,
+          {
+            autoAlpha: 0,
+            y: -20,
+            clipPath: 'inset(0% 0% 100% 0%)'
+          },
+          {
+            autoAlpha: 1,
+            y: 0,
             clipPath: 'inset(0% 0% 0% 0%)',
-            duration: 0.6, 
-            ease: 'expo.out' 
+            duration: 0.6,
+            ease: 'expo.out'
           }
         )
         .from('.mobile-nav-item', {
@@ -97,17 +97,17 @@ const Navbar: React.FC = () => {
       const m = magnet as HTMLElement;
       if (window.innerWidth < 1024) return;
 
-      const xTo = gsap.quickTo(m, "x", {duration: 0.3, ease: "power3"}),
-            yTo = gsap.quickTo(m, "y", {duration: 0.3, ease: "power3"});
+      const xTo = gsap.quickTo(m, "x", { duration: 0.3, ease: "power3" }),
+        yTo = gsap.quickTo(m, "y", { duration: 0.3, ease: "power3" });
 
       const handleMove = (e: MouseEvent) => {
-        const {left, top, width, height} = m.getBoundingClientRect();
+        const { left, top, width, height } = m.getBoundingClientRect();
         const x = e.clientX - (left + width / 2);
         const y = e.clientY - (top + height / 2);
         xTo(x * 0.35);
         yTo(y * 0.35);
       };
-      
+
       const handleLeave = () => {
         xTo(0);
         yTo(0);
@@ -166,27 +166,30 @@ const Navbar: React.FC = () => {
             <Link
               key={link.name}
               to={link.path}
-              className={`nav-item text-sm font-medium tracking-wide transition-colors ${
-                isActive(link.path) ? 'text-blue-600 font-bold' : 'text-gray-500 dark:text-gray-400 hover:text-blue-500'
-              }`}
+              className={`nav-item text-sm font-medium tracking-wide transition-colors ${isActive(link.path) ? 'text-blue-600 font-bold' : 'text-gray-500 dark:text-gray-400 hover:text-blue-500'
+                }`}
             >
               {link.name}
             </Link>
           ))}
-          <button 
-            ref={themeBtnRef}
-            onClick={toggleTheme}
-            className="nav-item magnetic-area w-10 h-10 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-blue-500 hover:text-blue-500 transition-all"
-            aria-label="Toggle Theme"
-          >
-            <i className={`fa-solid ${isDark ? 'fa-sun' : 'fa-moon'}`}></i>
-          </button>
-          <Link
-            to="/contact"
-            className="nav-item magnetic-area bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-full text-sm font-semibold transition-all shadow-lg shadow-blue-500/20"
-          >
-            Get Started
-          </Link>
+          <span className="nav-item">
+            <button
+              ref={themeBtnRef}
+              onClick={toggleTheme}
+              className="magnetic-area w-10 h-10 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-blue-500 hover:text-blue-500 transition-all"
+              aria-label="Toggle Theme"
+            >
+              <i className={`fa-solid ${isDark ? 'fa-sun' : 'fa-moon'}`}></i>
+            </button>
+          </span>
+          <span className="nav-item">
+            <Link
+              to="/contact"
+              className="magnetic-area bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-full text-sm font-semibold transition-all shadow-lg shadow-blue-500/20 block"
+            >
+              Get Started
+            </Link>
+          </span>
         </div>
 
         {/* Mobile Toggle */}
@@ -204,7 +207,7 @@ const Navbar: React.FC = () => {
       </div>
 
       {/* Mobile Menu Overlay */}
-      <div 
+      <div
         ref={mobileMenuRef}
         className="md:hidden absolute top-20 left-0 right-0 bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800 p-8 flex flex-col space-y-6 shadow-2xl invisible pointer-events-none"
         style={{ pointerEvents: isOpen ? 'auto' : 'none' }}
@@ -214,9 +217,8 @@ const Navbar: React.FC = () => {
             key={link.name}
             to={link.path}
             onClick={() => setIsOpen(false)}
-            className={`mobile-nav-item text-2xl font-heading font-bold transition-all ${
-              isActive(link.path) ? 'text-blue-600' : 'text-gray-600 dark:text-gray-400'
-            }`}
+            className={`mobile-nav-item text-2xl font-heading font-bold transition-all ${isActive(link.path) ? 'text-blue-600' : 'text-gray-600 dark:text-gray-400'
+              }`}
           >
             {link.name}
           </Link>

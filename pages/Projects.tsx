@@ -331,7 +331,7 @@ const Projects: React.FC = () => {
             onClick={() => navigate('/contact')}
             className="magnetic-area px-24 py-10 bg-emerald-600 text-white rounded-full font-black text-2xl shadow-3xl shadow-emerald-600/40 hover:scale-105 transition-all inline-block active:scale-95"
           >
-            INITIATE DEPLOYMENT
+            LET'S WORK TOGETHER
           </button>
         </section>
       </div>

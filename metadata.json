@@ -1,0 +1,8 @@
+{
+  "name": "Kytriq Technologies",
+  "description": "A premium, minimalistic corporate website for Kytriq Technologies, a software development company focused on intelligent systems and AI-powered solutions.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

@@ -68,7 +68,6 @@ const Footer: React.FC = memo(() => {
     handleResize();
 
     const isMobile = window.innerWidth < 768;
-    // const brandText = "KYTRIQ TECHNOLOGIES"; // Removed
     const colors = ['#2563eb', '#3b82f6', '#60a5fa', '#1d4ed8', '#7c3aed']; // Blues & Purples
 
     // Initialize shapes (Random Abstract)
@@ -240,17 +239,17 @@ const Footer: React.FC = memo(() => {
     gsap.ticker.add(physicsUpdate);
 
     const ctxScroll = gsap.context(() => {
-      // Physics Arena Entrance
+      // Coordinated Entrance with CTA Section style
       gsap.from(arenaRef.current, {
         scrollTrigger: {
           trigger: arenaRef.current,
           start: 'top 85%',
         },
-        scale: 0.9,
+        y: 100,
         opacity: 0,
-        y: 50,
+        scale: 0.95,
         duration: 1.2,
-        ease: 'elastic.out(1, 0.7)'
+        ease: 'power3.out'
       });
 
       gsap.from('.footer-identity', {
@@ -261,7 +260,8 @@ const Footer: React.FC = memo(() => {
         y: 50,
         opacity: 0,
         duration: 1.2,
-        ease: 'expo.out',
+        delay: 0.2,
+        ease: 'power3.out',
       });
     });
 
@@ -308,7 +308,7 @@ const Footer: React.FC = memo(() => {
       onTouchEnd={handleGlobalMouseUp}
       onMouseMove={updateMousePosition}
       onTouchMove={updateMousePosition}
-      className="relative bg-gray-50 dark:bg-brand-dark border-t border-gray-100 dark:border-gray-900 pt-0 pb-16 px-6 transition-colors duration-300 overflow-hidden"
+      className="relative bg-white dark:bg-brand-dark pt-0 pb-16 px-6 transition-colors duration-300 overflow-hidden"
     >
 
       {/* INTERACTIVE PHYSICS ARENA */}

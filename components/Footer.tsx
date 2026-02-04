@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, memo } from 'react';
 import logo from '../assets/logo.png';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
@@ -13,10 +13,14 @@ interface Shape {
   vx: number;
   vy: number;
   radius: number;
-  type: 'circle' | 'square';
+  char: string;
   color: string;
   mass: number;
   depth: number;
+  // Target positions for assembly
+  targetX: number;
+  targetY: number;
+  visible: boolean;
 }
 
 interface Particle {
@@ -29,12 +33,19 @@ interface Particle {
   size: number;
 }
 
-const Footer: React.FC = () => {
+type AnimationState = 'SCATTERED' | 'ASSEMBLING' | 'ASSEMBLED' | 'DISSOLVING';
+
+const Footer: React.FC = memo(() => {
   const footerRef = useRef<HTMLElement>(null);
-  const marqueeRef = useRef<HTMLDivElement>(null);
   const arenaRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const [renderedShapes, setRenderedShapes] = useState<Shape[]>([]);
   const shapesRef = useRef<Shape[]>([]);
+  const animationStateRef = useRef<AnimationState>('SCATTERED');
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const shapeElementsRef = useRef<{ [key: number]: HTMLDivElement }>({});
   const particlesRef = useRef<Particle[]>([]);
   const draggedShapeId = useRef<number | null>(null);
   const mousePos = useRef({ x: 0, y: 0 });
@@ -50,39 +61,144 @@ const Footer: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const resizeCanvas = () => {
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = arena.clientWidth * dpr;
-      canvas.height = arena.clientHeight * dpr;
-      ctx.scale(dpr, dpr);
+    let resizeTimeout: NodeJS.Timeout;
+    const handleResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = arena.clientWidth * dpr;
+        canvas.height = arena.clientHeight * dpr;
+        ctx.scale(dpr, dpr);
+      }, 100);
     };
 
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
+    window.addEventListener('resize', handleResize);
+    handleResize();
 
     const isMobile = window.innerWidth < 768;
-    const count = isMobile ? 8 : 16;
+    const brandText = "KYTRIQ TECHNOLOGIES";
     const colors = ['#2563eb', '#3b82f6', '#60a5fa', '#1d4ed8', '#7c3aed'];
 
-    // Initialize shapes
-    const initialShapes: Shape[] = Array.from({ length: count }).map((_, i) => {
-      const radius = isMobile ? 20 + Math.random() * 20 : 30 + Math.random() * 30;
-      return {
-        id: i,
-        x: Math.random() * (arena.clientWidth - radius * 2) + radius,
-        y: Math.random() * (arena.clientHeight - radius * 2) + radius,
-        vx: (Math.random() - 0.5) * 6,
-        vy: (Math.random() - 0.5) * 6,
-        radius,
-        type: Math.random() > 0.4 ? 'circle' : 'square',
-        color: colors[Math.floor(Math.random() * colors.length)],
-        mass: radius / 10,
-        depth: Math.random() * 0.8 + 0.2
-      };
-    });
-    shapesRef.current = initialShapes;
+    // Initialize shapes and cycle
+    if (shapesRef.current.length === 0) {
+      let currentId = 0;
+      // We want to verify layout
+      const width = arena.clientWidth || window.innerWidth;
+      const height = arena.clientHeight || 300;
 
-    // ScrollTrigger to track progress for parallax
+      const letters = brandText.split('').filter(c => c.trim() !== '');
+
+      // Calculate Targets
+      // We'll split "KYTRIQ" and "TECHNOLOGIES" into two lines if needed, or one line
+      // "KYTRIQ TECHNOLOGIES" is long. Two lines feels better for the sphere pack.
+      const line1 = "KYTRIQ";
+      const line2 = "TECHNOLOGIES";
+
+      const radius = isMobile ? 14 : 24; // Slightly smaller for dense packing
+      const spacing = radius * 2.2;
+
+      // Line 1 centering
+      const line1Width = line1.length * spacing;
+      const line1StartX = (width - line1Width) / 2 + radius;
+      const line1Y = height / 2 - radius * 1.5;
+
+      // Line 2 centering
+      const line2Width = line2.length * spacing;
+      const line2StartX = (width - line2Width) / 2 + radius;
+      const line2Y = height / 2 + radius * 1.5;
+
+      const initialShapes: Shape[] = [];
+      let charIndex = 0;
+
+      // Create shapes for Line 1
+      for (let i = 0; i < line1.length; i++) {
+        initialShapes.push(createShape(currentId++, line1[i],
+          line1StartX + i * spacing, line1Y, width, height, radius, colors, charIndex++));
+      }
+
+      // Create shapes for Line 2
+      for (let i = 0; i < line2.length; i++) {
+        initialShapes.push(createShape(currentId++, line2[i],
+          line2StartX + i * spacing, line2Y, width, height, radius, colors, charIndex++));
+      }
+
+      shapesRef.current = initialShapes;
+      setRenderedShapes(initialShapes);
+
+      // Start Animation Cycle
+      startAnimationCycle();
+    }
+
+    function createShape(id: number, char: string, tx: number, ty: number, w: number, h: number, r: number, cols: string[], idx: number): Shape {
+      return {
+        id,
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 10,
+        vy: (Math.random() - 0.5) * 10,
+        radius: r,
+        char,
+        color: cols[idx % cols.length],
+        mass: 1,
+        depth: Math.random() * 0.4 + 0.6,
+        targetX: tx,
+        targetY: ty,
+        visible: true
+      };
+    }
+
+    function startAnimationCycle() {
+      // SCATTERED -> (3s) -> ASSEMBLING -> (4s) -> ASSEMBLED -> (3s) -> DISSOLVING -> (1s) -> SCATTERED
+
+      const nextPhase = () => {
+        const current = animationStateRef.current;
+
+        if (current === 'SCATTERED') {
+          animationStateRef.current = 'ASSEMBLING';
+          timerRef.current = setTimeout(nextPhase, 5000); // Give it time to settle
+        }
+        else if (current === 'ASSEMBLING') {
+          animationStateRef.current = 'ASSEMBLED'; // Strict hold
+          shapesRef.current.forEach(s => { s.vx = 0; s.vy = 0; }); // Verify stop
+          timerRef.current = setTimeout(nextPhase, 3000); // Hold for 3s
+        }
+        else if (current === 'ASSEMBLED') {
+          animationStateRef.current = 'DISSOLVING';
+          // Trigger explosion immediately in update loop
+          timerRef.current = setTimeout(nextPhase, 1500); // Wait for dissolve
+        }
+        else if (current === 'DISSOLVING') {
+          // Reset
+          resetShapes();
+          animationStateRef.current = 'SCATTERED';
+          timerRef.current = setTimeout(nextPhase, 2000); // Stay scattered briefly
+        }
+      };
+
+      timerRef.current = setTimeout(nextPhase, 2000); // Initial delay
+    }
+
+    function resetShapes() {
+      const w = arena.clientWidth;
+      const h = arena.clientHeight;
+      shapesRef.current.forEach(s => {
+        s.visible = true;
+        s.x = Math.random() * w;
+        s.y = Math.random() * h;
+        s.vx = (Math.random() - 0.5) * 15; // Fast re-entry
+        s.vy = (Math.random() - 0.5) * 15;
+
+        // Update DOM visibility immediately
+        const el = shapeElementsRef.current[s.id];
+        if (el) {
+          el.style.opacity = '1';
+          el.style.transform = `scale(0)`; // Grow in
+          gsap.to(el, { scale: 1, duration: 0.5, ease: 'back.out(1.7)' });
+        }
+      });
+    }
+
+    // ScrollTrigger
     const st = ScrollTrigger.create({
       trigger: footerRef.current,
       start: 'top bottom',
@@ -97,8 +213,9 @@ const Footer: React.FC = () => {
       const particles = particlesRef.current;
       const width = arena.clientWidth;
       const height = arena.clientHeight;
+      const state = animationStateRef.current;
 
-      // Update mouse velocity for tossing
+      // Update mouse velocity
       mouseVelocity.current = {
         x: mousePos.current.x - lastMousePos.current.x,
         y: mousePos.current.y - lastMousePos.current.y
@@ -108,29 +225,56 @@ const Footer: React.FC = () => {
       // Clear Canvas
       ctx.clearRect(0, 0, width, height);
 
+      // Handle Dissolve Trigger
+      if (state === 'DISSOLVING') {
+        // If visible, explode and hide
+        shapes.forEach(s => {
+          if (s.visible) {
+            s.visible = false;
+            // Spawn particles
+            for (let k = 0; k < 12; k++) {
+              particles.push({
+                x: s.x + (Math.random() - 0.5) * s.radius,
+                y: s.y + (Math.random() - 0.5) * s.radius,
+                vx: (Math.random() - 0.5) * 5,
+                vy: (Math.random() - 0.5) * 5,
+                life: 1.0,
+                color: s.color,
+                size: Math.random() * 4 + 2
+              });
+            }
+            // Hide DOM
+            const el = shapeElementsRef.current[s.id];
+            if (el) el.style.opacity = '0';
+          }
+        });
+      }
+
       // Update Particles
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.x += p.vx;
         p.y += p.vy;
         p.life -= 0.02;
-        p.size *= 0.96;
+        p.size *= 0.94;
 
         if (p.life <= 0) {
           particles.splice(i, 1);
           continue;
         }
 
-        ctx.globalAlpha = p.life * 0.4;
+        ctx.globalAlpha = p.life;
         ctx.fillStyle = p.color;
         ctx.beginPath();
-        ctx.arc(p.x, p.y + (scrollProgress.current - 0.5) * 100 * 0.5, p.size, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.globalAlpha = 1.0;
 
+      // Update Shapes
       for (let i = 0; i < shapes.length; i++) {
         const s = shapes[i];
+        if (!s.visible) continue;
 
         if (draggedShapeId.current === s.id) {
           s.x = mousePos.current.x;
@@ -138,38 +282,46 @@ const Footer: React.FC = () => {
           s.vx = mouseVelocity.current.x;
           s.vy = mouseVelocity.current.y;
         } else {
-          s.x += s.vx;
-          s.y += s.vy;
 
-          if (s.x - s.radius < 0) { s.x = s.radius; s.vx *= -0.8; }
-          if (s.x + s.radius > width) { s.x = width - s.radius; s.vx *= -0.8; }
-          if (s.y - s.radius < 0) { s.y = s.radius; s.vy *= -0.8; }
-          if (s.y + s.radius > height) { s.y = height - s.radius; s.vy *= -0.8; }
+          if (state === 'ASSEMBLING' || state === 'ASSEMBLED') {
+            // Magnetic pull to target
+            const k = state === 'ASSEMBLED' ? 0.1 : 0.03; // Stiffer when assembled
+            const damp = 0.85;
 
-          s.vx *= 0.985;
-          s.vy *= 0.985;
-        }
+            const ax = (s.targetX - s.x) * k;
+            const ay = (s.targetY - s.y) * k;
 
-        // Spawn particles if moving fast or dragged
-        const speed = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
-        if (speed > 2 || draggedShapeId.current === s.id) {
-          const spawnCount = draggedShapeId.current === s.id ? 2 : Math.min(3, Math.floor(speed / 4));
-          for (let k = 0; k < spawnCount; k++) {
-            particles.push({
-              x: s.x + (Math.random() - 0.5) * s.radius,
-              y: s.y + (Math.random() - 0.5) * s.radius,
-              vx: s.vx * -0.2 + (Math.random() - 0.5) * 1,
-              vy: s.vy * -0.2 + (Math.random() - 0.5) * 1,
-              life: 1.0,
-              color: s.color,
-              size: Math.random() * 4 + 2
-            });
+            s.vx += ax;
+            s.vy += ay;
+            s.vx *= damp;
+            s.vy *= damp;
+          } else {
+            // Scattered Physics
+            s.x += s.vx;
+            s.y += s.vy;
+
+            // Bounce off walls
+            if (s.x - s.radius < 0) { s.x = s.radius; s.vx *= -0.7; }
+            if (s.x + s.radius > width) { s.x = width - s.radius; s.vx *= -0.7; }
+            if (s.y - s.radius < 0) { s.y = s.radius; s.vy *= -0.7; }
+            if (s.y + s.radius > height) { s.y = height - s.radius; s.vy *= -0.7; }
+
+            s.vx *= 0.99;
+            s.vy *= 0.99;
           }
         }
 
-        // Shape collisions
+        // Move position (integrated)
+        if (state !== 'SCATTERED') {
+          s.x += s.vx;
+          s.y += s.vy;
+        }
+
+        // Collisions (Always active so they don't overlap even when assembling)
         for (let j = i + 1; j < shapes.length; j++) {
           const s2 = shapes[j];
+          if (!s2.visible) continue;
+
           const dx = s2.x - s.x;
           const dy = s2.y - s.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
@@ -179,126 +331,52 @@ const Footer: React.FC = () => {
             const angle = Math.atan2(dy, dx);
             const sin = Math.sin(angle);
             const cos = Math.cos(angle);
-
-            const vx1 = s.vx * cos + s.vy * sin;
-            const vy1 = s.vy * cos - s.vx * sin;
-            const vx2 = s2.vx * cos + s2.vy * sin;
-            const vy2 = s2.vy * cos - s2.vx * sin;
-
-            const vTotal = vx1 - vx2;
-            const vx1Final = ((s.mass - s2.mass) * vx1 + 2 * s2.mass * vx2) / (s.mass + s2.mass);
-            const vx2Final = vTotal + vx1Final;
-
-            s.vx = vx1Final * cos - vy1 * sin;
-            s.vy = vy1 * cos + vx1Final * sin;
-            s2.vx = vx2Final * cos - vy2 * sin;
-            s2.vy = vy2 * cos + vx2Final * sin;
-
             const overlap = minDist - dist;
-            const cx = (overlap * cos) / 2;
-            const cy = (overlap * sin) / 2;
+
+            // Push apart proportional to overlap
+            const force = overlap * 0.05; // Soft collision
+
+            const fx = force * cos;
+            const fy = force * sin;
 
             if (draggedShapeId.current !== s.id) {
-              s.x -= cx;
-              s.y -= cy;
+              s.vx -= fx;
+              s.vy -= fy;
             }
             if (draggedShapeId.current !== s2.id) {
-              s2.x += cx;
-              s2.y += cy;
+              s2.vx += fx;
+              s2.vy += fy;
             }
           }
         }
 
-        const el = document.getElementById(`footer-shape-${s.id}`);
+        // Apply transform to DOM
+        const el = shapeElementsRef.current[s.id];
         if (el) {
-          const parallaxY = (scrollProgress.current - 0.5) * 100 * s.depth;
-          el.style.transform = `translate3d(${s.x - s.radius}px, ${s.y - s.radius + parallaxY}px, 0) rotate(${s.x + s.y}deg)`;
+          const parallaxY = (scrollProgress.current - 0.5) * 50 * s.depth;
+          // Less rotation when assembled
+          const rot = (state === 'ASSEMBLED' || state === 'ASSEMBLING') ? s.vx * 1 : s.vx * 2;
+          el.style.transform = `translate3d(${s.x - s.radius}px, ${s.y - s.radius + parallaxY}px, 0) rotate(${rot}deg)`;
         }
       }
     };
 
     gsap.ticker.add(physicsUpdate);
 
-    // Enhanced Marquee Loop & Multi-Responsive Pulse
-    if (marqueeRef.current) {
-      const marqueeContent = marqueeRef.current.querySelector('.marquee-content');
-      const words = marqueeRef.current.querySelectorAll('.marquee-word');
-
-      // Infinite horizontal scroll
-      gsap.to(marqueeContent, {
-        xPercent: -50,
-        repeat: -1,
-        duration: isMobile ? 30 : 60,
-        ease: "none",
-        force3D: true
-      });
-
-      // Subtle breathing pulse effect on individual words
-      const pulseTl = gsap.to(words, {
-        scale: 1.1,
-        duration: 2,
-        repeat: -1,
-        yoyo: true,
-        ease: "sine.inOut",
-        stagger: {
-          each: 0.3,
-          from: "start"
-        }
-      });
-
-      // Responsive Pulse: Speed up and intensify as we scroll through
-      ScrollTrigger.create({
-        trigger: marqueeRef.current,
-        start: "top bottom",
-        end: "bottom top",
-        onUpdate: (self) => {
-          gsap.to(pulseTl, {
-            timeScale: 1 + self.progress * 2.5,
-            duration: 0.4,
-            ease: "power2.out"
-          });
-        }
-      });
-
-      // User Interaction: Pronounced Hover scaling and active pulse
-      words.forEach(word => {
-        const w = word as HTMLElement;
-        let hoverPulse: gsap.core.Tween | null = null;
-
-        w.addEventListener('mouseenter', () => {
-          // Stop global pulse for this word momentarily
-          gsap.killTweensOf(w, 'scale');
-
-          // Trigger faster, significantly higher scale pulse on hover for extreme "pronounced" effect
-          hoverPulse = gsap.fromTo(w,
-            { scale: 1.9, filter: 'brightness(2.0) drop-shadow(0 0 40px rgba(37, 99, 235, 0.6))' },
-            {
-              scale: 2.1,
-              filter: 'brightness(2.5) drop-shadow(0 0 60px rgba(37, 99, 235, 0.8))',
-              duration: 0.2,
-              repeat: -1,
-              yoyo: true,
-              ease: "sine.inOut"
-            }
-          );
-        });
-
-        w.addEventListener('mouseleave', () => {
-          if (hoverPulse) {
-            hoverPulse.kill();
-          }
-
-          gsap.to(w, {
-            scale: 1.0,
-            filter: 'brightness(1.0) drop-shadow(0 0 0px rgba(37, 99, 235, 0))',
-            duration: 1.0,
-            ease: "power4.out"
-          });
-        });
-      });
-    }
-
     const ctxScroll = gsap.context(() => {
+      // Entrance
+      gsap.from(arenaRef.current, {
+        scrollTrigger: {
+          trigger: arenaRef.current,
+          start: 'top 85%',
+        },
+        scale: 0.9,
+        opacity: 0,
+        y: 50,
+        duration: 1.2,
+        ease: 'elastic.out(1, 0.7)'
+      });
+
       gsap.from('.footer-identity', {
         scrollTrigger: {
           trigger: footerRef.current,
@@ -313,7 +391,9 @@ const Footer: React.FC = () => {
 
     return () => {
       gsap.ticker.remove(physicsUpdate);
-      window.removeEventListener('resize', resizeCanvas);
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(resizeTimeout);
+      if (timerRef.current) clearTimeout(timerRef.current);
       st.kill();
       ctxScroll.revert();
     };
@@ -325,8 +405,8 @@ const Footer: React.FC = () => {
 
     const shape = shapesRef.current.find(s => s.id === id);
     if (shape) {
-      shape.vx = (Math.random() - 0.5) * 20;
-      shape.vy = (Math.random() - 0.5) * 20;
+      shape.vx = 0;
+      shape.vy = 0;
     }
   };
 
@@ -356,35 +436,16 @@ const Footer: React.FC = () => {
       className="relative bg-gray-50 dark:bg-brand-dark border-t border-gray-100 dark:border-gray-900 pt-0 pb-16 px-6 transition-colors duration-300 overflow-hidden"
     >
 
-      {/* HUGE TEXT MARQUEE */}
-      <div ref={marqueeRef} className="w-full py-16 md:py-32 border-b border-gray-100 dark:border-gray-900 overflow-hidden select-none">
-        <div className="marquee-content flex whitespace-nowrap will-change-transform">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex items-center">
-              <span className="marquee-word animated-gradient-text inline-block text-7xl md:text-[15rem] font-heading font-black tracking-tighter uppercase mr-16 transition-all duration-1000 cursor-default">
-                Kytriq Technologies
-              </span>
-              <span
-                className="marquee-word inline-block text-7xl md:text-[15rem] font-heading font-black tracking-tighter text-transparent uppercase mr-16 transition-all duration-1000 cursor-default"
-                style={{ WebkitTextStroke: '2px rgba(37, 99, 235, 0.2)' }}
-              >
-                Kytriq Technologies
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* INTERACTIVE PHYSICS ARENA */}
       <div className="max-w-7xl mx-auto my-16 md:my-24">
         <div className="flex items-center space-x-4 mb-10">
           <div className="h-px w-10 bg-blue-600"></div>
-          <span className="text-[10px] font-black uppercase tracking-[0.6em] text-blue-600">Digital Playground</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.6em] text-blue-600">Interact</span>
         </div>
 
         <div
           ref={arenaRef}
-          className="relative w-full h-[350px] md:h-[500px] rounded-[3rem] border border-gray-100 dark:border-gray-800 bg-white/50 dark:bg-gray-950/30 overflow-hidden group cursor-crosshair backdrop-blur-sm"
+          className="relative w-full h-[400px] md:h-[600px] rounded-[3rem] border border-gray-100 dark:border-gray-800 bg-white/50 dark:bg-gray-950/30 overflow-hidden group cursor-crosshair backdrop-blur-sm shadow-2xl shadow-blue-900/5 transition-all duration-300"
         >
           {/* TRAIL CANVAS */}
           <canvas
@@ -393,30 +454,32 @@ const Footer: React.FC = () => {
             style={{ width: '100%', height: '100%' }}
           />
 
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-40 transition-opacity duration-1000 pointer-events-none select-none">
-            <span className="text-[10px] md:text-xs font-black uppercase tracking-[1em] text-blue-600">Grab & Toss Objects</span>
+          <div className="absolute inset-x-0 bottom-10 flex items-center justify-center opacity-40 pointer-events-none select-none">
+            <span className="text-[9px] font-bold uppercase tracking-[0.4em] text-blue-400">Watch & Play</span>
           </div>
 
-          {shapesRef.current.map((s) => (
+          {renderedShapes.map((s) => (
             <div
               key={s.id}
-              id={`footer-shape-${s.id}`}
+              ref={(el) => { if (el) shapeElementsRef.current[s.id] = el; }}
               onMouseDown={(e) => handleMouseDown(e, s.id)}
               onTouchStart={(e) => handleMouseDown(e, s.id)}
-              className={`absolute pointer-events-auto z-10 transition-shadow duration-300 active:scale-110 hover:shadow-[0_0_40px_rgba(37,99,235,0.3)] ${s.type === 'circle' ? 'rounded-full' : 'rounded-2xl'}`}
+              className="absolute pointer-events-auto z-10 transition-shadow duration-300 active:scale-110 hover:shadow-[0_0_30px_rgba(37,99,235,0.4)] rounded-full flex items-center justify-center select-none"
               style={{
                 width: s.radius * 2,
                 height: s.radius * 2,
                 backgroundColor: s.color,
-                opacity: 0.9,
-                border: '1px solid rgba(255,255,255,0.2)',
+                color: '#ffffff',
+                border: '2px solid rgba(255,255,255,0.3)',
                 willChange: 'transform',
-                boxShadow: 'inset 0 0 20px rgba(255,255,255,0.1)'
+                boxShadow: 'inset 0 2px 10px rgba(255,255,255,0.3), 0 5px 15px rgba(0,0,0,0.1)',
+                fontSize: s.radius * 1.0 + 'px',
+                fontWeight: 900,
+                fontFamily: 'var(--font-heading, sans-serif)',
+                textShadow: '0 2px 4px rgba(0,0,0,0.2)'
               }}
             >
-              <div className="absolute inset-0 flex items-center justify-center opacity-20">
-                <div className={`w-1/2 h-1/2 border border-white ${s.type === 'circle' ? 'rounded-full' : 'rounded-lg'}`}></div>
-              </div>
+              {s.char}
             </div>
           ))}
         </div>
@@ -444,6 +507,7 @@ const Footer: React.FC = () => {
             <a
               key={i}
               href={social.href}
+              onClick={(e) => social.href === '#' && e.preventDefault()}
               className="group flex flex-col items-center space-y-3"
             >
               <div className="w-12 h-12 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-400 group-hover:border-blue-600 group-hover:text-blue-600 dark:group-hover:border-blue-500 dark:group-hover:text-blue-500 transition-all duration-300 group-hover:shadow-xl group-hover:shadow-blue-500/10">
@@ -464,6 +528,6 @@ const Footer: React.FC = () => {
       </div>
     </footer>
   );
-};
+});
 
 export default Footer;

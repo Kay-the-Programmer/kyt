@@ -97,8 +97,11 @@ const TransitionOverlay = ({ isPageTransition }: { isPageTransition: boolean }) 
 };
 
 const Preloader = () => (
-  <div id="preloader" className="fixed inset-0 bg-brand-dark z-[10000] flex flex-col items-center justify-center overflow-hidden">
-    <div className="relative flex flex-col items-center">
+  <div id="preloader" className="fixed inset-0 bg-brand-dark z-[10000] flex flex-col items-center justify-center overflow-hidden" style={{ willChange: 'clip-path, transform, opacity' }}>
+    <div className="preloader-content relative flex flex-col items-center" style={{ willChange: 'transform, opacity, filter' }}>
+      {/* Ambient glow behind logo */}
+      <div className="preloader-glow absolute w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none"></div>
+
       <div className="preloader-circle w-48 h-48 border border-blue-500/20 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
       <div className="preloader-circle-inner w-32 h-32 border border-blue-500/40 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
 
@@ -181,21 +184,65 @@ const AppContent: React.FC = () => {
 
     const tl = gsap.timeline();
 
-    tl.set('.preloader-char', { y: 100, opacity: 0 })
+    tl.set('.preloader-char', { y: 100, opacity: 0, scale: 0.8 })
+      .set('.preloader-glow', { scale: 0.5, opacity: 0 })
+      // Glow appears first
+      .to('.preloader-glow', {
+        scale: 1,
+        opacity: 1,
+        duration: 0.8,
+        ease: 'power2.out'
+      })
+      // Characters animate in with bounce
       .to('.preloader-char', {
         y: 0,
         opacity: 1,
-        duration: 1.2,
-        stagger: 0.08,
-        ease: 'expo.out'
-      })
-      .to('.preloader-progress', { width: '100%', duration: 1.5, ease: 'power2.inOut' }, '-=0.5')
+        scale: 1,
+        duration: 1,
+        stagger: 0.06,
+        ease: 'back.out(1.4)'
+      }, '-=0.4')
+      // Circles pulse
+      .to('.preloader-circle', {
+        scale: 1.1,
+        opacity: 0.4,
+        duration: 0.6,
+        ease: 'power2.inOut',
+        yoyo: true,
+        repeat: 1
+      }, '-=0.8')
+      .to('.preloader-circle-inner', {
+        scale: 1.15,
+        opacity: 0.6,
+        duration: 0.5,
+        ease: 'power2.inOut',
+        yoyo: true,
+        repeat: 1
+      }, '-=1.1')
+      // Progress bar fills
+      .to('.preloader-progress', { width: '100%', duration: 1.2, ease: 'power2.inOut' }, '-=0.6')
       .call(() => setIsLoading(false))
+      // Content fades and scales slightly before clip-path
+      .to('.preloader-content', {
+        scale: 0.95,
+        opacity: 0.8,
+        filter: 'blur(4px)',
+        duration: 0.3,
+        ease: 'power2.in'
+      })
+      // Glow expands outward
+      .to('.preloader-glow', {
+        scale: 2.5,
+        opacity: 0,
+        duration: 0.8,
+        ease: 'power2.out'
+      }, '-=0.2')
+      // Circle reveal with faster timing
       .to('#preloader', {
         clipPath: 'circle(0% at 50% 50%)',
-        duration: 1.2,
+        duration: 0.9,
         ease: 'expo.inOut'
-      });
+      }, '-=0.6');
 
     return () => {
       window.removeEventListener('mousemove', moveCursor);

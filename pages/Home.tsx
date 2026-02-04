@@ -38,27 +38,36 @@ const Home: React.FC = () => {
       window.addEventListener('mousemove', handleMouseMove);
 
       // Hero Entrance Sequence
-      // If it's a page transition, wait 0.8s for the curtain. If initial load, sync with preloader exit (1.2s delay).
-      const tl = gsap.timeline({ delay: isPageTransition ? 0.8 : 1.2 });
-      tl.fromTo('.hero-section .letter-reveal',
-        {
-          y: 100,
-          opacity: 0,
-          filter: 'blur(20px)'
-        },
-        {
-          y: 0,
-          opacity: 1,
-          scale: 1,
-          filter: 'blur(0px)',
-          stagger: 0.02,
-          duration: 1,
-          ease: 'power4.out',
-        }
+      // Optimized timing: page transition waits for curtain (0.8s), initial load syncs with preloader exit (0.8s faster)
+      const tl = gsap.timeline({ delay: isPageTransition ? 0.8 : 0.6 });
+
+      // Background glows fade in first for a warm welcome
+      tl.fromTo('.hero-bg-glow',
+        { opacity: 0, scale: 0.8 },
+        { opacity: 1, scale: 1, duration: 1.2, stagger: 0.2, ease: 'power2.out' }
       )
-        .to('.hero-badge', { y: 0, opacity: 1, duration: 0.8 }, '-=0.8')
-        .to('.hero-desc', { opacity: 1, y: 0, duration: 1 }, '-=0.6')
-        .to('.hero-btns', { y: 0, opacity: 1, duration: 0.8 }, '-=0.5')
+        // Title letters reveal with bounce
+        .fromTo('.hero-section .letter-reveal',
+          {
+            y: 80,
+            opacity: 0,
+            scale: 0.9,
+            filter: 'blur(15px)'
+          },
+          {
+            y: 0,
+            opacity: 1,
+            scale: 1,
+            filter: 'blur(0px)',
+            stagger: 0.025,
+            duration: 0.9,
+            ease: 'back.out(1.2)',
+          },
+          '-=0.8'
+        )
+        .to('.hero-badge', { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out' }, '-=0.6')
+        .to('.hero-desc', { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' }, '-=0.5')
+        .to('.hero-btns', { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out' }, '-=0.4')
         .call(() => setIsIntroComplete(true)); // Defer loading heavy sections until hero is stable
 
       // Global Reveal orchestration

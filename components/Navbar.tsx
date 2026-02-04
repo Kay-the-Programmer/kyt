@@ -201,7 +201,10 @@ const Navbar: React.FC = () => {
       <div
         className={`md:hidden absolute top-20 left-0 right-0 bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800 p-8 flex flex-col space-y-6 shadow-2xl transition-all duration-300 ease-out ${isOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-4'
           }`}
-        style={{ pointerEvents: isOpen ? 'auto' : 'none' }}
+        style={{
+          pointerEvents: isOpen ? 'auto' : 'none',
+          display: isOpen ? 'flex' : 'none'
+        }}
       >
         {navLinks.map((link) => (
           <Link

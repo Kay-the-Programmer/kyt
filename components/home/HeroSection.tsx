@@ -39,43 +39,6 @@ const HeroSection: React.FC = () => {
         y: -80, // Move up to create "rising" handoff
         ease: 'none'
       });
-
-      // Parallax effect for individual elements
-      gsap.to('.hero-badge', {
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top top',
-          end: 'bottom 60%',
-          scrub: 0.5
-        },
-        y: -60,
-        opacity: 0,
-        ease: 'none'
-      });
-
-      gsap.to('.hero-desc', {
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top top',
-          end: 'bottom 65%',
-          scrub: 0.6
-        },
-        y: -40,
-        opacity: 0,
-        ease: 'none'
-      });
-
-      gsap.to('.hero-btns', {
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top top',
-          end: 'bottom 70%',
-          scrub: 0.7
-        },
-        y: -30,
-        opacity: 0,
-        ease: 'none'
-      });
     }, sectionRef);
 
     return () => ctx.revert();

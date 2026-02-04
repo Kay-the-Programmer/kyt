@@ -213,6 +213,41 @@ const IdentitySection: React.FC = () => {
         }
       );
 
+      // Cinematic exit animation - handoff to PortfolioScroll
+      const contentWrapper = sectionRef.current?.querySelector('.max-w-7xl');
+      if (contentWrapper) {
+        gsap.to(contentWrapper, {
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'bottom 80%',
+            end: 'bottom 20%',
+            scrub: 0.6,
+            onUpdate: (self) => {
+              // Progressive blur for depth effect
+              const blur = self.progress * 12;
+              (contentWrapper as HTMLElement).style.filter = `blur(${blur}px)`;
+            }
+          },
+          opacity: 0,
+          scale: 0.94,
+          y: -60,
+          ease: 'none'
+        });
+      }
+
+      // Parallax background exit
+      gsap.to('.identity-parallax-bg', {
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: 'center center',
+          end: 'bottom top',
+          scrub: true
+        },
+        y: -300,
+        opacity: 0,
+        ease: 'none'
+      });
+
     }, sectionRef);
 
     return () => ctx.revert();

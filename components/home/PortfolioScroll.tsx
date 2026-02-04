@@ -63,6 +63,45 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
     });
 
     const ctx = gsap.context(() => {
+      // Section entrance - smooth emergence coordinated with IdentitySection exit
+      const sectionEl = container.closest('section') || container;
+      gsap.fromTo(sectionEl,
+        {
+          opacity: 0.3,
+          y: 80
+        },
+        {
+          opacity: 1,
+          y: 0,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: container,
+            start: 'top 90%',
+            end: 'top 50%',
+            scrub: 0.5
+          }
+        }
+      );
+
+      // First panel content pre-reveal (creates anticipation)
+      gsap.fromTo('.salepilot-title',
+        {
+          opacity: 0,
+          x: -50
+        },
+        {
+          opacity: 1,
+          x: 0,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: container,
+            start: 'top 70%',
+            end: 'top 40%',
+            scrub: 0.6
+          }
+        }
+      );
+
       // 1. Horizontal Scroll with Enhanced Animations (Desktop Only)
       const mm = gsap.matchMedia();
       mm.add("(min-width: 1024px)", () => {
@@ -587,7 +626,7 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
         <i className="fa-solid fa-arrow-right text-blue-600" />
       </div>
 
-      <section className="relative z-10 bg-gray-50 dark:bg-brand-dark transition-colors duration-500 overflow-hidden lg:overflow-visible">
+      <section className="portfolio-entrance relative z-10 bg-gray-50 dark:bg-brand-dark transition-colors duration-500 overflow-hidden lg:overflow-visible" style={{ willChange: 'transform, opacity' }}>
         {/* Progress Bar (Global) */}
         <div ref={progressBarRef} className="fixed bottom-0 left-0 h-1.5 w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 origin-left scale-x-0 z-[80] hidden lg:block opacity-60 shadow-[0_0_20px_rgba(59,130,246,0.5)]"></div>
 

@@ -13,8 +13,6 @@ const Navbar: React.FC = () => {
   const location = useLocation();
   const navRef = useRef<HTMLElement>(null);
   const themeBtnRef = useRef<HTMLButtonElement>(null);
-  const mobileMenuRef = useRef<HTMLDivElement>(null);
-  const mobileMenuTl = useRef<gsap.core.Timeline | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -43,30 +41,6 @@ const Navbar: React.FC = () => {
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      // Setup Mobile Menu
-      mobileMenuTl.current = gsap.timeline({ paused: true })
-        .fromTo(mobileMenuRef.current,
-          {
-            autoAlpha: 0,
-            y: -20,
-            clipPath: 'inset(0% 0% 100% 0%)'
-          },
-          {
-            autoAlpha: 1,
-            y: 0,
-            clipPath: 'inset(0% 0% 0% 0%)',
-            duration: 0.6,
-            ease: 'expo.out'
-          }
-        )
-        .from('.mobile-nav-item', {
-          y: 20,
-          opacity: 0,
-          stagger: 0.05,
-          duration: 0.4,
-          ease: 'power3.out'
-        }, "-=0.4");
-
       // Initial Entrance for Desktop - Using .from() for safety
       gsap.from('.nav-item', {
         y: -20,
@@ -79,14 +53,6 @@ const Navbar: React.FC = () => {
     });
     return () => ctx.revert();
   }, []);
-
-  useEffect(() => {
-    if (isOpen) {
-      mobileMenuTl.current?.play();
-    } else {
-      mobileMenuTl.current?.reverse();
-    }
-  }, [isOpen]);
 
   useEffect(() => {
     // Initial sync of theme state
@@ -233,7 +199,6 @@ const Navbar: React.FC = () => {
 
       {/* Mobile Menu Overlay */}
       <div
-        ref={mobileMenuRef}
         className={`md:hidden absolute top-20 left-0 right-0 bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800 p-8 flex flex-col space-y-6 shadow-2xl transition-all duration-300 ease-out ${isOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-4'
           }`}
         style={{ pointerEvents: isOpen ? 'auto' : 'none' }}

@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState, useRef, useLayoutEffect } from 'react';
+import { TransitionContext } from './TransitionContext';
 import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import AiAssistant from './components/AiAssistant';
@@ -55,14 +56,13 @@ const ScrollToTop = () => {
 /**
  * TransitionOverlay handles the visual wipe between pages.
  */
-const TransitionOverlay = () => {
+const TransitionOverlay = ({ isPageTransition }: { isPageTransition: boolean }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
-  const firstRender = useRef(true);
 
   useLayoutEffect(() => {
-    if (firstRender.current) {
-      firstRender.current = false;
+    // Only run animation if we are in a valid page transition state
+    if (!isPageTransition) {
       return;
     }
 
@@ -83,7 +83,7 @@ const TransitionOverlay = () => {
       })
       .set(overlayRef.current, { autoAlpha: 0 });
 
-  }, [location.pathname]);
+  }, [location.pathname, isPageTransition]);
 
   return (
     <div
@@ -127,6 +127,15 @@ const AppContent: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const mainRef = useRef<HTMLElement>(null);
   const location = useLocation();
+  const [isPageTransition, setIsPageTransition] = useState(false);
+  const firstPath = useRef(location.pathname);
+
+  // Track if we are in a page transition (navigation) vs initial load
+  useEffect(() => {
+    if (location.pathname !== firstPath.current) {
+      setIsPageTransition(true);
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     const cursor = document.getElementById('cursor');
@@ -199,7 +208,8 @@ const AppContent: React.FC = () => {
 
   // UseLayoutEffect ensures we start the animation state before the browser paints the new route content
   useLayoutEffect(() => {
-    if (!isLoading && mainRef.current) {
+    // Only animate the container if it's a page transition (not initial load)
+    if (!isLoading && mainRef.current && isPageTransition) {
       // Create a timeline to manage the fade-in of the new page
       const tl = gsap.timeline();
 
@@ -224,18 +234,20 @@ const AppContent: React.FC = () => {
       {!isLoading && (
         <div className="transition-colors duration-300">
           <ScrollToTop />
-          <TransitionOverlay />
+          <TransitionOverlay isPageTransition={isPageTransition} />
           <div className="flex flex-col min-h-screen">
             <Navbar />
             <main ref={mainRef} className="flex-grow">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/projects" element={<Projects />} />
-                <Route path="/projects/salepilot" element={<SalePilotDetail />} />
-                <Route path="/services" element={<Services />} />
-                <Route path="/contact" element={<Contact />} />
-              </Routes>
+              <TransitionContext.Provider value={isPageTransition}>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/projects" element={<Projects />} />
+                  <Route path="/projects/salepilot" element={<SalePilotDetail />} />
+                  <Route path="/services" element={<Services />} />
+                  <Route path="/contact" element={<Contact />} />
+                </Routes>
+              </TransitionContext.Provider>
             </main>
             <AiAssistant />
             <ScrollToTopButton />

@@ -1,6 +1,7 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useContext } from 'react';
 import { gsap } from 'gsap';
+import { TransitionContext } from '../TransitionContext';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 // Modular Components
@@ -15,6 +16,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 const Home: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const isPageTransition = useContext(TransitionContext);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -33,7 +35,8 @@ const Home: React.FC = () => {
       window.addEventListener('mousemove', handleMouseMove);
 
       // Hero Entrance Sequence
-      const tl = gsap.timeline({ delay: 0.8 });
+      // If it's a page transition, wait 0.8s for the curtain. If initial load, start immediately (0s).
+      const tl = gsap.timeline({ delay: isPageTransition ? 0.8 : 0 });
       tl.to('.hero-section .letter-reveal', {
         y: 0,
         opacity: 1,

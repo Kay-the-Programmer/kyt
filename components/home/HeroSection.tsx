@@ -1,15 +1,41 @@
-import React, { useRef } from 'react';
+import React, { useRef, useLayoutEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import SplitText from '../SplitText';
 import { useMagnetic } from '../../hooks/useMagnetic';
 
+gsap.registerPlugin(ScrollTrigger);
+
 const HeroSection: React.FC = () => {
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   useMagnetic(titleRef);
 
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.to(contentRef.current, {
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top top",
+          end: "bottom 60%",
+          scrub: true,
+        },
+        filter: "blur(12px)",
+        opacity: 0,
+        scale: 0.95,
+        y: 50,
+        ease: "none"
+      });
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <section className="hero-section relative z-10 min-h-screen flex items-center justify-center px-6 overflow-hidden pt-20">
-      <div className="hero-section-content max-w-[95rem] w-full text-center">
+    <section ref={sectionRef} className="hero-section relative z-10 min-h-screen flex items-center justify-center px-6 overflow-hidden pt-20">
+      <div ref={contentRef} className="hero-section-content max-w-[95rem] w-full text-center" style={{ willChange: 'transform, opacity, filter' }}>
         <div className="hero-badge opacity-0 translate-y-4 inline-flex items-center space-x-2 px-6 py-2 bg-white/5 dark:bg-blue-500/5 border border-gray-200/50 dark:border-blue-500/10 rounded-full mb-8 md:mb-12 mx-auto backdrop-blur-md">
           <span className="text-[10px] font-black uppercase tracking-[0.5em] text-blue-600 dark:text-blue-400">KYTRIQ TECHNOLOGIES</span>
         </div>

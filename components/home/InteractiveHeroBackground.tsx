@@ -8,14 +8,14 @@ const InteractiveHeroBackground: React.FC = () => {
     const container = containerRef.current;
     if (!container) return;
 
-    const nodeCount = window.innerWidth < 768 ? 10 : 18;
-    const nodes: { 
-      el: HTMLDivElement, 
-      xTo: Function, 
-      yTo: Function, 
-      baseX: number, 
-      baseY: number, 
-      depth: number 
+    const nodeCount = window.innerWidth < 768 ? 8 : 12;
+    const nodes: {
+      el: HTMLDivElement,
+      xTo: Function,
+      yTo: Function,
+      baseX: number,
+      baseY: number,
+      depth: number
     }[] = [];
 
     for (let i = 0; i < nodeCount; i++) {
@@ -24,13 +24,13 @@ const InteractiveHeroBackground: React.FC = () => {
       const isSquare = Math.random() > 0.7;
       const depth = Math.random() * 0.9 + 0.1;
 
-      node.className = `absolute border border-blue-500/10 dark:border-white/5 pointer-events-none transition-opacity duration-1000`;
+      node.className = `absolute border border-blue-500/10 dark:border-white/5 pointer-events-none transition-opacity duration-1000 will-change-transform`;
       node.style.width = `${size}px`;
       node.style.height = `${size}px`;
       node.style.borderRadius = isSquare ? '15%' : '50%';
       node.style.opacity = (depth * 0.3).toString();
       node.style.filter = `blur(${Math.max(0, (1 - depth) * 5)}px)`;
-      
+
       node.style.left = `${Math.random() * 100}%`;
       node.style.top = `${Math.random() * 100}%`;
 
@@ -57,7 +57,7 @@ const InteractiveHeroBackground: React.FC = () => {
         const rect = node.el.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
-        
+
         const deltaX = x - centerX;
         const deltaY = y - centerY;
         const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
@@ -85,7 +85,7 @@ const InteractiveHeroBackground: React.FC = () => {
 
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('touchmove', onTouchMove, { passive: true });
-    
+
     return () => {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('touchmove', onTouchMove);

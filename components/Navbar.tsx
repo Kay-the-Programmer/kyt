@@ -72,7 +72,7 @@ const Navbar: React.FC = () => {
         duration: 0.8,
         stagger: 0.08,
         ease: 'power4.out',
-        delay: 0.5
+        delay: 1.5 // Synced with Hero Entrance (starts after preloader + small gap)
       });
     });
     return () => ctx.revert();

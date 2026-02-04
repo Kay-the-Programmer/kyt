@@ -25,9 +25,19 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
   useEffect(() => {
     // Force a refresh after a short delay to account for lazy-loaded layouts
     const timer = setTimeout(() => {
-      ScrollTrigger.refresh();
-    }, 100);
-    return () => clearTimeout(timer);
+      ScrollTrigger.refresh(true);
+    }, 150);
+
+    // Additional refresh on load complete
+    const handleLoad = () => {
+      ScrollTrigger.refresh(true);
+    };
+    window.addEventListener('load', handleLoad);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('load', handleLoad);
+    };
   }, []);
 
   useEffect(() => {
@@ -44,6 +54,14 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
 
     if (!grid1 || !grid2 || !grid3 || !glow || !panel || !vignette || !container || !horizontal || !progressBar) return;
 
+    // Set initial states before animations begin
+    gsap.set('.horizontal-panel', {
+      scale: 1,
+      rotateY: 0,
+      filter: 'brightness(1) blur(0px)',
+      clearProps: 'skewX'
+    });
+
     const ctx = gsap.context(() => {
       // 1. Horizontal Scroll with Enhanced Animations (Desktop Only)
       const mm = gsap.matchMedia();
@@ -51,11 +69,11 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
         const panels = gsap.utils.toArray<HTMLElement>('.horizontal-panel', container);
         const totalWidth = 100 * (panels.length - 1);
 
-        // Advanced: Skew-on-scroll logic
-        const skewSetter = gsap.quickTo(panels, "skewX", { duration: 0.8, ease: "power3" });
-        const scaleSetter = gsap.quickTo(panels, "scale", { duration: 0.8, ease: "power3" });
+        // Advanced: Skew-on-scroll logic with reduced sensitivity
+        const skewSetter = gsap.quickTo(panels, "skewX", { duration: 0.6, ease: "power2.out" });
+        const scaleSetter = gsap.quickTo(panels, "scale", { duration: 0.6, ease: "power2.out" });
 
-        // Main Horizontal Pinned Scroll
+        // Main Horizontal Pinned Scroll - Smoother scrub value
         const horizontalTween = gsap.to(panels, {
           xPercent: -totalWidth,
           ease: "none",
@@ -63,27 +81,24 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
             id: 'main-horizontal-scroll',
             trigger: container,
             pin: true,
-            scrub: 1,
-            snap: {
-              snapTo: 1 / (panels.length - 1),
-              duration: { min: 0.2, max: 0.5 },
-              delay: 0.01,
-              ease: "power1.inOut"
-            },
+            scrub: 3, // Increased for smoother scrolling
             start: 'top top',
-            end: () => `+=${window.innerHeight * 6}`,
+            end: () => `+=${window.innerHeight * 12}`,
             anticipatePin: 1,
+            fastScrollEnd: true,
+            preventOverlaps: true,
             invalidateOnRefresh: true,
+            refreshPriority: 1, // Higher priority for main scroll
             onUpdate: (self) => {
-              gsap.set(progressBar, { scaleX: self.progress });
+              gsap.set(progressBar, { scaleX: self.progress, overwrite: true });
 
-              // Calculate velocity-based skew
-              const velocity = self.getVelocity() / 300;
-              const skew = gsap.utils.clamp(-15, 15, velocity);
-              const scale = 1 - Math.abs(velocity) * 0.01;
+              // Calculate velocity-based skew with reduced intensity
+              const velocity = self.getVelocity() / 400; // Reduced sensitivity
+              const skew = gsap.utils.clamp(-10, 10, velocity); // Reduced max skew
+              const scale = 1 - Math.abs(velocity) * 0.005; // Reduced scale effect
 
               skewSetter(skew);
-              scaleSetter(scale);
+              scaleSetter(Math.max(0.95, scale)); // Minimum scale limit
 
               // Dynamic background color shift based on scroll progress
               const hue = 220 + self.progress * 30;
@@ -102,13 +117,25 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
 
         // Enhanced panel animations with parallax and 3D effects
         panels.forEach((p, i) => {
+          const isFirst = i === 0;
           const isLast = i === panels.length - 1;
+
+          // Set first panel to active state immediately
+          if (isFirst) {
+            gsap.set(p, {
+              scale: 1,
+              rotateY: 0,
+              filter: 'brightness(1) blur(0px)',
+              immediateRender: true
+            });
+          }
 
           ScrollTrigger.create({
             trigger: p,
             containerAnimation: horizontalTween,
-            start: i === 0 ? 'left left' : 'left center',
+            start: isFirst ? 'left left' : 'left center',
             end: 'right center',
+            refreshPriority: -1 - i, // Ensure proper order
             onToggle: (self) => {
               if (self.isActive) {
                 setActivePanel(i);
@@ -118,17 +145,19 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
                   scale: 1,
                   rotateY: 0,
                   filter: 'brightness(1) blur(0px)',
-                  duration: 1.2,
-                  ease: 'expo.out'
+                  duration: 0.6,
+                  ease: 'power2.out',
+                  overwrite: 'auto'
                 });
               } else {
                 // Inactive panel dimming with perspective
                 gsap.to(p, {
-                  scale: 0.9,
-                  rotateY: self.direction === 1 ? -10 : 10,
-                  filter: 'brightness(0.7) blur(4px)',
-                  duration: 1.2,
-                  ease: 'power3.out'
+                  scale: 0.96,
+                  rotateY: self.direction === 1 ? -3 : 3,
+                  filter: 'brightness(0.85) blur(1.5px)',
+                  duration: 0.6,
+                  ease: 'power2.out',
+                  overwrite: 'auto'
                 });
               }
             }
@@ -136,14 +165,27 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
 
           // Staggered letter reveal with elastic bounce
           const letters = p.querySelectorAll('.letter-reveal');
-          gsap.fromTo(letters,
-            {
-              y: 120,
+
+          // First panel letters should be visible immediately
+          if (isFirst) {
+            gsap.set(letters, {
+              y: 0,
+              opacity: 1,
+              scale: 1,
+              rotationX: 0,
+              filter: 'blur(0px)'
+            });
+          } else {
+            gsap.set(letters, {
+              y: 80,
               opacity: 0,
-              scale: 0.5,
-              rotationX: -90,
-              filter: 'blur(10px)'
-            },
+              scale: 0.85,
+              rotationX: -30,
+              filter: 'blur(8px)'
+            });
+          }
+
+          gsap.to(letters,
             {
               y: 0,
               opacity: 1,
@@ -151,42 +193,57 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
               rotationX: 0,
               filter: 'blur(0px)',
               stagger: 0.02,
-              duration: 1.2,
-              ease: 'back.out(1.7)',
+              duration: 1,
+              ease: 'back.out(1.4)',
+              immediateRender: false,
+              overwrite: 'auto',
               scrollTrigger: {
                 trigger: p,
                 containerAnimation: horizontalTween,
-                start: i === 0 ? 'left right' : 'left 85%',
-                toggleActions: 'play none none reverse',
-                immediateRender: true
+                start: isFirst ? 'left left' : 'left 90%',
+                toggleActions: isFirst ? 'none none none none' : 'play none none reverse'
               }
             }
           );
 
           // Content reveal with depth effect
           const content = p.querySelectorAll('.reveal-target');
-          gsap.fromTo(content,
-            {
-              y: 80,
-              opacity: 0,
-              scale: 0.9,
-              rotationY: 15,
+
+          // First panel content should be visible immediately
+          if (isFirst) {
+            gsap.set(content, {
+              y: 0,
+              opacity: 1,
+              scale: 1,
+              rotationY: 0,
               transformPerspective: 1000
-            },
+            });
+          } else {
+            gsap.set(content, {
+              y: 40,
+              opacity: 0,
+              scale: 0.96,
+              rotationY: 8,
+              transformPerspective: 1000
+            });
+          }
+
+          gsap.to(content,
             {
               y: 0,
               opacity: 1,
               scale: 1,
               rotationY: 0,
-              duration: 1.4,
-              stagger: 0.12,
+              duration: 1.2,
+              stagger: 0.1,
               ease: 'expo.out',
+              immediateRender: false,
+              overwrite: 'auto',
               scrollTrigger: {
                 trigger: p,
                 containerAnimation: horizontalTween,
-                start: i === 0 ? 'left right' : 'left 80%',
-                toggleActions: 'play none none reverse',
-                immediateRender: true
+                start: isFirst ? 'left left' : 'left 85%',
+                toggleActions: isFirst ? 'none none none none' : 'play none none reverse'
               }
             }
           );
@@ -194,18 +251,23 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
           // Parallax effect for images within panels
           const images = p.querySelectorAll('img');
           images.forEach((img) => {
+            // First panel images should have minimal initial transform
+            const initialScale = isFirst ? 1.1 : 1.25;
+            const initialX = isFirst ? 30 : 80;
+            
             gsap.fromTo(img,
-              { scale: 1.3, x: 100 },
+              { scale: initialScale, x: initialX },
               {
                 scale: 1,
                 x: 0,
                 ease: 'none',
+                immediateRender: isFirst,
                 scrollTrigger: {
                   trigger: p,
                   containerAnimation: horizontalTween,
-                  start: 'left right',
+                  start: isFirst ? 'left left' : 'left right',
                   end: 'right left',
-                  scrub: 1
+                  scrub: 1.5 // Smoother parallax
                 }
               }
             );
@@ -213,52 +275,68 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
 
           // Floating elements within panels
           const floatingElements = p.querySelectorAll('.floating-card, [class*="rounded-[4rem]"], [class*="rounded-[6rem]"]');
-          floatingElements.forEach((el, j) => {
-            gsap.fromTo(el,
-              {
-                y: 60 + j * 20,
-                rotation: -5 + j * 3,
-                opacity: 0
-              },
-              {
-                y: 0,
-                rotation: 0,
-                opacity: 1,
-                duration: 1.6,
-                delay: j * 0.1,
-                ease: 'elastic.out(1, 0.5)',
-                scrollTrigger: {
-                  trigger: p,
-                  containerAnimation: horizontalTween,
-                  start: i === 0 ? 'left right' : 'left 75%',
-                  toggleActions: 'play none none reverse',
-                  immediateRender: true
-                }
+          
+          // First panel floating elements visible immediately
+          if (isFirst) {
+            gsap.set(floatingElements, {
+              y: 0,
+              rotation: 0,
+              opacity: 1
+            });
+          } else {
+            gsap.set(floatingElements, {
+              y: 50,
+              rotation: -3,
+              opacity: 0
+            });
+          }
+
+          gsap.to(floatingElements,
+            {
+              y: 0,
+              rotation: 0,
+              opacity: 1,
+              duration: 1.4,
+              stagger: 0.08,
+              ease: 'elastic.out(1, 0.6)',
+              immediateRender: false,
+              overwrite: 'auto',
+              scrollTrigger: {
+                trigger: p,
+                containerAnimation: horizontalTween,
+                start: isFirst ? 'left left' : 'left 80%',
+                toggleActions: isFirst ? 'none none none none' : 'play none none reverse'
               }
-            );
-          });
+            }
+          );
 
           // Counter/stats animation
           const statValues = p.querySelectorAll('.text-4xl, .text-5xl');
-          statValues.forEach((stat) => {
-            gsap.fromTo(stat,
-              { scale: 0.5, opacity: 0, y: 30 },
-              {
-                scale: 1,
-                opacity: 1,
-                y: 0,
-                duration: 1,
-                ease: 'elastic.out(1, 0.6)',
-                scrollTrigger: {
-                  trigger: p,
-                  containerAnimation: horizontalTween,
-                  start: i === 0 ? 'left right' : 'left 70%',
-                  toggleActions: 'play none none reverse',
-                  immediateRender: true
-                }
+          
+          if (isFirst) {
+            gsap.set(statValues, { scale: 1, opacity: 1, y: 0 });
+          } else {
+            gsap.set(statValues, { scale: 0.6, opacity: 0, y: 25 });
+          }
+
+          gsap.to(statValues,
+            {
+              scale: 1,
+              opacity: 1,
+              y: 0,
+              duration: 0.9,
+              stagger: 0.08,
+              ease: 'elastic.out(1, 0.7)',
+              immediateRender: false,
+              overwrite: 'auto',
+              scrollTrigger: {
+                trigger: p,
+                containerAnimation: horizontalTween,
+                start: isFirst ? 'left left' : 'left 75%',
+                toggleActions: isFirst ? 'none none none none' : 'play none none reverse'
               }
-            );
-          });
+            }
+          );
         });
 
         // Horizontal direction indicator animation
@@ -603,7 +681,7 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
             <div className="relative z-10 text-center text-white max-w-5xl px-6">
               <h2 className="text-6xl md:text-8xl lg:text-[11rem] font-heading font-bold mb-16 tracking-tighter leading-[0.85]">
                 <SplitText text="Let's Build" className="block" />
-                <span className="gradient-text"><SplitText text="Impact." /></span>
+                <SplitText text="Your Idea" isGradient={true} className="block" />
               </h2>
               <div className="flex flex-col md:flex-row items-center justify-center space-y-10 md:space-y-0 md:space-x-14 reveal-target">
                 <Link to="/contact" className="magnetic-area group px-16 py-8 bg-blue-600 text-white rounded-full font-black text-2xl hover:bg-blue-700 transition-all duration-500 shadow-3xl shadow-blue-600/30 active:scale-95 hover:scale-105 hover:shadow-blue-600/50">Contact us</Link>

@@ -148,7 +148,7 @@ const IdentitySection: React.FC = () => {
           </h3>
 
           <p className="reveal-child text-gray-500 dark:text-gray-400 text-lg lg:text-xl leading-relaxed mb-16 font-light max-w-xl">
-            Kytriq Technologies is a specialized software boutique development company. We build intelligent systems that evolve with human ambition.
+              We build intelligent systems that deliver value to our clients and evolve with human ambition.
           </p>
 
           <div className="feature-list space-y-8 md:space-y-12">

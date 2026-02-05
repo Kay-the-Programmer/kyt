@@ -35,14 +35,10 @@ export default defineConfig(({ mode }) => {
           },
         },
       },
-      // Minification options
-      minify: 'terser',
-      terserOptions: {
-        compress: {
-          drop_console: true,
-          drop_debugger: true,
-        },
-      },
+      // Use esbuild for minification (faster, no extra dependency)
+      minify: 'esbuild',
+      // Target modern browsers for smaller output
+      target: 'es2020',
     },
   };
 });

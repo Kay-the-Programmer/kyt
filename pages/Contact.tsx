@@ -4,8 +4,15 @@ import { GoogleGenAI } from "@google/genai";
 import { gsap } from 'gsap';
 import Footer from '../components/Footer';
 import SplitText from '../components/SplitText';
+import { useSEO } from '../hooks/useSEO';
 
 const Contact: React.FC = () => {
+  // SEO Configuration
+  useSEO({
+    title: 'Contact Us | Kytriq Technologies',
+    description: 'Get in touch with Kytriq Technologies. Whether you have a specific project in mind or want to explore how AI can help your business, we are here to help.',
+    keywords: 'contact Kytriq, software inquiry, AI consultation, project discussion',
+  });
   const [formData, setFormData] = useState({
     name: '',
     email: '',

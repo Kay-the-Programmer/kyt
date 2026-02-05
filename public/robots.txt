@@ -1,0 +1,8 @@
+# robots.txt for Kytriq Technologies
+# https://www.robotstxt.org/robotstxt.html
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://kytriq.com/sitemap.xml

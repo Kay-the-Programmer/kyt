@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useContext, useState } from 'react';
 import { gsap } from 'gsap';
 import { TransitionContext } from '../TransitionContext';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useSEO } from '../hooks/useSEO';
 
 // Modular Components
 import InteractiveHeroBackground from '../components/home/InteractiveHeroBackground';
@@ -18,7 +19,13 @@ gsap.registerPlugin(ScrollTrigger);
 const Home: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isPageTransition = useContext(TransitionContext);
-  const [isIntroComplete, setIsIntroComplete] = useState(false);
+
+  // SEO Configuration
+  useSEO({
+    title: 'Kytriq Technologies | Bringing Digital Ideas to Life',
+    description: 'Kytriq Technologies is a software development company specializing in AI integration, web application development, mobile apps, and strategic digital design. We bring your digital ideas to life.',
+    keywords: 'Kytriq, software development, AI integration, web development, digital transformation',
+  });
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -37,38 +44,19 @@ const Home: React.FC = () => {
 
       window.addEventListener('mousemove', handleMouseMove);
 
-      // Hero Entrance Sequence
-      // Optimized timing: page transition waits for curtain (0.8s), initial load syncs with preloader exit (0.8s faster)
+      // Hero Entrance Orchestration
       const tl = gsap.timeline({ delay: isPageTransition ? 0.8 : 0.6 });
 
-      // Background glows fade in first for a warm welcome
       tl.fromTo('.hero-bg-glow',
         { opacity: 0, scale: 0.8 },
-        { opacity: 1, scale: 1, duration: 1.2, stagger: 0.2, ease: 'power2.out' }
-      )
-        // Title letters reveal with bounce
-        .fromTo('.hero-section .letter-reveal',
-          {
-            y: 80,
-            opacity: 0,
-            scale: 0.9,
-            filter: 'blur(15px)'
-          },
-          {
-            y: 0,
-            opacity: 1,
-            scale: 1,
-            filter: 'blur(0px)',
-            stagger: 0.025,
-            duration: 0.9,
-            ease: 'back.out(1.2)',
-          },
-          '-=0.8'
-        )
-        .to('.hero-badge', { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out' }, '-=0.6')
-        .to('.hero-desc', { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' }, '-=0.5')
-        .to('.hero-btns', { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out' }, '-=0.4')
-        .call(() => setIsIntroComplete(true)); // Defer loading heavy sections until hero is stable
+        {
+          opacity: (i) => i === 0 ? 0.3 : 0.15,
+          scale: 1,
+          duration: 1.5,
+          stagger: 0.2,
+          ease: 'power3.out'
+        }
+      );
 
       // Global Reveal orchestration
       gsap.utils.toArray<HTMLElement>('.reveal-on-scroll').forEach((el) => {
@@ -93,25 +81,22 @@ const Home: React.FC = () => {
     }, containerRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [isPageTransition]); // Add isPageTransition if context changes
 
   return (
     <div ref={containerRef} className="relative bg-white dark:bg-brand-dark text-gray-900 dark:text-white transition-colors duration-500 overflow-x-hidden">
       <InteractiveHeroBackground />
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="hero-bg-glow absolute -top-[20%] -right-[10%] w-[100vw] h-[100vw] bg-blue-600/5 dark:bg-blue-500/10 rounded-full blur-[120px] opacity-30" style={{ willChange: 'transform' }}></div>
-        <div className="hero-bg-glow absolute -bottom-[30%] -left-[10%] w-[100vw] h-[100vw] bg-purple-600/5 dark:bg-purple-500/10 rounded-full blur-[150px] opacity-20" style={{ willChange: 'transform' }}></div>
+        <div className="hero-bg-glow absolute -top-[20%] -right-[10%] w-[100vw] h-[100vw] bg-blue-600/5 dark:bg-blue-500/10 rounded-full blur-[120px] opacity-0" style={{ willChange: 'transform' }}></div>
+        <div className="hero-bg-glow absolute -bottom-[30%] -left-[10%] w-[100vw] h-[100vw] bg-purple-600/5 dark:bg-purple-500/10 rounded-full blur-[150px] opacity-0" style={{ willChange: 'transform' }}></div>
       </div>
       <HeroSection />
-      {isIntroComplete && (
-        <React.Suspense fallback={null}>
-          <IdentitySection />
-          {/* PortfolioScroll now handles its own internal ScrollTrigger logic */}
-          <PortfolioScroll />
-          <CTASection />
-          <Footer />
-        </React.Suspense>
-      )}
+      <React.Suspense fallback={null}>
+        <IdentitySection />
+        <PortfolioScroll />
+        <CTASection />
+        <Footer />
+      </React.Suspense>
     </div>
   );
 };

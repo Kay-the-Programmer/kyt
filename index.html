@@ -1,15 +1,87 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Primary SEO Meta Tags -->
     <title>Kytriq Technologies | Bringing Digital Ideas to Life</title>
+    <meta name="title" content="Kytriq Technologies | Bringing Digital Ideas to Life">
+    <meta name="description"
+        content="Kytriq Technologies is a software development company specializing in AI integration, web application development, mobile apps, and strategic digital design. We bring your digital ideas to life.">
+    <meta name="keywords"
+        content="Kytriq, Kytriq Technologies, software development, AI integration, web development, mobile app development, UI/UX design, digital transformation, cloud solutions, enterprise software">
+    <meta name="author" content="Kytriq Technologies">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="English">
+    <meta name="revisit-after" content="7 days">
+
+    <!-- Theme and Branding -->
+    <meta name="theme-color" content="#2563eb">
+    <meta name="msapplication-TileColor" content="#030712">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kytriq.com/">
+    <meta property="og:title" content="Kytriq Technologies | Bringing Digital Ideas to Life">
+    <meta property="og:description"
+        content="Kytriq Technologies is a software development company specializing in AI integration, web application development, mobile apps, and strategic digital design.">
+    <meta property="og:image" content="https://kytriq.com/assets/logo.png">
+    <meta property="og:site_name" content="Kytriq Technologies">
+    <meta property="og:locale" content="en_US">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://kytriq.com/">
+    <meta name="twitter:title" content="Kytriq Technologies | Bringing Digital Ideas to Life">
+    <meta name="twitter:description"
+        content="Kytriq Technologies is a software development company specializing in AI integration, web application development, mobile apps, and strategic digital design.">
+    <meta name="twitter:image" content="https://kytriq.com/assets/logo.png">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://kytriq.com/">
+
+    <!-- Favicon and Touch Icons -->
+    <link rel="icon" type="image/png" href="/assets/logo.png">
+    <link rel="apple-touch-icon" href="/assets/logo.png">
+
+    <!-- Structured Data - Organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Kytriq Technologies",
+      "url": "https://kytriq.com",
+      "logo": "https://kytriq.com/assets/logo.png",
+      "description": "A software development company focused on intelligent systems and AI-powered solutions.",
+      "foundingDate": "2024",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "availableLanguage": "English"
+      },
+      "sameAs": []
+    }
+    </script>
+
+    <!-- Structured Data - WebSite -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Kytriq Technologies",
+      "url": "https://kytriq.com"
+    }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <script>
         // Immediate theme detection to prevent flash
-        (function() {
+        (function () {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'light') {
                 document.documentElement.classList.remove('dark');
@@ -42,49 +114,73 @@
         * {
             transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
         body {
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
             cursor: none;
             transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
         .dark body {
             background-color: #030712;
             color: #f9fafb;
         }
+
         body:not(.dark) {
             background-color: #ffffff;
             color: #111827;
         }
-        h1, h2, h3, h4, .font-heading {
+
+        h1,
+        h2,
+        h3,
+        h4,
+        .font-heading {
             font-family: 'Space Grotesk', sans-serif;
         }
+
         .glass-nav {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         }
+
         .dark .glass-nav {
             background: rgba(3, 7, 18, 0.8);
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
+
         .gradient-text {
             background: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #db2777 100%);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
         .animated-gradient-text {
             background: linear-gradient(165deg, #2563eb, #7c3aed, #60a5fa, #3b82f6, #2563eb);
             background-size: 300% 300%;
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             animation: gradient-flow 1.5s ease-in-out infinite;
         }
+
         @keyframes gradient-flow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
+
         .custom-cursor {
             width: 12px;
             height: 12px;
@@ -95,6 +191,7 @@
             z-index: 9999;
             mix-blend-mode: difference;
         }
+
         .custom-cursor-follower {
             width: 32px;
             height: 32px;
@@ -104,6 +201,7 @@
             pointer-events: none;
             z-index: 9998;
         }
+
         .grain-overlay {
             position: fixed;
             top: 0;
@@ -116,29 +214,35 @@
             opacity: 0.04;
             mix-blend-mode: overlay;
         }
+
         .dark .grain-overlay {
             opacity: 0.07;
         }
+
         ::-webkit-scrollbar {
             width: 6px;
         }
+
         ::-webkit-scrollbar-track {
             background: transparent;
         }
+
         ::-webkit-scrollbar-thumb {
             background: #2563eb;
             border-radius: 10px;
         }
+
         .word-reveal {
             overflow: hidden;
             display: inline-block;
             vertical-align: bottom;
         }
+
         .word-reveal span {
             display: inline-block;
         }
     </style>
-<script type="importmap">
+    <script type="importmap">
 {
   "imports": {
     "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0",
@@ -153,13 +257,15 @@
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
+    <link rel="stylesheet" href="/index.css">
 </head>
+
 <body class="bg-white dark:bg-brand-dark text-gray-900 dark:text-gray-100">
     <div class="grain-overlay"></div>
     <div id="cursor" class="custom-cursor hidden md:block"></div>
     <div id="cursor-follower" class="custom-cursor-follower hidden md:block"></div>
     <div id="root"></div>
-<script type="module" src="/index.tsx"></script>
+    <script type="module" src="/index.tsx"></script>
 </body>
+
 </html>

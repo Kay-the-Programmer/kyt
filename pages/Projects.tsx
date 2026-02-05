@@ -5,6 +5,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Footer from '../components/Footer';
 import SplitText from '../components/SplitText';
+import { useSEO } from '../hooks/useSEO';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -44,6 +45,13 @@ const PROJECTS_DATA: Project[] = [
 const Projects: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  // SEO Configuration
+  useSEO({
+    title: 'Projects | Kytriq Technologies',
+    description: 'Explore our selected work and flagship intelligent systems. We specialize in software designed for absolute stability and sub-millisecond precision.',
+    keywords: 'software projects, case studies, SalePilot, POS system, portfolio',
+  });
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -305,7 +313,7 @@ const Projects: React.FC = () => {
 
                     <div className="telemetry-panel hidden lg:grid grid-cols-1 gap-10 p-16 bg-black/60 backdrop-blur-[40px] rounded-[5rem] border border-emerald-500/10 min-w-[380px] shadow-3xl overflow-hidden relative" style={{ transformStyle: 'preserve-3d' }}>
                       <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none"></div>
-                      
+
                       {project.specs.map((spec, i) => (
                         <div key={i} className="spec-item relative border-b border-emerald-500/5 pb-8 last:border-0 last:pb-0">
                           <div className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-3">{spec.label}</div>

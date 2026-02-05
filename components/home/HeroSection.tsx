@@ -20,6 +20,7 @@ const HeroSection: React.FC = () => {
       const entranceTl = gsap.timeline({ defaults: { ease: 'power4.out' } });
 
       entranceTl
+        .set('.hud-element', { opacity: 0, scale: 0.8 })
         .to('.hero-badge', { opacity: 1, y: 0, duration: 1.2 }, 0.5)
         .to('.letter-reveal', {
           opacity: 1,
@@ -31,25 +32,48 @@ const HeroSection: React.FC = () => {
           ease: 'expo.out'
         }, 0.7)
         .to('.hero-desc', { opacity: 1, y: 0, duration: 1.2 }, '-=1')
-        .to('.hero-btns', { opacity: 1, y: 0, duration: 1.2 }, '-=1');
+        .to('.hero-btns', { opacity: 1, y: 0, duration: 1.2 }, '-=1')
+        .to('.hud-element', {
+          opacity: 0.4,
+          scale: 1,
+          duration: 1.5,
+          stagger: 0.2,
+          ease: 'expo.out'
+        }, '-=0.5');
 
-      // 2. Subtle Parallax effect on mouse move
+      // 2. Continuous HUD animations
+      gsap.to('.hud-rotate', {
+        rotation: 360,
+        duration: 20,
+        repeat: -1,
+        ease: 'none'
+      });
+
+      // 3. Subtle Parallax effect on mouse move
       const handleMouseMove = (e: MouseEvent) => {
         const { clientX, clientY } = e;
-        const x = (clientX - window.innerWidth / 2) / 50;
-        const y = (clientY - window.innerHeight / 2) / 50;
+        const x = (clientX - window.innerWidth / 2) / 40;
+        const y = (clientY - window.innerHeight / 2) / 40;
 
         gsap.to(contentRef.current, {
           x: x,
           y: y,
-          duration: 1,
+          duration: 1.2,
           ease: 'power2.out'
+        });
+
+        // Inverse parallax for HUD
+        gsap.to('.hud-element', {
+          x: -x * 0.5,
+          y: -y * 0.5,
+          duration: 1.5,
+          ease: 'power3.out'
         });
       };
 
       window.addEventListener('mousemove', handleMouseMove);
 
-      // 3. Cinematic exit animation with smooth scrub for handoff to IdentitySection
+      // 4. Cinematic exit animation
       const exitTl = gsap.timeline({
         scrollTrigger: {
           trigger: sectionRef.current,
@@ -67,8 +91,8 @@ const HeroSection: React.FC = () => {
 
       exitTl.to(contentRef.current, {
         opacity: 0,
-        scale: 0.92,
-        y: -120,
+        scale: 0.9,
+        y: -150,
         ease: 'none'
       });
 
@@ -82,7 +106,33 @@ const HeroSection: React.FC = () => {
 
   return (
     <section ref={sectionRef} className="hero-section relative z-10 min-h-screen flex items-center justify-center px-6 overflow-hidden pt-20">
-      <div ref={contentRef} className="hero-section-content max-w-[95rem] w-full text-center" style={{ willChange: 'transform, opacity, filter' }}>
+      {/* Technical HUD Decoration */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+        {/* Coordinate HUD (Top Left) */}
+        <div className="hud-element absolute top-[15%] left-[10%] font-mono text-[10px] text-blue-500/40 hidden lg:block">
+          <div className="flex flex-col space-y-1">
+            <span>SYS_MODEL: V-ARCH_2026</span>
+            <span>COORD: [34.22, 118.44]</span>
+            <div className="w-16 h-[1px] bg-blue-500/20" />
+            <span>LATENCY: 12ms</span>
+          </div>
+        </div>
+
+        {/* Data Grid (Bottom Right) */}
+        <div className="hud-element absolute bottom-[20%] right-[10%] w-32 h-32 opacity-20 hidden lg:block">
+          <div className="grid grid-cols-4 gap-2">
+            {[...Array(16)].map((_, i) => (
+              <div key={i} className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse" style={{ animationDelay: `${i * 0.1}s` }} />
+            ))}
+          </div>
+        </div>
+
+        {/* Floating Ring (Center-ish) */}
+        <div className="hud-element hud-rotate absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] border border-blue-500/5 rounded-full hidden xl:block" />
+        <div className="hud-element hud-rotate absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border border-blue-500/10 rounded-full border-dashed hidden xl:block" style={{ animationDirection: 'reverse' }} />
+      </div>
+
+      <div ref={contentRef} className="hero-section-content max-w-[95rem] w-full text-center relative z-10" style={{ willChange: 'transform, opacity, filter' }}>
         <div className="hero-badge opacity-0 translate-y-4 inline-flex items-center space-x-2 px-6 py-2 bg-white/5 dark:bg-blue-500/5 border border-gray-200/50 dark:border-blue-500/10 rounded-full mb-8 md:mb-12 mx-auto backdrop-blur-md">
           <span className="text-[10px] font-black uppercase tracking-[0.5em] text-blue-600 dark:text-blue-400">KYTRIQ TECHNOLOGIES</span>
         </div>

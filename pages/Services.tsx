@@ -4,6 +4,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import PortfolioScroll from '../components/home/PortfolioScroll';
 import Footer from '../components/Footer';
+import { useSEO } from '../hooks/useSEO';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -193,6 +194,13 @@ const Services: React.FC = () => {
   const ctaRef = useRef<HTMLElement>(null);
   const [activeCard, setActiveCard] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+
+  // SEO Configuration
+  useSEO({
+    title: 'Services | Kytriq Technologies',
+    description: 'Explore our elite software services: AI Integration, Web & Mobile Apps, Software Development, Strategic Design, Native Performance, and Security Core.',
+    keywords: 'software services, AI integration, web development, mobile apps, UI/UX design, cybersecurity',
+  });
 
   // Detect mobile on mount and resize
   useEffect(() => {

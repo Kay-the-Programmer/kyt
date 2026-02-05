@@ -68,24 +68,24 @@ const TransitionOverlay = ({ isPageTransition }: { isPageTransition: boolean }) 
 
     const tl = gsap.timeline();
 
-    // Multi-panel shutter effect
+    // Fast multi-panel shutter effect - quick transition so content animations are visible
     tl.set(containerRef.current, { autoAlpha: 1 })
       .fromTo(panels,
         { scaleY: 0, transformOrigin: (i) => i % 2 === 0 ? 'top' : 'bottom' },
         {
           scaleY: 1,
-          duration: 0.5,
-          stagger: 0.05,
+          duration: 0.25,
+          stagger: 0.03,
           ease: 'expo.inOut'
         }
       )
       .to(panels, {
         scaleY: 0,
         transformOrigin: (i) => i % 2 === 0 ? 'bottom' : 'top',
-        duration: 0.5,
-        stagger: 0.05,
+        duration: 0.25,
+        stagger: 0.03,
         ease: 'expo.inOut',
-        delay: 0.1
+        delay: 0.05
       })
       .set(containerRef.current, { autoAlpha: 0 });
 
@@ -94,22 +94,45 @@ const TransitionOverlay = ({ isPageTransition }: { isPageTransition: boolean }) 
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-[9999] pointer-events-none invisible pointer-events-none flex"
+      className="fixed inset-0 z-[9999] pointer-events-none invisible flex"
     >
       {[...Array(5)].map((_, i) => (
         <div
           key={i}
-          className="transition-panel relative flex-grow bg-blue-600 dark:bg-blue-700 h-full"
+          className="transition-panel relative flex-grow bg-blue-600 dark:bg-blue-700 h-full overflow-hidden"
           style={{ willChange: 'transform' }}
         >
           {/* Accent line for digital feel */}
           <div className="absolute inset-y-0 right-0 w-[1px] bg-white/10" />
+
+          {/* Flickering Data Stream */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center font-mono text-[8px] text-white/10 select-none">
+            {[...Array(10)].map((_, j) => (
+              <DataFlicker key={j} />
+            ))}
+          </div>
+
           {/* Scanline effect */}
           <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.05)_50%),linear-gradient(90deg,rgba(255,0,0,0.02),rgba(0,255,0,0.01),rgba(0,0,255,0.02))] bg-[length:100%_2px,3px_100%] pointer-events-none opacity-20" />
         </div>
       ))}
     </div>
   );
+};
+
+const DataFlicker = () => {
+  const [val, setVal] = useState('');
+
+  useEffect(() => {
+    const update = () => {
+      setVal(Math.random().toString(16).substring(2, 10).toUpperCase());
+    };
+    const interval = setInterval(update, 100 + Math.random() * 200);
+    update();
+    return () => clearInterval(interval);
+  }, []);
+
+  return <div className="opacity-50">{val}</div>;
 };
 
 const Preloader = () => (
@@ -282,13 +305,13 @@ const AppContent: React.FC = () => {
       const tl = gsap.timeline();
 
       tl.fromTo(mainRef.current,
-        { opacity: 0, y: 20, filter: 'blur(10px)' },
+        { opacity: 0, y: 15, filter: 'blur(6px)' },
         {
           opacity: 1,
           y: 0,
           filter: 'blur(0px)',
-          duration: 0.8,
-          delay: 0.5, // Sync with the TransitionOverlay curtain wipe (0.5s in)
+          duration: 0.4,
+          delay: 0.2, // Quick sync with faster TransitionOverlay
           ease: 'expo.out',
           clearProps: 'all'
         }

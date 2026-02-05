@@ -16,9 +16,18 @@ const Footer = React.lazy(() => import('../components/Footer'));
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Lightweight skeleton placeholder for lazy-loaded sections
+const SectionPlaceholder = () => (
+  <div className="w-full min-h-[50vh] flex items-center justify-center">
+    <div className="w-12 h-12 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+  </div>
+);
+
 const Home: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isPageTransition = useContext(TransitionContext);
+  const glowXTo = useRef<gsap.QuickToFunc | null>(null);
+  const glowYTo = useRef<gsap.QuickToFunc | null>(null);
 
   // SEO Configuration
   useSEO({
@@ -29,23 +38,25 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Optimized Background Parallax using quickTo
+      // Optimized Background Parallax using quickTo (created once, called on mousemove)
       const glows = document.querySelectorAll('.hero-bg-glow');
-      const xTo = gsap.quickTo(glows, "x", { duration: 2.5, ease: "sine.out" });
-      const yTo = gsap.quickTo(glows, "y", { duration: 2.5, ease: "sine.out" });
+      if (glows.length > 0) {
+        glowXTo.current = gsap.quickTo(glows, "x", { duration: 2.5, ease: "sine.out" });
+        glowYTo.current = gsap.quickTo(glows, "y", { duration: 2.5, ease: "sine.out" });
+      }
 
       const handleMouseMove = (e: MouseEvent) => {
         const xPos = (e.clientX / window.innerWidth - 0.5) * 60;
         const yPos = (e.clientY / window.innerHeight - 0.5) * 60;
 
-        xTo(xPos);
-        yTo(yPos);
+        glowXTo.current?.(xPos);
+        glowYTo.current?.(yPos);
       };
 
       window.addEventListener('mousemove', handleMouseMove);
 
       // Hero Entrance Orchestration
-      const tl = gsap.timeline({ delay: isPageTransition ? 0.8 : 0.6 });
+      const tl = gsap.timeline({ delay: isPageTransition ? 0.8 : 0.05 });
 
       tl.fromTo('.hero-bg-glow',
         { opacity: 0, scale: 0.8 },
@@ -87,11 +98,11 @@ const Home: React.FC = () => {
     <div ref={containerRef} className="relative bg-white dark:bg-brand-dark text-gray-900 dark:text-white transition-colors duration-500 overflow-x-hidden">
       <InteractiveHeroBackground />
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="hero-bg-glow absolute -top-[20%] -right-[10%] w-[100vw] h-[100vw] bg-blue-600/5 dark:bg-blue-500/10 rounded-full blur-[120px] opacity-0" style={{ willChange: 'transform' }}></div>
-        <div className="hero-bg-glow absolute -bottom-[30%] -left-[10%] w-[100vw] h-[100vw] bg-purple-600/5 dark:bg-purple-500/10 rounded-full blur-[150px] opacity-0" style={{ willChange: 'transform' }}></div>
+        <div className="hero-bg-glow absolute -top-[20%] -right-[10%] w-[100vw] h-[100vw] bg-blue-600/5 dark:bg-blue-500/10 rounded-full blur-[120px] opacity-0"></div>
+        <div className="hero-bg-glow absolute -bottom-[30%] -left-[10%] w-[100vw] h-[100vw] bg-purple-600/5 dark:bg-purple-500/10 rounded-full blur-[150px] opacity-0"></div>
       </div>
       <HeroSection />
-      <React.Suspense fallback={null}>
+      <React.Suspense fallback={<SectionPlaceholder />}>
         <IdentitySection />
         <PortfolioScroll />
         <CTASection />

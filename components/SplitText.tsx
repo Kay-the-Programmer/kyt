@@ -16,11 +16,11 @@ const SplitText: React.FC<SplitTextProps> = ({ text, className, isGradient = fal
   return (
     <span className={`${className} inline-flex flex-wrap relative leading-none`} aria-label={text}>
       {text.split('').map((char, i) => (
-        <span 
-          key={i} 
-          className={`letter-reveal inline-block ${isGradient ? 'gradient-text' : ''}`} 
-          style={{ 
-            transformOrigin: 'bottom center', 
+        <span
+          key={i}
+          className={`letter-reveal inline-block ${isGradient ? 'gradient-text' : ''}`}
+          style={{
+            transformOrigin: 'bottom center',
             willChange: 'transform, opacity, filter',
             display: 'inline-block',
             whiteSpace: 'pre'

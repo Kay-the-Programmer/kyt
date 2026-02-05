@@ -68,24 +68,23 @@ const TransitionOverlay = ({ isPageTransition }: { isPageTransition: boolean }) 
 
     const tl = gsap.timeline();
 
-    // Fast multi-panel shutter effect - quick transition so content animations are visible
+    // Simplified, faster transition - reduces animation overhead
     tl.set(containerRef.current, { autoAlpha: 1 })
       .fromTo(panels,
-        { scaleY: 0, transformOrigin: (i) => i % 2 === 0 ? 'top' : 'bottom' },
+        { scaleY: 0, transformOrigin: 'top' },
         {
           scaleY: 1,
-          duration: 0.25,
-          stagger: 0.03,
-          ease: 'expo.inOut'
+          duration: 0.2,
+          stagger: 0.02,
+          ease: 'power2.inOut'
         }
       )
       .to(panels, {
         scaleY: 0,
-        transformOrigin: (i) => i % 2 === 0 ? 'bottom' : 'top',
-        duration: 0.25,
-        stagger: 0.03,
-        ease: 'expo.inOut',
-        delay: 0.05
+        transformOrigin: 'bottom',
+        duration: 0.2,
+        stagger: 0.02,
+        ease: 'power2.inOut'
       })
       .set(containerRef.current, { autoAlpha: 0 });
 
@@ -96,7 +95,7 @@ const TransitionOverlay = ({ isPageTransition }: { isPageTransition: boolean }) 
       ref={containerRef}
       className="fixed inset-0 z-[9999] pointer-events-none invisible flex"
     >
-      {[...Array(5)].map((_, i) => (
+      {[...Array(3)].map((_, i) => (
         <div
           key={i}
           className="transition-panel relative flex-grow bg-blue-600 dark:bg-blue-700 h-full overflow-hidden"
@@ -105,35 +104,31 @@ const TransitionOverlay = ({ isPageTransition }: { isPageTransition: boolean }) 
           {/* Accent line for digital feel */}
           <div className="absolute inset-y-0 right-0 w-[1px] bg-white/10" />
 
-          {/* Flickering Data Stream */}
+          {/* Reduced data stream - only 3 elements per panel */}
           <div className="absolute inset-0 flex flex-col items-center justify-center font-mono text-[8px] text-white/10 select-none">
-            {[...Array(10)].map((_, j) => (
+            {[...Array(3)].map((_, j) => (
               <DataFlicker key={j} />
             ))}
           </div>
-
-          {/* Scanline effect */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.05)_50%),linear-gradient(90deg,rgba(255,0,0,0.02),rgba(0,255,0,0.01),rgba(0,0,255,0.02))] bg-[length:100%_2px,3px_100%] pointer-events-none opacity-20" />
         </div>
       ))}
     </div>
   );
 };
 
-const DataFlicker = () => {
-  const [val, setVal] = useState('');
+const DataFlicker = React.memo(() => {
+  const [val, setVal] = useState(() => Math.random().toString(16).substring(2, 10).toUpperCase());
 
   useEffect(() => {
-    const update = () => {
+    // Slower update rate to reduce re-renders during transitions
+    const interval = setInterval(() => {
       setVal(Math.random().toString(16).substring(2, 10).toUpperCase());
-    };
-    const interval = setInterval(update, 100 + Math.random() * 200);
-    update();
+    }, 300);
     return () => clearInterval(interval);
   }, []);
 
   return <div className="opacity-50">{val}</div>;
-};
+});
 
 const Preloader = () => (
   <div id="preloader" className="fixed inset-0 bg-brand-dark z-[10000] flex flex-col items-center justify-center overflow-hidden" style={{ willChange: 'clip-path, transform, opacity' }}>
@@ -260,34 +255,12 @@ const AppContent: React.FC = () => {
       }, '-=1.1')
       // Progress bar fills
       .to('.preloader-progress', { width: '100%', duration: 1.2, ease: 'power2.inOut' }, '-=0.6')
-      .call(() => setIsLoading(false))
-      // Content fades and scales slightly before clip-path
-      .to('.preloader-content', {
-        scale: 0.95,
-        opacity: 0.8,
-        filter: 'blur(4px)',
-        duration: 0.3,
-        ease: 'power2.in'
-      })
-      // Glow expands outward
-      .to('.preloader-glow', {
-        scale: 3,
-        opacity: 0,
-        filter: 'blur(100px)',
-        duration: 1,
-        ease: 'power4.out'
-      }, '-=0.2')
-      // Advanced reveal using clip-path with expansion
-      .to('#preloader', {
-        clipPath: 'circle(150% at 50% 50%)',
-        duration: 1.2,
-        ease: 'expo.inOut'
-      }, '-=0.8')
       .to('#preloader', {
         opacity: 0,
         autoAlpha: 0,
-        duration: 0.5
-      }, '-=0.4');
+        duration: 0.3,
+        onComplete: () => setIsLoading(false)
+      });
 
     return () => {
       window.removeEventListener('mousemove', moveCursor);

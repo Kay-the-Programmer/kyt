@@ -1,4 +1,5 @@
-import React, { useRef, useLayoutEffect } from 'react';
+import React, { useRef, useLayoutEffect, useContext } from 'react';
+import { TransitionContext } from '../../TransitionContext';
 import logo from '../../assets/logo.png';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
@@ -12,12 +13,22 @@ const HeroSection: React.FC = () => {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const isPageTransition = useContext(TransitionContext);
+
+  const contentXTo = useRef<gsap.QuickToFunc | null>(null);
+  const contentYTo = useRef<gsap.QuickToFunc | null>(null);
+  const hudXTo = useRef<gsap.QuickToFunc | null>(null);
+  const hudYTo = useRef<gsap.QuickToFunc | null>(null);
   useMagnetic(titleRef);
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      // 1. Entrance Animation
-      const entranceTl = gsap.timeline({ defaults: { ease: 'power4.out' } });
+      // 1. Entrance Animation - Faster initial load
+      const delay = isPageTransition ? 0.45 : 0.05;
+      const entranceTl = gsap.timeline({
+        delay: delay,
+        defaults: { ease: 'power4.out' }
+      });
 
       entranceTl
         .set('.hud-element', { opacity: 0, scale: 0.8 })
@@ -49,43 +60,39 @@ const HeroSection: React.FC = () => {
         ease: 'none'
       });
 
-      // 3. Subtle Parallax effect on mouse move
+      // 3. Set up quickTo for smooth parallax (much more efficient than creating tweens per mouse move)
+      if (contentRef.current) {
+        contentXTo.current = gsap.quickTo(contentRef.current, 'x', { duration: 1, ease: 'power2.out' });
+        contentYTo.current = gsap.quickTo(contentRef.current, 'y', { duration: 1, ease: 'power2.out' });
+      }
+
+      const hudElements = document.querySelectorAll('.hud-element');
+      if (hudElements.length > 0) {
+        hudXTo.current = gsap.quickTo(hudElements, 'x', { duration: 1.2, ease: 'power3.out' });
+        hudYTo.current = gsap.quickTo(hudElements, 'y', { duration: 1.2, ease: 'power3.out' });
+      }
+
       const handleMouseMove = (e: MouseEvent) => {
         const { clientX, clientY } = e;
         const x = (clientX - window.innerWidth / 2) / 40;
         const y = (clientY - window.innerHeight / 2) / 40;
 
-        gsap.to(contentRef.current, {
-          x: x,
-          y: y,
-          duration: 1.2,
-          ease: 'power2.out'
-        });
-
-        // Inverse parallax for HUD
-        gsap.to('.hud-element', {
-          x: -x * 0.5,
-          y: -y * 0.5,
-          duration: 1.5,
-          ease: 'power3.out'
-        });
+        // Use quickTo for optimal performance
+        contentXTo.current?.(x);
+        contentYTo.current?.(y);
+        hudXTo.current?.(-x * 0.5);
+        hudYTo.current?.(-y * 0.5);
       };
 
       window.addEventListener('mousemove', handleMouseMove);
 
-      // 4. Cinematic exit animation
+      // 4. Cinematic exit animation - use only GPU-friendly properties (no blur)
       const exitTl = gsap.timeline({
         scrollTrigger: {
           trigger: sectionRef.current,
           start: 'top top',
           end: 'bottom 40%',
-          scrub: 0.8,
-          onUpdate: (self) => {
-            const blur = self.progress * 16;
-            if (contentRef.current) {
-              contentRef.current.style.filter = `blur(${blur}px)`;
-            }
-          }
+          scrub: 0.8
         }
       });
 
@@ -137,7 +144,7 @@ const HeroSection: React.FC = () => {
           <span className="text-[10px] font-black uppercase tracking-[0.5em] text-blue-600 dark:text-blue-400">KYTRIQ TECHNOLOGIES</span>
         </div>
 
-        <h1 ref={titleRef} className="magnetic-area text-4xl sm:text-6xl md:text-7xl lg:text-[8rem] font-heading font-extrabold tracking-tighter leading-[0.95] text-gray-900 dark:text-white select-none overflow-visible flex flex-col items-center [&_.letter-reveal]:opacity-0 [&_.letter-reveal]:translate-y-[60px] [&_.letter-reveal]:rotate-x-[45deg] [&_.letter-reveal]:blur-[10px]">
+        <h1 ref={titleRef} className="text-4xl sm:text-6xl md:text-7xl lg:text-[8rem] font-heading font-extrabold tracking-tighter leading-[0.95] text-gray-900 dark:text-white select-none overflow-visible flex flex-col items-center [&_.letter-reveal]:opacity-0 [&_.letter-reveal]:translate-y-[60px] [&_.letter-reveal]:rotate-x-[45deg] [&_.letter-reveal]:blur-[10px]">
           <SplitText text="Bringing Digital Ideas" className="block mb-2 md:mb-4" />
           <SplitText text="To Life." className="block" isGradient={true} />
         </h1>

@@ -20,6 +20,9 @@ const InteractiveHeroBackground: React.FC = () => {
   const mouseRef = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2, active: false });
   const rafRef = useRef<number>();
   const timeRef = useRef(0);
+  const lastFrameRef = useRef(0);
+  const frameCountRef = useRef(0);
+  const cachedPositionsRef = useRef<{ x: number; y: number }[]>([]);
 
   // Color palette
   const colors = [
@@ -291,18 +294,51 @@ const InteractiveHeroBackground: React.FC = () => {
       }
     });
 
-    // Main animation loop
-    const animate = () => {
-      timeRef.current += 0.016;
+    // Cache particle positions - called on scroll/resize, not every frame
+    const updateCachedPositions = () => {
+      cachedPositionsRef.current = particlesRef.current.map(p => {
+        const rect = p.el.getBoundingClientRect();
+        return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+      });
+    };
+
+    // Initial position cache
+    setTimeout(updateCachedPositions, 100);
+
+    // Update positions on scroll (throttled)
+    let scrollTimeout: number;
+    const handleScroll = () => {
+      if (scrollTimeout) cancelAnimationFrame(scrollTimeout);
+      scrollTimeout = requestAnimationFrame(updateCachedPositions);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    // Main animation loop - throttled to ~30fps for performance
+    const animate = (timestamp: number) => {
+      const elapsed = timestamp - lastFrameRef.current;
+
+      // Throttle to ~30fps (33ms between frames)
+      if (elapsed < 33) {
+        rafRef.current = requestAnimationFrame(animate);
+        return;
+      }
+
+      lastFrameRef.current = timestamp;
+      frameCountRef.current++;
+      timeRef.current += 0.033;
+
       const { x, y, active } = mouseRef.current;
       const isMobileDevice = window.innerWidth < 768;
       const interactionRadius = isMobileDevice ? 220 : 450;
       const maxForce = isMobileDevice ? 0.7 : 1.0;
 
       particlesRef.current.forEach((p, i) => {
-        const rect = p.el.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
+        // Use cached positions instead of getBoundingClientRect every frame
+        const cached = cachedPositionsRef.current[i];
+        if (!cached) return;
+
+        const centerX = cached.x;
+        const centerY = cached.y;
 
         const deltaX = x - centerX;
         const deltaY = y - centerY;
@@ -316,12 +352,11 @@ const InteractiveHeroBackground: React.FC = () => {
           p.xTo(moveX);
           p.yTo(moveY);
 
-          // Magnetic attraction/repulsion effect
+          // Simplified animation - use only GPU-accelerated properties
           gsap.to(p.el, {
-            scale: 1 + force * 0.6,
-            opacity: Math.min(1, p.depth * 0.5 + force * 0.5),
-            filter: `blur(${Math.max(0, (1 - force) * 2)}px) brightness(${1 + force * 0.3})`,
-            duration: 0.2,
+            scale: 1 + force * 0.5,
+            opacity: Math.min(1, p.depth * 0.5 + force * 0.4),
+            duration: 0.3,
             overwrite: 'auto'
           });
         } else {
@@ -331,18 +366,17 @@ const InteractiveHeroBackground: React.FC = () => {
           gsap.to(p.el, {
             scale: 1,
             opacity: p.depth * 0.5,
-            filter: 'blur(0px) brightness(1)',
-            duration: 0.6,
+            duration: 0.5,
             overwrite: 'auto'
           });
         }
-
-        // Subtle wave motion
-        const waveOffset = Math.sin(timeRef.current + i * 0.2) * 3;
-        gsap.set(p.el, { y: `+=${waveOffset}` });
       });
 
-      drawConnections();
+      // Draw connections every 2 frames for performance
+      if (frameCountRef.current % 2 === 0) {
+        drawConnections();
+      }
+
       rafRef.current = requestAnimationFrame(animate);
     };
 
@@ -420,43 +454,15 @@ const InteractiveHeroBackground: React.FC = () => {
 
     rafRef.current = requestAnimationFrame(animate);
 
-    // Periodic aurora wave effect
-    const auroraInterval = setInterval(() => {
-      const startY = Math.random() * window.innerHeight;
-
-      particlesRef.current.forEach((p, i) => {
-        const rect = p.el.getBoundingClientRect();
-        const delay = Math.abs(rect.top - startY) / 600;
-
-        gsap.to(p.el, {
-          scale: 1.5,
-          opacity: Math.min(1, p.depth + 0.4),
-          filter: 'brightness(1.5)',
-          duration: 0.5,
-          delay,
-          ease: "power2.out"
-        });
-
-        gsap.to(p.el, {
-          scale: 1,
-          opacity: p.depth * 0.5,
-          filter: 'brightness(1)',
-          duration: 0.8,
-          delay: delay + 0.5,
-          ease: "power2.inOut"
-        });
-      });
-    }, 10000);
-
     return () => {
       window.removeEventListener('resize', resizeCanvas);
+      window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseleave', handleMouseLeave);
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('click', handleClick);
       cancelAnimationFrame(rafRef.current!);
-      clearInterval(auroraInterval);
       gsap.killTweensOf(particlesRef.current.map(p => p.el));
       particlesRef.current.forEach(p => p.el.remove());
       particlesRef.current = [];

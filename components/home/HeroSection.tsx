@@ -250,7 +250,7 @@ const HeroSection: React.FC = () => {
           onMouseLeave={() => handleTitleHover(false)}
           className="hero-title text-4xl xs:text-5xl sm:text-6xl md:text-7xl lg:text-[9rem] font-heading font-black tracking-tighter leading-[0.85] text-gray-900 dark:text-white select-none flex flex-col items-center cursor-pointer transition-all duration-500"
         >
-          <SplitText text="We Bring Digital Ideas" className="part-1 block mb-1 sm:mb-2 md:mb-4" />
+          <SplitText text="We Bring Ideas" className="part-1 block mb-1 sm:mb-2 md:mb-4" />
           <SplitText text="To Life." className="part-2 block" isGradient={true} />
         </h1>
 

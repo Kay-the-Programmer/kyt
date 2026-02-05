@@ -1,0 +1,54 @@
+/* Add to your global CSS */
+@keyframes gradient-x {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-gradient-x {
+  animation: gradient-x 3s ease infinite;
+  background-size: 200% 200%;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Performance optimizations */
+.will-change-transform {
+  will-change: transform;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+/* Mobile touch feedback */
+@media (max-width: 1023px) {
+  .horizontal-panel {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .horizontal-panel:active {
+    transform: scale(0.99);
+    transition: transform 0.1s ease;
+  }
+}
+
+/* Connection lines animation */
+.panel-connection-line::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  background: #3b82f6;
+  border-radius: 50%;
+  animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.5; }
+}

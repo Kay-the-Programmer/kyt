@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import SplitText from '../SplitText';
@@ -9,7 +9,77 @@ import aiIntegrationImg from '../../assets/ai-integration.jpg';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const AUTO_ROTATE_INTERVAL = 4000; // 4 seconds between auto-rotations
+const AUTO_ROTATE_INTERVAL = 4000;
+
+// Memoized Feature Item component to prevent unnecessary re-renders
+interface FeatureItemProps {
+  item: { title: string; text: string; icon: string; image: string };
+  index: number;
+  isActive: boolean;
+  onHover: (index: number) => void;
+  onLeave: () => void;
+  featureRef: (el: HTMLDivElement | null) => void;
+}
+
+const FeatureItem = memo<FeatureItemProps>(({ item, index, isActive, onHover, onLeave, featureRef }) => (
+  <div
+    ref={featureRef}
+    className={`feature-item group flex items-start space-x-8 cursor-pointer transition-transform duration-300 ${isActive ? 'translate-x-2' : ''}`}
+    onMouseEnter={() => onHover(index)}
+    onMouseLeave={onLeave}
+  >
+    <div
+      className={`feature-icon w-14 h-14 border rounded-2xl flex items-center justify-center shrink-0 shadow-sm transition-all duration-500 ${isActive
+          ? 'bg-blue-600 text-white border-blue-600 -rotate-12 scale-110'
+          : 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 text-blue-600 dark:text-blue-500 group-hover:bg-blue-600 group-hover:text-white group-hover:-rotate-12 group-hover:scale-110'
+        }`}
+    >
+      <i className={`fa-solid ${item.icon} text-lg`} />
+    </div>
+    <div className="flex-1">
+      <div className="flex items-center gap-3 mb-2">
+        <h4 className={`font-bold text-xl tracking-tight transition-colors duration-300 ${isActive ? 'text-blue-600 dark:text-blue-500' : 'text-gray-900 dark:text-white'}`}>
+          {item.title}
+        </h4>
+        {isActive && (
+          <div className="flex items-center gap-1">
+            <span className="active-pulse w-1.5 h-1.5 rounded-full bg-blue-500" />
+            <span className="text-[10px] uppercase tracking-widest text-blue-500 font-semibold">Active</span>
+          </div>
+        )}
+      </div>
+      <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base leading-relaxed">{item.text}</p>
+    </div>
+  </div>
+));
+
+FeatureItem.displayName = 'FeatureItem';
+
+// Memoized Indicator Dots
+interface IndicatorDotsProps {
+  count: number;
+  activeIndex: number;
+  onSelect: (index: number) => void;
+  labels: string[];
+}
+
+const IndicatorDots = memo<IndicatorDotsProps>(({ count, activeIndex, onSelect, labels }) => (
+  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 z-10">
+    {Array.from({ length: count }).map((_, i) => (
+      <button
+        key={i}
+        onClick={() => onSelect(i)}
+        className={`indicator-dot relative w-2.5 h-2.5 rounded-full transition-all duration-500 ${activeIndex === i ? 'bg-blue-500 scale-125' : 'bg-white/50 hover:bg-white/80'
+          }`}
+        aria-label={`View ${labels[i]}`}
+      >
+        {activeIndex === i && <span className="ping-indicator absolute inset-0 rounded-full bg-blue-400" />}
+      </button>
+    ))}
+  </div>
+));
+
+IndicatorDots.displayName = 'IndicatorDots';
 
 const IdentitySection: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -19,96 +89,137 @@ const IdentitySection: React.FC = () => {
   const progressBarRef = useRef<HTMLDivElement>(null);
   const progressTweenRef = useRef<gsap.core.Tween | null>(null);
   const delayedCallRef = useRef<gsap.core.Tween | null>(null);
+  const scanLineRef = useRef<HTMLDivElement>(null);
+  const pulseDotRefs = useRef<(HTMLDivElement | null)[]>([]);
+
   const [activeImage, setActiveImage] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
+  // Track last transition time to prevent rapid-fire transitions
+  const lastTransitionRef = useRef(0);
+  const TRANSITION_DEBOUNCE = 150;
+
   // Memoize features to prevent re-creation
-  const features = React.useMemo(() => [
+  const features = useMemo(() => [
     { title: 'Web applications', text: 'We build responsive and user-friendly web applications.', icon: 'fa-brain', image: webAppImg },
     { title: 'Mobile applications', text: 'We build responsive and user-friendly mobile applications.', icon: 'fa-user-astronaut', image: mobileAppImg },
     { title: 'AI Integration', text: 'We can integrate AI into your applications to make them more intelligent and user-friendly.', icon: 'fa-server', image: aiIntegrationImg }
   ], []);
 
-  // Synchronized transition animation
+  // Feature labels for accessibility
+  const featureLabels = useMemo(() => features.map(f => f.title), [features]);
+
+  // Optimized transition animation with debouncing
   const animateTransition = useCallback((fromIndex: number, toIndex: number) => {
-    const tl = gsap.timeline();
+    const now = performance.now();
+    if (now - lastTransitionRef.current < TRANSITION_DEBOUNCE) return;
+    lastTransitionRef.current = now;
+
+    const fromFeature = featureRefs.current[fromIndex];
+    const toFeature = featureRefs.current[toIndex];
+    const fromImage = imageRefs.current[fromIndex];
+    const toImage = imageRefs.current[toIndex];
+
+    const tl = gsap.timeline({ defaults: { overwrite: 'auto' } });
 
     // Animate out current feature highlight
-    if (featureRefs.current[fromIndex]) {
-      tl.to(featureRefs.current[fromIndex]?.querySelector('.feature-icon'), {
-        scale: 1,
-        rotate: 0,
-        backgroundColor: 'transparent',
-        duration: 0.3,
-        ease: 'power2.out'
-      }, 0);
+    if (fromFeature) {
+      const fromIcon = fromFeature.querySelector('.feature-icon');
+      if (fromIcon) {
+        tl.to(fromIcon, {
+          scale: 1,
+          rotate: 0,
+          duration: 0.3,
+          ease: 'power2.out'
+        }, 0);
+      }
     }
 
-    // Animate in new feature highlight
-    if (featureRefs.current[toIndex]) {
-      tl.to(featureRefs.current[toIndex]?.querySelector('.feature-icon'), {
-        scale: 1.1,
-        rotate: -12,
-        duration: 0.4,
-        ease: 'back.out(1.5)'
-      }, 0.1);
-    }
-
-    // Image crossfade with scale effect - use hardware acceleration
-    if (imageRefs.current[fromIndex] && imageRefs.current[toIndex]) {
-      tl.to(imageRefs.current[fromIndex], {
-        opacity: 0,
-        scale: 1.05,
-        duration: 0.5,
-        ease: 'power2.inOut',
-        overwrite: 'auto'
-      }, 0);
-
-      tl.fromTo(imageRefs.current[toIndex],
-        { opacity: 0, scale: 1.15 },
-        {
-          opacity: 1,
+    // Animate in new feature highlight with enhanced 3D effect
+    if (toFeature) {
+      const toIcon = toFeature.querySelector('.feature-icon');
+      if (toIcon) {
+        tl.to(toIcon, {
           scale: 1.1,
+          rotate: -12,
+          duration: 0.4,
+          ease: 'back.out(1.5)'
+        }, 0.1);
+      }
+
+      // Add subtle glow pulse to active feature
+      tl.fromTo(toFeature,
+        { boxShadow: '0 0 0 rgba(59, 130, 246, 0)' },
+        {
+          boxShadow: '0 0 30px rgba(59, 130, 246, 0.15)',
           duration: 0.6,
-          ease: 'power2.out',
-          overwrite: 'auto'
+          ease: 'power2.out'
         },
-        0.1
+        0
       );
     }
 
-    // Update state
+    // Image crossfade with enhanced scale and blur effect
+    if (fromImage && toImage) {
+      tl.to(fromImage, {
+        opacity: 0,
+        scale: 1.05,
+        filter: 'blur(4px)',
+        duration: 0.5,
+        ease: 'power2.inOut'
+      }, 0);
+
+      tl.fromTo(toImage,
+        { opacity: 0, scale: 1.2, filter: 'blur(8px)' },
+        {
+          opacity: 1,
+          scale: 1.1,
+          filter: 'blur(0px)',
+          duration: 0.7,
+          ease: 'power3.out'
+        },
+        0.15
+      );
+    }
+
     setActiveImage(toIndex);
   }, []);
 
-  // Start progress bar animation
+  // Optimized progress animation using quickSetter
   const startProgressAnimation = useCallback(() => {
-    if (progressBarRef.current) {
-      if (progressTweenRef.current) progressTweenRef.current.kill();
+    const progressBar = progressBarRef.current;
+    if (!progressBar) return;
 
-      gsap.set(progressBarRef.current, { scaleX: 0 });
-      progressTweenRef.current = gsap.to(progressBarRef.current, {
-        scaleX: 1,
-        duration: AUTO_ROTATE_INTERVAL / 1000,
-        ease: 'none'
-      });
+    if (progressTweenRef.current) {
+      progressTweenRef.current.kill();
     }
+
+    gsap.set(progressBar, { scaleX: 0 });
+    progressTweenRef.current = gsap.to(progressBar, {
+      scaleX: 1,
+      duration: AUTO_ROTATE_INTERVAL / 1000,
+      ease: 'none'
+    });
   }, []);
 
-  // Auto-rotation logic using GSAP delayedCall for better sync
+  // Auto-rotation logic with cleanup
   const startAutoRotate = useCallback(() => {
-    if (delayedCallRef.current) delayedCallRef.current.kill();
+    if (delayedCallRef.current) {
+      delayedCallRef.current.kill();
+    }
 
     startProgressAnimation();
 
     const tick = () => {
       setActiveImage(prev => {
         const next = (prev + 1) % features.length;
-        animateTransition(prev, next);
-        startProgressAnimation();
+        // Use requestAnimationFrame for smoother transitions
+        requestAnimationFrame(() => {
+          animateTransition(prev, next);
+          startProgressAnimation();
+        });
 
-        // Schedule next tick
         delayedCallRef.current = gsap.delayedCall(AUTO_ROTATE_INTERVAL / 1000, tick);
         return next;
       });
@@ -127,7 +238,7 @@ const IdentitySection: React.FC = () => {
     }
   }, []);
 
-  // Handle hover interaction
+  // Handle hover interaction with debouncing
   const handleFeatureHover = useCallback((index: number) => {
     setIsPaused(true);
     stopAutoRotate();
@@ -141,127 +252,163 @@ const IdentitySection: React.FC = () => {
     setIsPaused(false);
   }, []);
 
+  // Store ref callbacks
+  const setFeatureRef = useCallback((index: number) => (el: HTMLDivElement | null) => {
+    featureRefs.current[index] = el;
+  }, []);
+
+  // Main animation setup
   useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
     const ctx = gsap.context(() => {
       const mm = gsap.matchMedia();
 
-      // Section entrance - optimized with will-change
-      gsap.fromTo(sectionRef.current,
-        { opacity: 0, y: 100 },
+      // Section entrance with optimized scrub
+      gsap.fromTo(section,
+        { opacity: 0, y: 80 },
         {
           opacity: 1,
           y: 0,
           ease: 'power2.out',
           scrollTrigger: {
-            trigger: sectionRef.current,
+            trigger: section,
             start: 'top 95%',
-            end: 'top 60%',
-            scrub: 0.5
+            end: 'top 65%',
+            scrub: 0.8
           }
         }
       );
 
       mm.add("(min-width: 768px)", () => {
-        // Desktop: High-end Parallax using transforms only
+        // Desktop: Optimized parallax
         gsap.to('.identity-parallax-bg', {
-          y: -150,
-          opacity: 0.1,
+          y: -120,
           ease: 'none',
           scrollTrigger: {
-            trigger: sectionRef.current,
+            trigger: section,
             start: 'top bottom',
             end: 'bottom top',
             scrub: true
           }
         });
 
-        // Floating badge - use force3D for GPU acceleration
-        gsap.to(badgeRef.current, {
-          y: -30,
-          x: 20,
-          duration: 3,
-          repeat: -1,
-          yoyo: true,
-          ease: 'sine.inOut',
-          force3D: true
+        // Floating badge with GPU acceleration
+        if (badgeRef.current) {
+          gsap.to(badgeRef.current, {
+            y: -25,
+            x: 15,
+            duration: 3.5,
+            repeat: -1,
+            yoyo: true,
+            ease: 'sine.inOut',
+            force3D: true
+          });
+        }
+
+        // Animate pulse dots with GSAP instead of CSS
+        pulseDotRefs.current.forEach((dot, i) => {
+          if (dot) {
+            gsap.to(dot, {
+              opacity: 0.3,
+              scale: 1.2,
+              duration: 0.8,
+              repeat: -1,
+              yoyo: true,
+              ease: 'sine.inOut',
+              delay: i * 0.15
+            });
+          }
         });
       });
 
-      // Header revelation
-      gsap.fromTo('.identity-title .letter-reveal',
-        {
-          y: '80%',
-          opacity: 0,
-          rotateX: -30,
-          scale: 0.9,
-          filter: 'blur(8px)'
-        },
-        {
-          scrollTrigger: {
-            trigger: '.identity-title',
-            start: 'top 88%',
-            end: 'top 60%',
-            scrub: 0.6,
-            toggleActions: 'play none none reverse'
+      // Header revelation with enhanced 3D
+      const letterReveals = section.querySelectorAll('.identity-title .letter-reveal');
+      if (letterReveals.length > 0) {
+        gsap.fromTo(letterReveals,
+          {
+            y: '100%',
+            opacity: 0,
+            rotateX: -45,
+            scale: 0.85
           },
-          y: '0%',
-          opacity: 1,
-          rotateX: 0,
-          scale: 1,
-          filter: 'blur(0px)',
-          stagger: 0.01, // Reduced stagger for performance
-          ease: 'power3.out',
-          overwrite: 'auto'
-        }
-      );
+          {
+            scrollTrigger: {
+              trigger: '.identity-title',
+              start: 'top 88%',
+              end: 'top 55%',
+              scrub: 0.8,
+              toggleActions: 'play none none reverse'
+            },
+            y: '0%',
+            opacity: 1,
+            rotateX: 0,
+            scale: 1,
+            stagger: 0.015,
+            ease: 'power4.out'
+          }
+        );
+      }
 
-      // Description text reveal
+      // Description with smooth reveal
       gsap.fromTo('.identity-description',
-        { opacity: 0, y: 20, filter: 'blur(4px)' },
+        { opacity: 0, y: 30 },
         {
           opacity: 1,
           y: 0,
-          filter: 'blur(0px)',
-          duration: 0.6,
-          ease: 'power2.out',
+          duration: 0.8,
+          ease: 'power3.out',
           scrollTrigger: {
             trigger: '.identity-description',
-            start: 'top 90%',
+            start: 'top 88%',
             toggleActions: 'play none none reverse'
           }
         }
       );
 
-      // Feature Items Stagger
-      gsap.fromTo('.feature-item',
-        { opacity: 0, x: -30, filter: 'blur(4px)' },
-        {
-          scrollTrigger: {
-            trigger: '.feature-list',
-            start: 'top 85%',
-            toggleActions: 'play none none reverse'
+      // Feature Items with enhanced stagger animation
+      const featureItems = section.querySelectorAll('.feature-item');
+      if (featureItems.length > 0) {
+        gsap.fromTo(featureItems,
+          {
+            opacity: 0,
+            x: -40,
+            rotateY: -15
           },
-          opacity: 1,
-          x: 0,
-          filter: 'blur(0px)',
-          stagger: 0.1,
-          duration: 0.6,
-          ease: 'power3.out'
-        }
-      );
+          {
+            scrollTrigger: {
+              trigger: '.feature-list',
+              start: 'top 85%',
+              toggleActions: 'play none none reverse'
+            },
+            opacity: 1,
+            x: 0,
+            rotateY: 0,
+            stagger: {
+              each: 0.12,
+              ease: 'power2.out'
+            },
+            duration: 0.8,
+            ease: 'power3.out'
+          }
+        );
+      }
 
-      // Image Reveal Wrapper
+      // Image Reveal with enhanced clip-path animation
       gsap.fromTo('.image-reveal-wrapper',
         {
-          clipPath: 'inset(10% 10% 10% 10% round 3rem)',
+          clipPath: 'inset(15% 15% 15% 15% round 3rem)',
           opacity: 0,
-          scale: 0.98
+          scale: 0.95,
+          rotateY: 10
         },
         {
           clipPath: 'inset(0% 0% 0% 0% round 3rem)',
           opacity: 1,
           scale: 1,
-          duration: 1,
+          rotateY: 0,
+          duration: 1.2,
           ease: 'expo.out',
           scrollTrigger: {
             trigger: '.image-reveal-wrapper',
@@ -271,32 +418,65 @@ const IdentitySection: React.FC = () => {
         }
       );
 
-      // Inner Image Scale Parallax
+      // Inner Image Parallax
       gsap.to('.inner-image', {
-        y: 30,
+        y: 25,
         ease: 'none',
         scrollTrigger: {
           trigger: '.image-reveal-wrapper',
           start: 'top bottom',
           end: 'bottom top',
-          scrub: 0.5
+          scrub: 0.8
         }
       });
 
-      // Cleanup
+      // Scan line animation with GSAP instead of CSS
+      if (scanLineRef.current) {
+        gsap.to(scanLineRef.current, {
+          top: '100%',
+          duration: 4,
+          repeat: -1,
+          ease: 'none'
+        });
+      }
+
+      // Badge entrance animation
+      if (badgeRef.current) {
+        gsap.fromTo(badgeRef.current,
+          { opacity: 0, y: 50, scale: 0.9 },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 1,
+            ease: 'back.out(1.5)',
+            scrollTrigger: {
+              trigger: badgeRef.current,
+              start: 'top 90%',
+              toggleActions: 'play none none reverse'
+            }
+          }
+        );
+      }
+
       return () => {
         mm.revert();
       };
-    }, sectionRef);
+    }, section);
 
     return () => ctx.revert();
   }, []);
 
   // Intersection Observer for visibility
   useEffect(() => {
-    if (!sectionRef.current) return;
-    const observer = new IntersectionObserver(([entry]) => setIsVisible(entry.isIntersecting), { threshold: 0.1 });
-    observer.observe(sectionRef.current);
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0.1, rootMargin: '50px' }
+    );
+    observer.observe(section);
     return () => observer.disconnect();
   }, []);
 
@@ -315,20 +495,22 @@ const IdentitySection: React.FC = () => {
       id="who-we-are"
       ref={sectionRef}
       className="reveal-on-scroll relative z-10 py-24 md:py-48 lg:py-64 px-6 border-t border-gray-100 dark:border-gray-900/30 overflow-hidden"
-      style={{ willChange: 'transform, opacity' }}
     >
-      <div className="identity-parallax-bg absolute top-0 -left-10 text-[35vw] font-black text-blue-600/[0.04] dark:text-white/[0.02] select-none pointer-events-none tracking-tighter leading-none" style={{ willChange: 'transform' }}>
+      <div
+        className="identity-parallax-bg absolute top-0 -left-10 text-[35vw] font-black text-blue-600/[0.04] dark:text-white/[0.02] select-none pointer-events-none tracking-tighter leading-none"
+        style={{ willChange: 'transform' }}
+      >
         01
       </div>
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 md:gap-32 items-center relative z-10">
         <div>
           <div className="identity-intro-badge flex items-center space-x-4 mb-8">
-            <div className="h-px w-12 bg-blue-600"></div>
+            <div className="h-px w-12 bg-blue-600" />
             <h2 className="text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-[0.7em]">INTRO</h2>
           </div>
 
-          <h3 className="identity-title text-5xl md:text-7xl lg:text-[7.5rem] font-heading font-bold mb-10 leading-[0.85] text-gray-900 dark:text-white tracking-tighter">
+          <h3 className="identity-title text-5xl md:text-7xl lg:text-[7.5rem] font-heading font-bold mb-10 leading-[0.85] text-gray-900 dark:text-white tracking-tighter" style={{ perspective: '1000px' }}>
             <SplitText text="What We" className="block" />
             <span className="text-gray-400 dark:text-gray-600 inline-block">
               <SplitText text="DO." />
@@ -339,7 +521,7 @@ const IdentitySection: React.FC = () => {
             We build intelligent systems that deliver value to our clients and evolve with human ambition.
           </p>
 
-          <div className="feature-list space-y-8 md:space-y-12">
+          <div className="feature-list space-y-8 md:space-y-12" style={{ perspective: '800px' }}>
             <div className="relative h-0.5 w-full max-w-xs bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden mb-4">
               <div
                 ref={progressBarRef}
@@ -349,67 +531,58 @@ const IdentitySection: React.FC = () => {
             </div>
 
             {features.map((item, i) => (
-              <div
+              <FeatureItem
                 key={i}
-                ref={(el) => featureRefs.current[i] = el}
-                className={`feature-item group flex items-start space-x-8 cursor-pointer transition-all duration-300 ${activeImage === i ? 'translate-x-2' : ''}`}
-                onMouseEnter={() => handleFeatureHover(i)}
-                onMouseLeave={handleFeatureLeave}
-              >
-                <div className={`feature-icon w-14 h-14 border rounded-2xl flex items-center justify-center shrink-0 shadow-sm transition-all duration-500 ${activeImage === i ? 'bg-blue-600 text-white border-blue-600 -rotate-12 scale-110' : 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 text-blue-600 dark:text-blue-500 group-hover:bg-blue-600 group-hover:text-white group-hover:-rotate-12 group-hover:scale-110'}`} style={{ willChange: 'transform, background-color' }}>
-                  <i className={`fa-solid ${item.icon} text-lg`}></i>
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h4 className={`font-bold text-xl tracking-tight transition-colors duration-300 ${activeImage === i ? 'text-blue-600 dark:text-blue-500' : 'text-gray-900 dark:text-white'}`}>{item.title}</h4>
-                    {activeImage === i && (
-                      <div className="flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                        <span className="text-[10px] uppercase tracking-widest text-blue-500 font-semibold">Active</span>
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base leading-relaxed">{item.text}</p>
-                </div>
-              </div>
+                item={item}
+                index={i}
+                isActive={activeImage === i}
+                onHover={handleFeatureHover}
+                onLeave={handleFeatureLeave}
+                featureRef={setFeatureRef(i)}
+              />
             ))}
           </div>
         </div>
 
-        <div className="reveal-child relative">
-          <div className="image-reveal-wrapper relative aspect-square rounded-[3rem] overflow-hidden border border-gray-100 dark:border-gray-800 p-3 bg-white/50 dark:bg-gray-950/30 backdrop-blur-md" style={{ willChange: 'clip-path, transform' }}>
+        <div className="reveal-child relative" style={{ perspective: '1200px' }}>
+          <div
+            className="image-reveal-wrapper relative aspect-square rounded-[3rem] overflow-hidden border border-gray-100 dark:border-gray-800 p-3 bg-white/50 dark:bg-gray-950/30 backdrop-blur-md"
+            style={{ willChange: 'clip-path, transform', transformStyle: 'preserve-3d' }}
+          >
             <div className="w-full h-full overflow-hidden rounded-[2.5rem] relative">
               {features.map((item, i) => (
                 <img
                   key={i}
-                  ref={(el) => imageRefs.current[i] = el}
+                  ref={(el) => { imageRefs.current[i] = el; }}
                   src={item.image}
                   alt={item.title}
                   width="600"
                   height="600"
                   loading={i === 0 ? 'eager' : 'lazy'}
-                  {...(i === 0 ? { fetchpriority: 'high' } : {})}
+                  fetchPriority={i === 0 ? 'high' : 'auto'}
                   decoding="async"
-                  className={`inner-image absolute inset-0 w-full h-full object-cover scale-110 ${activeImage === i ? 'opacity-100' : 'opacity-0'}`}
-                  style={{ willChange: 'opacity' }}
+                  className={`inner-image absolute inset-0 w-full h-full object-cover ${activeImage === i ? '' : 'pointer-events-none'}`}
+                  style={{
+                    willChange: 'transform, opacity, filter',
+                    opacity: activeImage === i ? 1 : 0,
+                    transform: 'scale(1.1)'
+                  }}
                 />
               ))}
             </div>
 
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 z-10">
-              {features.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => handleFeatureHover(i)}
-                  className={`relative w-2.5 h-2.5 rounded-full transition-all duration-500 ${activeImage === i ? 'bg-blue-500 scale-125' : 'bg-white/50 hover:bg-white/80'}`}
-                  aria-label={`View ${features[i].title}`}
-                >
-                  {activeImage === i && <span className="absolute inset-0 rounded-full bg-blue-400 animate-ping" />}
-                </button>
-              ))}
-            </div>
+            <IndicatorDots
+              count={features.length}
+              activeIndex={activeImage}
+              onSelect={handleFeatureHover}
+              labels={featureLabels}
+            />
 
-            <div className="absolute inset-0 bg-gradient-to-b from-blue-500/0 via-blue-500/10 to-blue-500/0 h-1/4 w-full -top-full animate-[scan_4s_linear_infinite] pointer-events-none"></div>
+            <div
+              ref={scanLineRef}
+              className="absolute inset-x-0 bg-gradient-to-b from-blue-500/0 via-blue-500/10 to-blue-500/0 h-1/4 pointer-events-none"
+              style={{ top: '-25%' }}
+            />
           </div>
 
           <div
@@ -422,17 +595,17 @@ const IdentitySection: React.FC = () => {
               <div className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 dark:text-gray-500 text-center">System Reliability</div>
               <div className="flex space-x-1 mt-6">
                 {[...Array(5)].map((_, i) => (
-                  <div key={i} className="w-1.5 h-1.5 rounded-full bg-blue-600/20 animate-pulse" style={{ animationDelay: `${i * 0.2}s` }}></div>
+                  <div
+                    key={i}
+                    ref={el => { pulseDotRefs.current[i] = el; }}
+                    className="w-1.5 h-1.5 rounded-full bg-blue-600/40"
+                  />
                 ))}
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      <style dangerouslySetInnerHTML={{
-        __html: `@keyframes scan { 0% { top: -100%; } 100% { top: 100%; } }`
-      }} />
     </section>
   );
 };

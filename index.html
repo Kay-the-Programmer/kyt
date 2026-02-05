@@ -46,6 +46,10 @@
 
     <!-- Preload Critical Assets -->
     <link rel="preload" as="image" href="/assets/logo.png">
+    <link rel="modulepreload" href="/index.tsx">
+    <!-- Preload critical fonts -->
+    <link rel="preload" as="font" type="font/woff2" href="https://fonts.gstatic.com/s/inter/v18/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2" crossorigin>
+    <link rel="preload" as="font" type="font/woff2" href="https://fonts.gstatic.com/s/spacegrotesk/v17/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj62UXs.woff2" crossorigin>
 
     <!-- Favicon and Touch Icons -->
     <link rel="icon" type="image/png" href="/assets/logo.png">
@@ -80,7 +84,10 @@
     }
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Font Awesome - deferred loading to prevent render blocking -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+    <!-- Google Fonts with font-display=swap for faster text rendering -->
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">

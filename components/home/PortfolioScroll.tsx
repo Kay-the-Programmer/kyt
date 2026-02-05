@@ -436,44 +436,104 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
         }
       });
 
-      // 7. Optimized Mobile Animations
+      // 7. Enhanced Mobile Animations
       mm.add("(max-width: 1023px)", () => {
         const panels = gsap.utils.toArray<HTMLElement>('.horizontal-panel');
 
-        // Batch set initial state
+        // Set initial state with GPU acceleration
         gsap.set(panels, {
-          y: 80,
+          y: 60,
           opacity: 0,
-          scale: 0.95,
+          scale: 0.97,
+          transformOrigin: 'center top',
           willChange: 'transform, opacity'
         });
 
         panels.forEach((panel, index) => {
+          // Main panel entrance - trigger earlier for smoother feel
           gsap.to(panel, {
             y: 0,
             opacity: 1,
             scale: 1,
-            duration: 1.2,
-            delay: index * 0.15,
-            ease: 'back.out(1.7)',
+            duration: 0.9,
+            ease: 'power3.out',
             scrollTrigger: {
               trigger: panel,
-              start: 'top 85%',
-              end: 'top 30%',
+              start: 'top 92%',
+              end: 'top 40%',
               toggleActions: 'play none none reverse'
             }
           });
 
-          // Simplified internal animations
-          const internalTargets = panel.querySelectorAll('.reveal-target, img');
-          if (internalTargets.length > 0) {
-            gsap.from(internalTargets, {
-              y: 40,
+          // Enhanced internal element animations with better timing
+          const splitTextChars = panel.querySelectorAll('.split-text-char');
+          const revealTargets = panel.querySelectorAll('.reveal-target');
+          const images = panel.querySelectorAll('img');
+
+          // Split text character animations (headlines)
+          if (splitTextChars.length > 0) {
+            gsap.set(splitTextChars, {
               opacity: 0,
-              stagger: 0.05,
-              duration: 0.8,
-              delay: 0.3,
-              ease: 'power3.out',
+              y: 30,
+              rotationX: -20,
+              transformPerspective: 600,
+              willChange: 'transform, opacity'
+            });
+
+            gsap.to(splitTextChars, {
+              opacity: 1,
+              y: 0,
+              rotationX: 0,
+              stagger: {
+                each: 0.015,
+                from: index % 2 === 0 ? 'start' : 'end'
+              },
+              duration: 0.6,
+              ease: 'power2.out',
+              scrollTrigger: {
+                trigger: panel,
+                start: 'top 88%',
+                toggleActions: 'play none none reverse'
+              }
+            });
+          }
+
+          // Reveal targets with staggered entrance
+          if (revealTargets.length > 0) {
+            gsap.set(revealTargets, {
+              opacity: 0,
+              y: 35,
+              willChange: 'transform, opacity'
+            });
+
+            gsap.to(revealTargets, {
+              opacity: 1,
+              y: 0,
+              stagger: 0.08,
+              duration: 0.7,
+              ease: 'power2.out',
+              scrollTrigger: {
+                trigger: panel,
+                start: 'top 85%',
+                toggleActions: 'play none none reverse'
+              }
+            });
+          }
+
+          // Image scale reveal
+          if (images.length > 0) {
+            gsap.set(images, {
+              scale: 1.1,
+              opacity: 0,
+              willChange: 'transform, opacity'
+            });
+
+            gsap.to(images, {
+              scale: 1,
+              opacity: 1,
+              stagger: 0.15,
+              duration: 1,
+              ease: 'power2.out',
               scrollTrigger: {
                 trigger: panel,
                 start: 'top 80%',
@@ -483,7 +543,7 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
           }
         });
 
-        // Pre-create mobile progress indicator
+        // Mobile progress indicator
         if (!mobileProgressRef.current) {
           const mobileProgress = document.createElement('div');
           mobileProgress.className = 'mobile-progress-indicator';
@@ -496,6 +556,7 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
             z-index: 9999;
             width: 0%;
             will-change: width;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
           `;
           document.body.appendChild(mobileProgress);
           mobileProgressRef.current = mobileProgress;
@@ -507,10 +568,13 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
           start: 'top top',
           end: 'bottom bottom',
           onUpdate: (self) => {
-            // Only update if progress changed significantly
-            if (Math.abs(self.progress - lastMobileProgress) > 0.01) {
-              gsap.set(mobileProgressRef.current, {
-                width: `${self.progress * 100}%`
+            // Smooth update with threshold
+            if (Math.abs(self.progress - lastMobileProgress) > 0.008) {
+              gsap.to(mobileProgressRef.current, {
+                width: `${self.progress * 100}%`,
+                duration: 0.2,
+                ease: 'none',
+                overwrite: true
               });
               lastMobileProgress = self.progress;
             }

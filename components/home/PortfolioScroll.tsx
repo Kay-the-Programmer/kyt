@@ -548,7 +548,7 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
   }), []);
 
   return (
-    <div ref={innerRef} className="portfolio-scroll-container relative w-full overflow-x-hidden lg:overflow-visible">
+    <div ref={innerRef} className="portfolio-scroll-container relative w-full overflow-hidden lg:overflow-visible">
       <PortfolioProgressBar ref={progressBarRef} />
       {!isMobile && <CursorGlow ref={cursorGlowRef} />}
       <ScrollDirectionIndicator />

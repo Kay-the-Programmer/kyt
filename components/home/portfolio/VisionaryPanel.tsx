@@ -5,15 +5,15 @@ const VisionaryPanel = () => {
     return (
         <div className="horizontal-panel w-full lg:w-screen min-h-screen lg:h-screen flex items-center justify-center p-6 md:p-24 relative overflow-hidden shrink-0 z-[3] will-change-transform">
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
-                <span className="text-[45vw] font-black text-blue-600/[0.02] dark:text-white/[0.01] tracking-tighter leading-none pointer-events-none uppercase animate-pulse">Kytriq</span>
+                <span className="text-[30vw] lg:text-[45vw] font-black text-blue-600/[0.02] dark:text-white/[0.01] tracking-tighter leading-none pointer-events-none uppercase animate-pulse">Kytriq</span>
             </div>
             <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-24 items-center max-w-7xl">
                 <div className="text-left">
-                    <h2 className="text-7xl md:text-9xl font-heading font-black text-gray-900 dark:text-white mb-12 tracking-tighter leading-[0.85]">
+                    <h2 className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-heading font-black text-gray-900 dark:text-white mb-8 sm:mb-12 tracking-tighter leading-[0.85]">
                         <SplitText text="Visionary" className="block" />
                         <span className="gradient-text"><SplitText text="Engineering." /></span>
                     </h2>
-                    <p className="text-xl md:text-2xl text-gray-500 dark:text-gray-400 font-light leading-relaxed mb-12 max-w-lg reveal-target">
+                    <p className="text-base sm:text-xl md:text-2xl text-gray-500 dark:text-gray-400 font-light leading-relaxed mb-8 sm:mb-12 max-w-lg reveal-target">
                         We don't just build applications. We architect digital organisms that adapt, learn, and grow alongside your evolving business mission.
                     </p>
                 </div>

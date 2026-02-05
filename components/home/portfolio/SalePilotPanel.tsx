@@ -45,7 +45,7 @@ const SalePilotPanel = () => {
                             <img src={salePilotImg} width="1200" height="900" className="w-full h-full object-cover grayscale opacity-90 transition-all duration-1000 hover:grayscale-0 hover:scale-105" alt="SalePilot Hub" />
                         </div>
                     </div>
-                    <div className="floating-card absolute -bottom-10 -right-4 lg:-bottom-16 lg:-right-16 w-52 h-52 lg:w-72 lg:h-72 bg-gray-900 dark:bg-white rounded-[4rem] lg:rounded-[6rem] flex flex-col items-center justify-center p-8 lg:p-12 shadow-3xl z-20 group hover:-rotate-6 hover:scale-105 transition-all duration-700">
+                    <div className="floating-card absolute -bottom-10 right-2 sm:right-0 lg:-bottom-16 lg:-right-16 w-40 h-40 sm:w-52 sm:h-52 lg:w-72 lg:h-72 bg-gray-900 dark:bg-white rounded-[3rem] sm:rounded-[4rem] lg:rounded-[6rem] flex flex-col items-center justify-center p-6 sm:p-8 lg:p-12 shadow-3xl z-20 group hover:-rotate-6 hover:scale-105 transition-all duration-700">
                         <i className="fa-solid fa-brain text-blue-500 text-4xl lg:text-5xl mb-6 group-hover:scale-110 transition-transform"></i>
                         <span className="text-[9px] lg:text-xs font-black uppercase tracking-[0.4em] text-center text-white dark:text-gray-900 leading-relaxed">Cognitive <br />Insights Engine</span>
                     </div>

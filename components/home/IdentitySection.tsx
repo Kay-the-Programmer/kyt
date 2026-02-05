@@ -3,9 +3,9 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import SplitText from '../SplitText';
 
-import webAppImg from '../../assets/web-app-dev.png';
-import mobileAppImg from '../../assets/mobile-app-dev.png';
-import aiIntegrationImg from '../../assets/ai-integration.png';
+import webAppImg from '../../assets/web-app-dev.jpg';
+import mobileAppImg from '../../assets/mobile-app-dev.jpg';
+import aiIntegrationImg from '../../assets/ai-integration.jpg';
 
 gsap.registerPlugin(ScrollTrigger);
 

@@ -24,8 +24,6 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
   const cursorGlowRef = useRef<HTMLDivElement>(null);
   useSharedMousePos();
 
-  const [activePanel, setActivePanel] = useState(0);
-
   useEffect(() => {
     const timer = setTimeout(() => {
       ScrollTrigger.refresh(true);
@@ -105,7 +103,7 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
             id: 'main-horizontal-scroll',
             trigger: container,
             pin: true,
-            scrub: 3,
+            scrub: 1, // Reduced from 3 to 1 for more responsive scrolling
             snap: {
               snapTo: 1 / (panels.length - 1),
               duration: { min: 0.3, max: 0.6 },
@@ -126,8 +124,6 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
               const scale = 1 - Math.abs(velocity) * 0.005;
               skewSetter(skew);
               scaleSetter(Math.max(0.95, scale));
-              const hue = 220 + self.progress * 30;
-              gsap.set(container, { '--scroll-hue': hue });
             },
             onToggle: (self) => {
               if (!self.isActive) {
@@ -151,7 +147,6 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
             refreshPriority: -1 - i,
             onToggle: (self) => {
               if (self.isActive) {
-                setActivePanel(i);
                 gsap.to(p, { scale: 1, rotateY: 0, filter: 'brightness(1) blur(0px)', duration: 0.6, ease: 'power2.out', overwrite: 'auto' });
               } else {
                 gsap.to(p, { scale: 0.96, rotateY: self.direction === 1 ? -2 : 2, filter: 'brightness(0.95) blur(0px)', duration: 0.6, ease: 'power2.out', overwrite: 'auto' });
@@ -263,6 +258,18 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
       const cursorXTo = cursorGlow ? gsap.quickTo(cursorGlow, "left", { duration: 0.3, ease: "power2.out" }) : null;
       const cursorYTo = cursorGlow ? gsap.quickTo(cursorGlow, "top", { duration: 0.3, ease: "power2.out" }) : null;
 
+      let cachedRect: DOMRect | null = null;
+      let lastUpdateRect = 0;
+
+      const getRect = () => {
+        const now = Date.now();
+        if (!cachedRect || now - lastUpdateRect > 1000) {
+          cachedRect = panel.getBoundingClientRect();
+          lastUpdateRect = now;
+        }
+        return cachedRect;
+      };
+
       let isInsidePanel = false;
       const updateInteractiveGrid = () => {
         if (!globalMousePos.active) return;
@@ -271,9 +278,11 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
           cursorYTo(globalMousePos.y);
         }
         if (window.innerWidth < 1024) return;
-        const rect = panel.getBoundingClientRect();
+
+        const rect = getRect();
         const relX = globalMousePos.x - rect.left;
         const relY = globalMousePos.y - rect.top;
+
         if (relX >= -rect.width * 0.5 && relX <= rect.width * 1.5) {
           const xPct = (relX / rect.width) - 0.5;
           const yPct = (relY / rect.height) - 0.5;

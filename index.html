@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <!-- Primary SEO Meta Tags -->
     <title>Kytriq Technologies | Bringing Digital Ideas to Life</title>
@@ -41,6 +43,9 @@
 
     <!-- Canonical URL -->
     <link rel="canonical" href="https://kytriq.com/">
+
+    <!-- Preload Critical Assets -->
+    <link rel="preload" as="image" href="/assets/logo.png">
 
     <!-- Favicon and Touch Icons -->
     <link rel="icon" type="image/png" href="/assets/logo.png">
@@ -111,7 +116,15 @@
         }
     </script>
     <style>
-        * {
+        /* Targeted transitions instead of global * trigger */
+        html,
+        body,
+        div,
+        section,
+        nav,
+        footer,
+        aside,
+        header {
             transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -119,6 +132,8 @@
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
             cursor: none;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
             transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 

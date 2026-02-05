@@ -160,12 +160,15 @@ const Preloader = () => (
   </div>
 );
 
+import { useSharedMousePos, globalMousePos } from './hooks/useSharedMousePos';
+
 const AppContent: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const mainRef = useRef<HTMLElement>(null);
   const location = useLocation();
   const [isPageTransition, setIsPageTransition] = useState(false);
   const firstPath = useRef(location.pathname);
+  useSharedMousePos();
 
   // Track if we are in a page transition (navigation) vs initial load
   useEffect(() => {
@@ -179,10 +182,10 @@ const AppContent: React.FC = () => {
     const follower = document.getElementById('cursor-follower');
     const isMobile = window.innerWidth < 768;
 
-    const moveCursor = (e: MouseEvent) => {
-      if (isMobile) return;
-      gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1, ease: 'power2.out' });
-      gsap.to(follower, { x: e.clientX - 16, y: e.clientY - 16, duration: 0.4, ease: 'power3.out' });
+    const updateCursor = () => {
+      if (isMobile || !globalMousePos.active) return;
+      gsap.to(cursor, { x: globalMousePos.x, y: globalMousePos.y, duration: 0.1, ease: 'power2.out', overwrite: 'auto' });
+      gsap.to(follower, { x: globalMousePos.x - 16, y: globalMousePos.y - 16, duration: 0.4, ease: 'power3.out', overwrite: 'auto' });
     };
 
     const handleHover = (e: MouseEvent) => {
@@ -211,7 +214,7 @@ const AppContent: React.FC = () => {
       gsap.to(follower, { scale: 1, duration: 0.2 });
     };
 
-    window.addEventListener('mousemove', moveCursor);
+    gsap.ticker.add(updateCursor);
     window.addEventListener('mouseover', handleHover);
     window.addEventListener('mousedown', handleMouseDown);
     window.addEventListener('mouseup', handleMouseUp);
@@ -224,51 +227,48 @@ const AppContent: React.FC = () => {
       .to('.preloader-glow', {
         scale: 1,
         opacity: 1,
-        duration: 0.8,
+        duration: 0.3,
         ease: 'power2.out'
       })
-      // Characters animate in with bounce
+      // Characters animate in very fast
       .to('.preloader-char', {
         y: 0,
         opacity: 1,
         scale: 1,
-        duration: 1,
-        stagger: 0.06,
+        duration: 0.4,
+        stagger: 0.015,
         ease: 'back.out(1.4)'
-      }, '-=0.4')
-      // Circles pulse
+      }, '-=0.1')
+      // Circles/Progress fills very fast
       .to('.preloader-circle', {
         scale: 1.1,
         opacity: 0.4,
-        duration: 0.6,
+        duration: 0.2,
         ease: 'power2.inOut',
         yoyo: true,
         repeat: 1
-      }, '-=0.8')
-      .to('.preloader-circle-inner', {
-        scale: 1.15,
-        opacity: 0.6,
-        duration: 0.5,
+      }, '-=0.2')
+      .to('.preloader-progress', {
+        width: '100%',
+        duration: 0.3,
         ease: 'power2.inOut',
-        yoyo: true,
-        repeat: 1
-      }, '-=1.1')
-      // Progress bar fills
-      .to('.preloader-progress', { width: '100%', duration: 1.2, ease: 'power2.inOut' }, '-=0.6')
+        onComplete: () => setIsLoading(false) // Trigger visibility EARLY
+      }, '-=0.3')
       .to('#preloader', {
         opacity: 0,
         autoAlpha: 0,
         duration: 0.3,
-        onComplete: () => setIsLoading(false)
+        ease: 'power2.inOut'
       });
 
     return () => {
-      window.removeEventListener('mousemove', moveCursor);
+      gsap.ticker.remove(updateCursor);
       window.removeEventListener('mouseover', handleHover);
       window.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mouseup', handleMouseUp);
     };
   }, []);
+
 
   // UseLayoutEffect ensures we start the animation state before the browser paints the new route content
   useLayoutEffect(() => {
@@ -295,29 +295,27 @@ const AppContent: React.FC = () => {
   return (
     <>
       <Preloader />
-      {!isLoading && (
-        <div className="transition-colors duration-300">
-          <ScrollToTop />
-          <TransitionOverlay isPageTransition={isPageTransition} />
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main ref={mainRef} className="flex-grow">
-              <TransitionContext.Provider value={isPageTransition}>
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/projects" element={<Projects />} />
-                  <Route path="/projects/salepilot" element={<SalePilotDetail />} />
-                  <Route path="/services" element={<Services />} />
-                  <Route path="/contact" element={<Contact />} />
-                </Routes>
-              </TransitionContext.Provider>
-            </main>
-            <AiAssistant />
-            <ScrollToTopButton />
-          </div>
+      <div className={`transition-colors duration-300 ${isLoading ? 'pointer-events-none' : ''}`}>
+        <ScrollToTop />
+        <TransitionOverlay isPageTransition={isPageTransition} />
+        <div className="flex flex-col min-h-screen">
+          <Navbar />
+          <main ref={mainRef} className="flex-grow">
+            <TransitionContext.Provider value={isPageTransition}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/projects" element={<Projects />} />
+                <Route path="/projects/salepilot" element={<SalePilotDetail />} />
+                <Route path="/services" element={<Services />} />
+                <Route path="/contact" element={<Contact />} />
+              </Routes>
+            </TransitionContext.Provider>
+          </main>
+          <AiAssistant />
+          <ScrollToTopButton />
         </div>
-      )}
+      </div>
     </>
   );
 };

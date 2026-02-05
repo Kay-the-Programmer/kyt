@@ -125,6 +125,8 @@ const Navbar: React.FC = () => {
           <img
             src={logo}
             alt="Kytriq Logo"
+            width="112"
+            height="48"
             className="h-10 md:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
           />
         </Link>

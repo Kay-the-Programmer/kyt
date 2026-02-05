@@ -41,7 +41,7 @@ const SalePilotPanel = () => {
                 <div className="relative reveal-target" style={{ perspective: '2000px' }}>
                     <div className="relative z-10 aspect-[4/3] bg-white dark:bg-gray-900 rounded-[3.5rem] lg:rounded-[5.5rem] overflow-hidden border border-gray-100 dark:border-white/5 shadow-2xl p-5 hover:shadow-blue-600/10 transition-shadow duration-700">
                         <div className="w-full h-full overflow-hidden rounded-[2.5rem] lg:rounded-[4.5rem] bg-gray-50 dark:bg-gray-800 relative">
-                            <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=1200" className="w-full h-full object-cover grayscale opacity-90 transition-all duration-1000 hover:grayscale-0 hover:scale-105" alt="SalePilot Hub" />
+                            <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=1200" width="1200" height="900" className="w-full h-full object-cover grayscale opacity-90 transition-all duration-1000 hover:grayscale-0 hover:scale-105" alt="SalePilot Hub" />
                         </div>
                     </div>
                     <div className="floating-card absolute -bottom-10 -right-4 lg:-bottom-16 lg:-right-16 w-52 h-52 lg:w-72 lg:h-72 bg-gray-900 dark:bg-white rounded-[4rem] lg:rounded-[6rem] flex flex-col items-center justify-center p-8 lg:p-12 shadow-3xl z-20 group hover:-rotate-6 hover:scale-105 transition-all duration-700">

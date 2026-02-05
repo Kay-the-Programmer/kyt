@@ -12,7 +12,7 @@ interface SplitTextProps {
  * Refactored to be visible by default for better robustness.
  * Use gsap.from() in parent components to animate these characters.
  */
-const SplitText: React.FC<SplitTextProps> = ({ text, className, isGradient = false }) => {
+const SplitText: React.FC<SplitTextProps> = React.memo(({ text, className, isGradient = false }) => {
   return (
     <span className={`${className} inline-flex flex-wrap relative leading-none`} aria-label={text}>
       {text.split('').map((char, i) => (
@@ -32,6 +32,7 @@ const SplitText: React.FC<SplitTextProps> = ({ text, className, isGradient = fal
       ))}
     </span>
   );
-};
+});
+
 
 export default SplitText;

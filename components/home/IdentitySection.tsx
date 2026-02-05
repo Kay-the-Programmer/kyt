@@ -385,10 +385,13 @@ const IdentitySection: React.FC = () => {
                   ref={(el) => imageRefs.current[i] = el}
                   src={item.image}
                   alt={item.title}
+                  width="600"
+                  height="600"
                   loading={i === 0 ? 'eager' : 'lazy'}
+                  {...(i === 0 ? { fetchpriority: 'high' } : {})}
                   decoding="async"
                   className={`inner-image absolute inset-0 w-full h-full object-cover scale-110 ${activeImage === i ? 'opacity-100' : 'opacity-0'}`}
-                  style={{ willChange: 'opacity, transform' }}
+                  style={{ willChange: 'opacity' }}
                 />
               ))}
             </div>

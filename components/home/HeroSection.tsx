@@ -21,9 +21,11 @@ const HeroSection: React.FC = () => {
 
   const [isReducedMotion, setIsReducedMotion] = useState(false);
   const [isInView, setIsInView] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
   useSharedMousePos();
-  useMagnetic(titleRef);
+  // Only use magnetic effect on desktop
+  useMagnetic(isMobile ? { current: null } : titleRef);
 
   const quickToRefs = useRef({
     contentX: null as gsap.QuickToFunc | null,
@@ -56,8 +58,19 @@ const HeroSection: React.FC = () => {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  // Optimized parallax with frame skipping
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile, { passive: true });
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Optimized parallax with frame skipping (desktop only)
   const updateParallax = useCallback(() => {
+    // Skip parallax on mobile for performance
+    if (isMobile) return;
+
     // Skip every other frame for performance
     frameCountRef.current++;
     if (frameCountRef.current % 2 !== 0) return;
@@ -77,7 +90,7 @@ const HeroSection: React.FC = () => {
     refs.bg1Y?.(-yRel * 35);
     refs.bg2X?.(-xRel * 70);
     refs.bg2Y?.(-yRel * 70);
-  }, [isInView, isReducedMotion]);
+  }, [isInView, isReducedMotion, isMobile]);
 
   useLayoutEffect(() => {
     const section = sectionRef.current;
@@ -123,8 +136,9 @@ const HeroSection: React.FC = () => {
         });
       }
 
-      // 3. Entrance Animation
+      // 3. Entrance Animation (faster on mobile)
       const delay = isPageTransition ? 0.7 : 0.1;
+      const durationMultiplier = isMobile ? 0.7 : 1; // Faster animations on mobile
       const entranceTl = gsap.timeline({
         delay,
         defaults: { ease: 'expo.out', force3D: true },
@@ -132,22 +146,24 @@ const HeroSection: React.FC = () => {
       });
 
       entranceTl
-        .to(heroBadge, { opacity: 1, y: 0, duration: 1.2 })
+        .to(heroBadge, { opacity: 1, y: 0, duration: 1.2 * durationMultiplier })
         .to(part1Chars, {
           opacity: 1, y: 0, rotateX: 0,
-          duration: 1.6, stagger: { amount: 0.6, from: 'start' }
+          duration: 1.6 * durationMultiplier,
+          stagger: { amount: isMobile ? 0.3 : 0.6, from: 'start' }
         }, "-=0.8")
         .to(part2Chars, {
           opacity: 1, y: 0, rotateX: 0,
-          duration: 1.6, stagger: { amount: 0.6, from: 'center' }
+          duration: 1.6 * durationMultiplier,
+          stagger: { amount: isMobile ? 0.3 : 0.6, from: 'center' }
         }, "-=1.2")
-        .to(heroDesc, { opacity: 1, y: 0, duration: 1.2 }, "-=1.0")
+        .to(heroDesc, { opacity: 1, y: 0, duration: 1.2 * durationMultiplier }, "-=1.0")
         .to(heroBtns, {
-          opacity: 1, y: 0, duration: 1.2, ease: 'back.out(1.7)'
+          opacity: 1, y: 0, duration: 1.2 * durationMultiplier, ease: 'back.out(1.7)'
         }, "-=0.8");
 
-      // 4. Ticker-based Parallax (only when not reduced motion)
-      if (!isReducedMotion) {
+      // 4. Ticker-based Parallax (only when not reduced motion and not mobile)
+      if (!isReducedMotion && !isMobile) {
         gsap.ticker.add(updateParallax);
       }
 
@@ -165,11 +181,12 @@ const HeroSection: React.FC = () => {
       observerRef.current?.disconnect();
       gsap.ticker.remove(updateParallax);
     };
-  }, [isPageTransition, isReducedMotion, updateParallax]);
+  }, [isPageTransition, isReducedMotion, isMobile, updateParallax]);
 
-  // Optimized title hover with CSS transitions (removed broken Flip dependency)
+  // Optimized title hover (desktop only - no hover on touch devices)
   const handleTitleHover = useCallback((isEnter: boolean) => {
-    if (isReducedMotion || !titleRef.current) return;
+    // Skip on mobile/touch devices
+    if (isMobile || isReducedMotion || !titleRef.current) return;
 
     const title = titleRef.current;
     const currentlyActive = title.classList.contains("hover-active");
@@ -193,7 +210,7 @@ const HeroSection: React.FC = () => {
         overwrite: 'auto'
       });
     }
-  }, [isReducedMotion]);
+  }, [isReducedMotion, isMobile]);
 
   // Memoized scroll handler
   const handleExploreClick = useCallback(() => {
@@ -220,9 +237,9 @@ const HeroSection: React.FC = () => {
         />
       </div>
 
-      <div ref={contentRef} className="hero-section-content max-w-[95rem] w-full text-center relative z-10 will-change-transform">
-        <div className="hero-badge inline-flex items-center space-x-2 px-6 py-2 bg-white/10 dark:bg-blue-500/5 border border-gray-200/50 dark:border-blue-500/10 rounded-full mb-8 md:mb-12 mx-auto backdrop-blur-md">
-          <span className="text-[10px] font-black uppercase tracking-[0.7em] text-blue-600 dark:text-blue-400">
+      <div ref={contentRef} className="hero-section-content max-w-[95rem] w-full text-center relative z-10 will-change-transform px-2 sm:px-0">
+        <div className="hero-badge inline-flex items-center space-x-2 px-3 sm:px-6 py-1.5 sm:py-2 bg-white/10 dark:bg-blue-500/5 border border-gray-200/50 dark:border-blue-500/10 rounded-full mb-6 sm:mb-8 md:mb-12 mx-auto backdrop-blur-md">
+          <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.4em] sm:tracking-[0.7em] text-blue-600 dark:text-blue-400">
             SYSTEM_STATUS: OPERATIONAL
           </span>
         </div>
@@ -231,28 +248,28 @@ const HeroSection: React.FC = () => {
           ref={titleRef}
           onMouseEnter={() => handleTitleHover(true)}
           onMouseLeave={() => handleTitleHover(false)}
-          className="hero-title text-5xl sm:text-6xl md:text-7xl lg:text-[9rem] font-heading font-black tracking-tighter leading-[0.85] text-gray-900 dark:text-white select-none flex flex-col items-center cursor-pointer transition-all duration-500"
+          className="hero-title text-4xl xs:text-5xl sm:text-6xl md:text-7xl lg:text-[9rem] font-heading font-black tracking-tighter leading-[0.85] text-gray-900 dark:text-white select-none flex flex-col items-center cursor-pointer transition-all duration-500"
         >
-          <SplitText text="We Bring Digital Ideas" className="part-1 block mb-2 md:mb-4" />
+          <SplitText text="We Bring Digital Ideas" className="part-1 block mb-1 sm:mb-2 md:mb-4" />
           <SplitText text="To Life." className="part-2 block" isGradient={true} />
         </h1>
 
-        <p className="hero-desc text-lg md:text-xl lg:text-2xl text-gray-400 dark:text-gray-300 max-w-3xl mx-auto mt-8 md:mt-12 lg:mt-16 font-light leading-relaxed tracking-tight">
+        <p className="hero-desc text-base sm:text-lg md:text-xl lg:text-2xl text-gray-400 dark:text-gray-300 max-w-3xl mx-auto mt-6 sm:mt-8 md:mt-12 lg:mt-16 font-light leading-relaxed tracking-tight px-2">
           Engineering <span className="font-semibold text-blue-500">high-performance systems</span> with radical precision.
         </p>
 
-        <div className="hero-btns mt-10 md:mt-16 flex flex-col sm:flex-row items-center justify-center space-y-6 sm:space-y-0 sm:space-x-8">
+        <div className="hero-btns mt-8 sm:mt-10 md:mt-16 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-0 sm:space-x-8 px-4 sm:px-0">
           <Link
             to="/contact"
-            className="group relative overflow-hidden inline-block w-full sm:w-auto px-12 py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-bold transition-all duration-700 text-center shadow-3xl shadow-blue-500/30 hover:scale-105 active:scale-95"
+            className="group relative overflow-hidden inline-block w-full sm:w-auto px-8 sm:px-12 py-4 sm:py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-bold transition-all duration-700 text-center shadow-3xl shadow-blue-500/30 hover:scale-105 active:scale-95"
           >
-            <span className="relative z-10 text-lg flex items-center justify-center space-x-2">
+            <span className="relative z-10 text-base sm:text-lg flex items-center justify-center space-x-2">
               <span>Let's Build</span>
               <i className="fa-solid fa-arrow-right transition-transform group-hover:translate-x-1" />
             </span>
           </Link>
           <button
-            className="group px-10 py-5 bg-transparent border border-gray-300/50 dark:border-gray-800 text-gray-700 dark:text-gray-300 rounded-full font-semibold transition-all duration-500 hover:border-blue-500 hover:text-blue-500"
+            className="group w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-transparent border border-gray-300/50 dark:border-gray-800 text-gray-700 dark:text-gray-300 rounded-full font-semibold transition-all duration-500 hover:border-blue-500 hover:text-blue-500 text-base sm:text-base"
             onClick={handleExploreClick}
           >
             Explore More

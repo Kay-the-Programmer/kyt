@@ -440,107 +440,32 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
       mm.add("(max-width: 1023px)", () => {
         const panels = gsap.utils.toArray<HTMLElement>('.horizontal-panel');
 
-        // Set initial state with GPU acceleration
+        // Only set initial state for panels themselves - let child components handle internal elements
+        // This prevents conflicts where both parent and child try to animate the same elements
         gsap.set(panels, {
-          y: 60,
+          y: 50,
           opacity: 0,
-          scale: 0.97,
+          scale: 0.98,
           transformOrigin: 'center top',
           willChange: 'transform, opacity'
         });
 
-        panels.forEach((panel, index) => {
-          // Main panel entrance - trigger earlier for smoother feel
+        panels.forEach((panel) => {
+          // Main panel entrance - this is the only animation parent should do
+          // Start when panel is almost in view for a smooth feel
           gsap.to(panel, {
             y: 0,
             opacity: 1,
             scale: 1,
-            duration: 0.9,
-            ease: 'power3.out',
+            duration: 0.8,
+            ease: 'power2.out',
             scrollTrigger: {
               trigger: panel,
-              start: 'top 92%',
-              end: 'top 40%',
+              start: 'top 95%',  // Start earlier - when panel is just entering viewport
+              end: 'top 60%',
               toggleActions: 'play none none reverse'
             }
           });
-
-          // Enhanced internal element animations with better timing
-          const splitTextChars = panel.querySelectorAll('.split-text-char');
-          const revealTargets = panel.querySelectorAll('.reveal-target');
-          const images = panel.querySelectorAll('img');
-
-          // Split text character animations (headlines)
-          if (splitTextChars.length > 0) {
-            gsap.set(splitTextChars, {
-              opacity: 0,
-              y: 30,
-              rotationX: -20,
-              transformPerspective: 600,
-              willChange: 'transform, opacity'
-            });
-
-            gsap.to(splitTextChars, {
-              opacity: 1,
-              y: 0,
-              rotationX: 0,
-              stagger: {
-                each: 0.015,
-                from: index % 2 === 0 ? 'start' : 'end'
-              },
-              duration: 0.6,
-              ease: 'power2.out',
-              scrollTrigger: {
-                trigger: panel,
-                start: 'top 88%',
-                toggleActions: 'play none none reverse'
-              }
-            });
-          }
-
-          // Reveal targets with staggered entrance
-          if (revealTargets.length > 0) {
-            gsap.set(revealTargets, {
-              opacity: 0,
-              y: 35,
-              willChange: 'transform, opacity'
-            });
-
-            gsap.to(revealTargets, {
-              opacity: 1,
-              y: 0,
-              stagger: 0.08,
-              duration: 0.7,
-              ease: 'power2.out',
-              scrollTrigger: {
-                trigger: panel,
-                start: 'top 85%',
-                toggleActions: 'play none none reverse'
-              }
-            });
-          }
-
-          // Image scale reveal
-          if (images.length > 0) {
-            gsap.set(images, {
-              scale: 1.1,
-              opacity: 0,
-              willChange: 'transform, opacity'
-            });
-
-            gsap.to(images, {
-              scale: 1,
-              opacity: 1,
-              stagger: 0.15,
-              duration: 1,
-              ease: 'power2.out',
-              scrollTrigger: {
-                trigger: panel,
-                start: 'top 80%',
-                toggleActions: 'play none none reverse'
-              }
-            });
-          }
         });
 
         // Mobile progress indicator

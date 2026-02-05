@@ -103,11 +103,15 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
                     // Icon bounce effect on reveal
                     const icon = card.querySelector('.stats-icon');
                     if (icon) {
-                        gsap.from(icon, {
+                        gsap.set(icon, {
                             scale: 0,
-                            rotation: -180,
+                            rotation: -180
+                        });
+
+                        gsap.to(icon, {
+                            scale: 1,
+                            rotation: 0,
                             duration: 0.6,
-                            delay: 0.2,
                             ease: 'back.out(1.7)',
                             scrollTrigger: {
                                 trigger: card,
@@ -121,9 +125,14 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
                 // Headline animation for mobile
                 const headlineChars = headline.querySelectorAll('.split-text-char');
                 if (headlineChars.length > 0) {
-                    gsap.from(headlineChars, {
+                    gsap.set(headlineChars, {
                         opacity: 0,
-                        y: 30,
+                        y: 30
+                    });
+
+                    gsap.to(headlineChars, {
+                        opacity: 1,
+                        y: 0,
                         stagger: 0.02,
                         duration: 0.6,
                         ease: 'power2.out',

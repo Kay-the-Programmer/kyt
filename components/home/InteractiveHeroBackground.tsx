@@ -5,6 +5,8 @@ interface Particle {
   el: HTMLDivElement;
   xTo: gsap.QuickToFunc;
   yTo: gsap.QuickToFunc;
+  scaleTo: gsap.QuickToFunc;
+  opacityTo: gsap.QuickToFunc;
   baseX: number;
   baseY: number;
   depth: number;
@@ -19,7 +21,6 @@ const InteractiveHeroBackground: React.FC = () => {
   const particlesRef = useRef<Particle[]>([]);
   const mouseRef = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2, active: false });
   const rafRef = useRef<number>();
-  const timeRef = useRef(0);
   const lastFrameRef = useRef(0);
   const frameCountRef = useRef(0);
   const cachedPositionsRef = useRef<{ x: number; y: number }[]>([]);
@@ -54,13 +55,11 @@ const InteractiveHeroBackground: React.FC = () => {
 
     const particle = document.createElement('div');
     particle.className = 'hero-particle absolute pointer-events-none';
-
     particle.style.left = `${Math.random() * 100}%`;
     particle.style.top = `${Math.random() * 100}%`;
     particle.style.willChange = 'transform, opacity';
     particle.style.transformOrigin = 'center center';
 
-    // Create inner content for morphing effects
     const inner = document.createElement('div');
     inner.className = 'particle-inner';
     inner.style.width = '100%';
@@ -75,7 +74,6 @@ const InteractiveHeroBackground: React.FC = () => {
         inner.style.background = `radial-gradient(circle at 30% 30%, ${color}, transparent 70%)`;
         inner.style.boxShadow = `0 0 ${size}px ${color}, inset 0 0 ${size * 0.3}px ${color}`;
         break;
-
       case 'square':
         particle.style.width = `${size}px`;
         particle.style.height = `${size}px`;
@@ -84,7 +82,6 @@ const InteractiveHeroBackground: React.FC = () => {
         inner.style.backdropFilter = 'blur(2px)';
         inner.style.boxShadow = `0 0 ${size * 0.5}px ${color}`;
         break;
-
       case 'ring':
         const ringSize = size * 1.5;
         particle.style.width = `${ringSize}px`;
@@ -93,7 +90,6 @@ const InteractiveHeroBackground: React.FC = () => {
         inner.style.border = `${Math.max(2, size * 0.08)}px solid ${color}`;
         inner.style.boxShadow = `0 0 ${size * 0.5}px ${color}, inset 0 0 ${size * 0.3}px ${color}`;
         break;
-
       case 'dot':
         const dotSize = Math.max(4, size * 0.2);
         particle.style.width = `${dotSize}px`;
@@ -102,14 +98,12 @@ const InteractiveHeroBackground: React.FC = () => {
         inner.style.background = color.replace(String(colorOpacity), String(depth * 0.8));
         inner.style.boxShadow = `0 0 ${dotSize * 3}px ${color}, 0 0 ${dotSize * 6}px ${color}`;
         break;
-
       case 'line':
         particle.style.width = `${size * 2.5}px`;
         particle.style.height = '2px';
         inner.style.background = `linear-gradient(90deg, transparent 0%, ${color} 30%, ${color} 70%, transparent 100%)`;
         inner.style.boxShadow = `0 0 ${size * 0.3}px ${color}`;
         break;
-
       case 'hexagon':
         particle.style.width = `${size}px`;
         particle.style.height = `${size * 0.866}px`;
@@ -117,7 +111,6 @@ const InteractiveHeroBackground: React.FC = () => {
         inner.style.background = `linear-gradient(135deg, ${color} 0%, transparent 60%)`;
         inner.style.border = `1px solid ${color}`;
         break;
-
       case 'triangle':
         particle.style.width = `${size}px`;
         particle.style.height = `${size * 0.866}px`;
@@ -132,19 +125,20 @@ const InteractiveHeroBackground: React.FC = () => {
 
     const xTo = gsap.quickTo(particle, "x", { duration: 1.2 + depth * 0.5, ease: "power3.out" });
     const yTo = gsap.quickTo(particle, "y", { duration: 1.2 + depth * 0.5, ease: "power3.out" });
+    const scaleTo = gsap.quickTo(particle, "scale", { duration: 0.4, ease: "power2.out" });
+    const opacityTo = gsap.quickTo(particle, "opacity", { duration: 0.4, ease: "power2.out" });
 
     const baseX = parseFloat(particle.style.left);
     const baseY = parseFloat(particle.style.top);
 
-    return { el: particle, xTo, yTo, baseX, baseY, depth, size, type, color };
+    return { el: particle, xTo, yTo, scaleTo, opacityTo, baseX, baseY, depth, size, type, color };
   }, []);
 
-  // Draw connection lines on canvas
+  // Optimized draw connections - uses cached positions to avoid layout thrashing
   const drawConnections = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) return;
 
     const isMobile = window.innerWidth < 768;
@@ -155,25 +149,26 @@ const InteractiveHeroBackground: React.FC = () => {
 
     const particles = particlesRef.current;
     const { x: mouseX, y: mouseY, active } = mouseRef.current;
+    const positions = cachedPositionsRef.current;
 
-    // Draw connections between particles
     for (let i = 0; i < particles.length; i++) {
-      const p1 = particles[i];
-      const rect1 = p1.el.getBoundingClientRect();
-      const x1 = rect1.left + rect1.width / 2;
-      const y1 = rect1.top + rect1.height / 2;
+      const pos1 = positions[i];
+      if (!pos1) continue;
 
-      // Connect to nearby particles
+      const x1 = pos1.x;
+      const y1 = pos1.y;
+
       for (let j = i + 1; j < particles.length; j++) {
-        const p2 = particles[j];
-        const rect2 = p2.el.getBoundingClientRect();
-        const x2 = rect2.left + rect2.width / 2;
-        const y2 = rect2.top + rect2.height / 2;
+        const pos2 = positions[j];
+        if (!pos2) continue;
 
-        const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+        const x2 = pos2.x;
+        const y2 = pos2.y;
 
-        if (distance < connectionDistance) {
-          const opacity = (1 - distance / connectionDistance) * 0.15 * Math.min(p1.depth, p2.depth);
+        const distanceSq = Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2);
+        if (distanceSq < connectionDistance * connectionDistance) {
+          const distance = Math.sqrt(distanceSq);
+          const opacity = (1 - distance / connectionDistance) * 0.12 * Math.min(particles[i].depth, particles[j].depth);
           ctx.beginPath();
           ctx.moveTo(x1, y1);
           ctx.lineTo(x2, y2);
@@ -183,21 +178,16 @@ const InteractiveHeroBackground: React.FC = () => {
         }
       }
 
-      // Connect to mouse cursor when active
       if (active) {
-        const mouseDistFromParticle = Math.sqrt(Math.pow(mouseX - x1, 2) + Math.pow(mouseY - y1, 2));
-
-        if (mouseDistFromParticle < mouseDistance) {
-          const opacity = (1 - mouseDistFromParticle / mouseDistance) * 0.3 * p1.depth;
+        const dMouseSq = Math.pow(mouseX - x1, 2) + Math.pow(mouseY - y1, 2);
+        if (dMouseSq < mouseDistance * mouseDistance) {
+          const dMouse = Math.sqrt(dMouseSq);
+          const opacity = (1 - dMouse / mouseDistance) * 0.25 * particles[i].depth;
           ctx.beginPath();
           ctx.moveTo(x1, y1);
           ctx.lineTo(mouseX, mouseY);
-
-          const gradient = ctx.createLinearGradient(x1, y1, mouseX, mouseY);
-          gradient.addColorStop(0, `rgba(59, 130, 246, ${opacity})`);
-          gradient.addColorStop(1, `rgba(147, 51, 234, ${opacity * 0.5})`);
-          ctx.strokeStyle = gradient;
-          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = `rgba(147, 51, 234, ${opacity})`;
+          ctx.lineWidth = 1;
           ctx.stroke();
         }
       }
@@ -209,7 +199,6 @@ const InteractiveHeroBackground: React.FC = () => {
     const canvas = canvasRef.current;
     if (!container || !canvas) return;
 
-    // Setup canvas
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -219,16 +208,13 @@ const InteractiveHeroBackground: React.FC = () => {
 
     const isMobile = window.innerWidth < 768;
     const isTablet = window.innerWidth < 1024;
-    const particleCount = isMobile ? 20 : isTablet ? 35 : 50;
+    const particleCount = isMobile ? 18 : isTablet ? 30 : 45;
 
-    // Create particles with staggered entrance
     for (let i = 0; i < particleCount; i++) {
       particlesRef.current.push(createParticle(i, particleCount));
     }
 
-    // Grand entrance animation
     const entranceTl = gsap.timeline();
-
     particlesRef.current.forEach((p, i) => {
       const startAngle = Math.random() * Math.PI * 2;
       const startRadius = window.innerWidth * 0.8;
@@ -247,65 +233,34 @@ const InteractiveHeroBackground: React.FC = () => {
         opacity: p.depth * 0.5,
         scale: 1,
         rotation: 0,
-        duration: 1.8,
-        ease: "elastic.out(0.8, 0.4)"
-      }, 0.02 * i);
+        duration: 1.5,
+        ease: "power2.out"
+      }, 0.015 * i);
     });
 
-    // Continuous floating animation with variety
     particlesRef.current.forEach((p) => {
       const floatTl = gsap.timeline({ repeat: -1, yoyo: true });
-      const duration = 6 + Math.random() * 10;
-      const xMove = (40 + Math.random() * 60) * (Math.random() > 0.5 ? 1 : -1);
-      const yMove = (30 + Math.random() * 50) * (Math.random() > 0.5 ? 1 : -1);
+      const duration = 8 + Math.random() * 8;
+      const xMove = (30 + Math.random() * 40) * (Math.random() > 0.5 ? 1 : -1);
+      const yMove = (20 + Math.random() * 30) * (Math.random() > 0.5 ? 1 : -1);
 
       floatTl.to(p.el, {
         x: `+=${xMove}`,
         y: `+=${yMove}`,
-        rotation: `+=${p.type === 'line' ? 180 : p.type === 'square' || p.type === 'hexagon' ? 120 : 360}`,
+        rotation: `+=${p.type === 'line' ? 90 : 180}`,
         duration,
         ease: "sine.inOut"
       });
-
-      // Breathing effect for glowing particles
-      if (['circle', 'dot', 'ring'].includes(p.type)) {
-        gsap.to(p.el, {
-          scale: 1 + Math.random() * 0.4,
-          opacity: p.depth * 0.7,
-          duration: 2 + Math.random() * 3,
-          repeat: -1,
-          yoyo: true,
-          ease: "sine.inOut"
-        });
-      }
-
-      // Morphing effect for shapes
-      if (['square', 'hexagon'].includes(p.type)) {
-        const inner = p.el.querySelector('.particle-inner') as HTMLElement;
-        if (inner) {
-          gsap.to(inner, {
-            borderRadius: p.type === 'square' ? '50%' : '30%',
-            duration: 4 + Math.random() * 4,
-            repeat: -1,
-            yoyo: true,
-            ease: "power2.inOut"
-          });
-        }
-      }
     });
 
-    // Cache particle positions - called on scroll/resize, not every frame
     const updateCachedPositions = () => {
       cachedPositionsRef.current = particlesRef.current.map(p => {
         const rect = p.el.getBoundingClientRect();
         return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
       });
     };
+    setTimeout(updateCachedPositions, 200);
 
-    // Initial position cache
-    setTimeout(updateCachedPositions, 100);
-
-    // Update positions on scroll (throttled)
     let scrollTimeout: number;
     const handleScroll = () => {
       if (scrollTimeout) cancelAnimationFrame(scrollTimeout);
@@ -313,66 +268,48 @@ const InteractiveHeroBackground: React.FC = () => {
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
 
-    // Main animation loop - throttled to ~30fps for performance
+    // Optimized Animation loop
     const animate = (timestamp: number) => {
       const elapsed = timestamp - lastFrameRef.current;
-
-      // Throttle to ~30fps (33ms between frames)
-      if (elapsed < 33) {
+      if (elapsed < 32) { // Target ~30fps for background elements
         rafRef.current = requestAnimationFrame(animate);
         return;
       }
 
       lastFrameRef.current = timestamp;
       frameCountRef.current++;
-      timeRef.current += 0.033;
 
       const { x, y, active } = mouseRef.current;
       const isMobileDevice = window.innerWidth < 768;
-      const interactionRadius = isMobileDevice ? 220 : 450;
-      const maxForce = isMobileDevice ? 0.7 : 1.0;
+      const interactionRadius = isMobileDevice ? 200 : 400;
+
+      // Update position cache occasionally to account for floating animations
+      if (frameCountRef.current % 10 === 0) {
+        updateCachedPositions();
+      }
 
       particlesRef.current.forEach((p, i) => {
-        // Use cached positions instead of getBoundingClientRect every frame
         const cached = cachedPositionsRef.current[i];
         if (!cached) return;
 
-        const centerX = cached.x;
-        const centerY = cached.y;
+        const deltaX = x - cached.x;
+        const deltaY = y - cached.y;
+        const distSq = deltaX * deltaX + deltaY * deltaY;
 
-        const deltaX = x - centerX;
-        const deltaY = y - centerY;
-        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-
-        if (active && distance < interactionRadius) {
-          const force = Math.pow((interactionRadius - distance) / interactionRadius, 1.5);
-          const moveX = -deltaX * force * maxForce * p.depth;
-          const moveY = -deltaY * force * maxForce * p.depth;
-
-          p.xTo(moveX);
-          p.yTo(moveY);
-
-          // Simplified animation - use only GPU-accelerated properties
-          gsap.to(p.el, {
-            scale: 1 + force * 0.5,
-            opacity: Math.min(1, p.depth * 0.5 + force * 0.4),
-            duration: 0.3,
-            overwrite: 'auto'
-          });
+        if (active && distSq < interactionRadius * interactionRadius) {
+          const force = 1 - Math.sqrt(distSq) / interactionRadius;
+          p.xTo(-deltaX * force * 0.8 * p.depth);
+          p.yTo(-deltaY * force * 0.8 * p.depth);
+          p.scaleTo(1 + force * 0.4);
+          p.opacityTo(Math.min(1, p.depth * 0.5 + force * 0.4));
         } else {
           p.xTo(0);
           p.yTo(0);
-
-          gsap.to(p.el, {
-            scale: 1,
-            opacity: p.depth * 0.5,
-            duration: 0.5,
-            overwrite: 'auto'
-          });
+          p.scaleTo(1);
+          p.opacityTo(p.depth * 0.5);
         }
       });
 
-      // Draw connections every 2 frames for performance
       if (frameCountRef.current % 2 === 0) {
         drawConnections();
       }
@@ -380,67 +317,28 @@ const InteractiveHeroBackground: React.FC = () => {
       rafRef.current = requestAnimationFrame(animate);
     };
 
-    // Event handlers
-    const handleMouseMove = (e: MouseEvent) => {
-      mouseRef.current = { x: e.clientX, y: e.clientY, active: true };
-    };
+    const handleMouseMove = (e: MouseEvent) => { mouseRef.current = { x: e.clientX, y: e.clientY, active: true }; };
+    const handleMouseLeave = () => { mouseRef.current.active = false; };
+    const handleTouchMove = (e: TouchEvent) => { if (e.touches.length > 0) mouseRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, active: true }; };
+    const handleTouchEnd = () => { setTimeout(() => { mouseRef.current.active = false; }, 500); };
 
-    const handleMouseLeave = () => {
-      mouseRef.current.active = false;
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length > 0) {
-        mouseRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, active: true };
-      }
-    };
-
-    const handleTouchEnd = () => {
-      setTimeout(() => {
-        mouseRef.current.active = false;
-      }, 500);
-    };
-
-    // Click burst effect
+    // Efficient click burst
     const handleClick = (e: MouseEvent) => {
-      const clickX = e.clientX;
-      const clickY = e.clientY;
-
-      particlesRef.current.forEach((p) => {
-        const rect = p.el.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-
-        const deltaX = centerX - clickX;
-        const deltaY = centerY - clickY;
-        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-        const maxDist = 500;
-
-        if (distance < maxDist) {
-          const force = (maxDist - distance) / maxDist;
-          const angle = Math.atan2(deltaY, deltaX);
-          const burstX = Math.cos(angle) * force * 150;
-          const burstY = Math.sin(angle) * force * 150;
-
+      const { clientX: clickX, clientY: clickY } = e;
+      particlesRef.current.forEach((p, i) => {
+        const cached = cachedPositionsRef.current[i];
+        if (!cached) return;
+        const dx = cached.x - clickX;
+        const dy = cached.y - clickY;
+        const distSq = dx * dx + dy * dy;
+        if (distSq < 400 * 400) {
+          const force = 1 - Math.sqrt(distSq) / 400;
           gsap.to(p.el, {
-            x: `+=${burstX}`,
-            y: `+=${burstY}`,
-            scale: 1 + force * 0.8,
-            rotation: `+=${force * 180}`,
-            opacity: Math.min(1, p.depth + force * 0.5),
-            duration: 0.4,
-            ease: "power3.out"
-          });
-
-          gsap.to(p.el, {
-            x: 0,
-            y: 0,
-            scale: 1,
-            rotation: 0,
-            opacity: p.depth * 0.5,
-            duration: 1.2,
-            delay: 0.3,
-            ease: "elastic.out(0.5, 0.3)"
+            x: `+=${dx * force * 0.5}`,
+            y: `+=${dy * force * 0.5}`,
+            duration: 0.6,
+            ease: "power2.out",
+            onComplete: () => gsap.to(p.el, { x: 0, y: 0, duration: 1, ease: "power2.inOut" })
           });
         }
       });
@@ -463,7 +361,6 @@ const InteractiveHeroBackground: React.FC = () => {
       window.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('click', handleClick);
       cancelAnimationFrame(rafRef.current!);
-      gsap.killTweensOf(particlesRef.current.map(p => p.el));
       particlesRef.current.forEach(p => p.el.remove());
       particlesRef.current = [];
     };

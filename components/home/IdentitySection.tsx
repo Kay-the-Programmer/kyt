@@ -55,9 +55,7 @@ const FeatureItem = memo<FeatureItemProps>(({ item, index, isActive, onHover, on
           {item.title}
         </h4>
         {isActive && (
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-            <span className="text-[9px] uppercase tracking-widest text-blue-600 dark:text-blue-400 font-bold">Active</span>
+          <div className="flex items-center gap-1.5 py-0.5 px-6 rounded-full bg-blue-500/10 border border-blue-500/20">
           </div>
         )}
       </div>

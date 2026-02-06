@@ -228,46 +228,86 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
 
         // Centralized Panel Animations
         panels.forEach((panel, i) => {
-          // Special handling for First Panel (SalePilot) - immediate entrance
+          const q = gsap.utils.selector(panel);
+
+          // Special handling for First Panel (SalePilot)
           if (i === 0) {
-            const q = gsap.utils.selector(panel);
-            const commonTargets = q('.reveal-target, .split-text-char, img, .floating-card');
+            // 1. Initial Entrance (On Mount) - play once
+            const chars = q('.letter-reveal');
+            const reveals = q('.reveal-target');
+            const images = q('img, .floating-card');
 
-            if (commonTargets.length) {
-              gsap.set(commonTargets, {
-                opacity: 0,
-                y: 30,
-                scale: 0.95,
-                filter: 'blur(5px)'
-              });
+            const tl = gsap.timeline({ delay: 0.2 });
 
-              // Play immediately on mount/desktop active since it's the landing panel
-              gsap.to(commonTargets, {
-                opacity: 1,
-                y: 0,
-                scale: 1,
-                filter: 'blur(0px)',
-                stagger: 0.05,
-                duration: 1.2,
-                ease: 'power3.out',
-                delay: 0.2
-              });
+            if (chars.length) {
+              // Dramatic Flip In
+              tl.fromTo(chars,
+                {
+                  opacity: 0,
+                  rotateX: -90,
+                  y: 50,
+                  transformOrigin: "50% 50% -50px",
+                  scaleY: 0.5
+                },
+                {
+                  opacity: 1,
+                  rotateX: 0,
+                  y: 0,
+                  scaleY: 1,
+                  stagger: 0.04,
+                  duration: 0.8,
+                  ease: 'back.out(1.7)'
+                },
+                0
+              );
             }
+
+            if (reveals.length) {
+              tl.fromTo(reveals,
+                { opacity: 0, y: 30 },
+                { opacity: 1, y: 0, stagger: 0.1, duration: 0.8, ease: 'power2.out' },
+                0.2
+              );
+            }
+
+            if (images.length) {
+              tl.fromTo(images,
+                { opacity: 0, scale: 0.9, filter: 'blur(10px)' },
+                { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 1, ease: 'power2.out' },
+                0.3
+              );
+            }
+
+            // 2. Scroll Exit / Re-entry (Backward Support)
+            // As we scroll right (away), animate out.
+            gsap.to(panel, {
+              opacity: 0,
+              scale: 0.95,
+              filter: 'blur(5px)',
+              x: -100,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: panel,
+                containerAnimation: scrollTween,
+                start: 'left left',
+                end: 'right left',
+                scrub: true,
+                invalidateOnRefresh: true
+              }
+            });
+
             return;
           }
 
           // Other Panels - Scroll Scrubbed Entrance
 
-          // 1. Panel Container Entrance (Fade/Blur/Scale)
-          // Use precise calculations for consistent feel across aspect ratios
-          const viewportW = window.innerWidth;
-
+          // Panel Container Entrance
           gsap.fromTo(panel,
             {
               opacity: 0,
               scale: 0.92,
               filter: 'blur(8px)',
-              x: viewportW * 0.1 // Slight parallax slide in
+              x: window.innerWidth * 0.1
             },
             {
               opacity: 1,
@@ -279,45 +319,45 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
               scrollTrigger: {
                 trigger: panel,
                 containerAnimation: scrollTween,
-                // Start when left edge of panel hits 95% of viewport width (just entering)
-                start: () => "left " + (viewportW * 0.95) + "px",
-                // End when left edge hits 60% (fully visible)
-                end: () => "left " + (viewportW * 0.6) + "px",
-                scrub: 1
+                start: () => "left " + (window.innerWidth * 0.95) + "px",
+                end: () => "left " + (window.innerWidth * 0.6) + "px",
+                scrub: 1,
+                invalidateOnRefresh: true
               }
             }
           );
-        });
 
-        // Content Animations inside Panels
-        panels.forEach((panel, i) => {
-          if (i === 0) return; // Handled above
-
-          const q = gsap.utils.selector(panel);
-          const viewportW = window.innerWidth;
-
-          // SplitText characters - Dramatic letters
+          // Content Animations inside Panels
           const chars = q('.split-text-char');
+          // Title Flip Animation (Split/Flip)
           if (chars.length) {
             gsap.fromTo(chars,
-              { opacity: 0, y: 80, rotateX: -60 },
               {
-                opacity: 1, y: 0, rotateX: 0,
-                stagger: 0.03,
-                ease: 'back.out(1.4)',
+                opacity: 0,
+                rotateX: -90,
+                y: 50,
+                transformOrigin: "50% 50% -50px",
+                scaleY: 0.5
+              },
+              {
+                opacity: 1,
+                rotateX: 0,
+                y: 0,
+                scaleY: 1,
+                stagger: 0.04,
+                ease: 'back.out(1.5)',
                 scrollTrigger: {
                   trigger: panel,
                   containerAnimation: scrollTween,
-                  // Tighter trigger zone for text to ensure it's readable quickly
-                  start: () => "left " + (viewportW * 0.85) + "px",
-                  end: () => "left " + (viewportW * 0.5) + "px",
-                  scrub: 1
+                  start: () => "left " + (window.innerWidth * 0.85) + "px",
+                  end: () => "left " + (window.innerWidth * 0.5) + "px",
+                  scrub: 1,
+                  invalidateOnRefresh: true
                 }
               }
             );
           }
 
-          // Reveal targets (standard fade-up)
           const reveals = q('.reveal-target');
           if (reveals.length) {
             gsap.fromTo(reveals,
@@ -329,15 +369,15 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
                 scrollTrigger: {
                   trigger: panel,
                   containerAnimation: scrollTween,
-                  start: () => "left " + (viewportW * 0.8) + "px",
-                  end: () => "left " + (viewportW * 0.45) + "px",
-                  scrub: 1
+                  start: () => "left " + (window.innerWidth * 0.8) + "px",
+                  end: () => "left " + (window.innerWidth * 0.45) + "px",
+                  scrub: 1,
+                  invalidateOnRefresh: true
                 }
               }
             );
           }
 
-          // Images / Cards - specialized entrance
           const images = q('img, .floating-card');
           if (images.length) {
             gsap.fromTo(images,
@@ -350,32 +390,35 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
                 scrollTrigger: {
                   trigger: panel,
                   containerAnimation: scrollTween,
-                  start: () => "left " + (viewportW * 0.75) + "px",
-                  end: () => "left " + (viewportW * 0.35) + "px",
-                  scrub: 1
+                  start: () => "left " + (window.innerWidth * 0.75) + "px",
+                  end: () => "left " + (window.innerWidth * 0.35) + "px",
+                  scrub: 1,
+                  invalidateOnRefresh: true
                 }
               }
             );
           }
 
-          // Background Giant Text Parallax
           const bgText = q('[class*="text-[30vw]"], [class*="text-[45vw]"]');
           if (bgText.length) {
             gsap.fromTo(bgText,
-              { x: viewportW * 0.2, opacity: 0 },
+              { x: window.innerWidth * 0.2, opacity: 0 },
               {
-                x: -viewportW * 0.2, opacity: 0.05,
+                x: -window.innerWidth * 0.2, opacity: 0.05,
                 scrollTrigger: {
                   trigger: panel,
                   containerAnimation: scrollTween,
                   start: 'left right',
                   end: 'right left',
-                  scrub: true // Raw scrub for parallax
+                  scrub: true,
+                  invalidateOnRefresh: true
                 }
               }
             );
           }
         });
+
+
 
         // Connection Lines (Draw between panels)
         // Re-implement if desired, or simplify. 

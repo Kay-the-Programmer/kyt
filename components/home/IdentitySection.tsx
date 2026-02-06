@@ -644,4 +644,4 @@ const IdentitySection: React.FC = () => {
   );
 };
 
-export default IdentitySection;
+export default React.memo(IdentitySection);

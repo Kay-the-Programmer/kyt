@@ -277,4 +277,4 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
 
 StatsPanel.displayName = 'StatsPanel';
 
-export default StatsPanel;
+export default React.memo(StatsPanel);

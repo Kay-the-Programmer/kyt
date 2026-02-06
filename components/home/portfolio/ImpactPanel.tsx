@@ -257,5 +257,5 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea }) => {
     );
 };
 
-export default ImpactPanel;
+export default React.memo(ImpactPanel);
 

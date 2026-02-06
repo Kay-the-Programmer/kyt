@@ -324,6 +324,7 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
                                 height="900"
                                 className="w-full h-full object-cover grayscale opacity-90 transition-all duration-1000 hover:grayscale-0"
                                 alt="SalePilot Hub"
+                                decoding="async"
                             />
                         </div>
                     </div>
@@ -342,4 +343,4 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
     );
 };
 
-export default SalePilotPanel;
+export default React.memo(SalePilotPanel);

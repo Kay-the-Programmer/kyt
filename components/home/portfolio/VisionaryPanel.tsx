@@ -207,6 +207,7 @@ const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea })
                             src="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&q=80&w=1000"
                             className="w-full h-full object-cover grayscale opacity-50 group-hover:scale-110 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-1000 -rotate-6"
                             alt="The Workshop"
+                            decoding="async"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-blue-600/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     </div>
@@ -216,5 +217,5 @@ const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea })
     );
 };
 
-export default VisionaryPanel;
+export default React.memo(VisionaryPanel);
 

@@ -9,24 +9,28 @@ import { useSharedMousePos, globalMousePos } from '../../hooks/useSharedMousePos
 
 gsap.registerPlugin(ScrollTrigger);
 
-const HeroSection: React.FC = () => {
+const HeroSection = () => {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const bgLayer1Ref = useRef<HTMLDivElement>(null);
   const bgLayer2Ref = useRef<HTMLDivElement>(null);
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const frameCountRef = useRef(0);
-  const isPageTransition = useContext(TransitionContext);
 
-  const [isReducedMotion, setIsReducedMotion] = useState(false);
-  const [isInView, setIsInView] = useState(true);
+  // State refs to avoid frequent callback recreation
+  const frameCountRef = useRef(0);
+  const isInViewRef = useRef(true);
+  const isReducedMotionRef = useRef(false);
+  const isMobileRef = useRef(false);
+
+  // State for hooks that require re-render/logic updates
   const [isMobile, setIsMobile] = useState(false);
 
-  useSharedMousePos();
-  // Only use magnetic effect on desktop
-  useMagnetic(isMobile ? { current: null } : titleRef);
+  const isPageTransition = useContext(TransitionContext);
 
+  // Cache letter elements for hover effect
+  const letterRefs = useRef<NodeListOf<Element> | null>(null);
+
+  // QuickTo Refs
   const quickToRefs = useRef({
     contentX: null as gsap.QuickToFunc | null,
     contentY: null as gsap.QuickToFunc | null,
@@ -36,7 +40,7 @@ const HeroSection: React.FC = () => {
     bg2Y: null as gsap.QuickToFunc | null,
   });
 
-  // Memoized background styles to prevent re-renders
+  // Memoized styles
   const bgLayer1Style = useMemo(() => ({
     backgroundImage: 'radial-gradient(#2563eb 1px, transparent 1px)',
     backgroundSize: '50px 50px'
@@ -49,60 +53,97 @@ const HeroSection: React.FC = () => {
 
   const sectionStyle = useMemo(() => ({ perspective: '2500px' }), []);
 
-  // Consolidated media query detection (reduced motion + mobile)
-  useEffect(() => {
-    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setIsReducedMotion(reducedMotionQuery.matches);
-    const handleReducedMotionChange = (e: MediaQueryListEvent) => setIsReducedMotion(e.matches);
-    reducedMotionQuery.addEventListener('change', handleReducedMotionChange);
+  // Sync state to refs for ticker usage
+  useLayoutEffect(() => {
+    const mm = gsap.matchMedia();
 
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile, { passive: true });
+    // Setup generic matchMedia listener to update refs
+    mm.add({
+      // Define conditions
+      isReduced: "(prefers-reduced-motion: reduce)",
+      isMobile: "(max-width: 767px)",
+      isDesktop: "(min-width: 768px)"
+    }, (context) => {
+      const { isReduced, isMobile } = context.conditions as { isReduced: boolean, isMobile: boolean };
+      isReducedMotionRef.current = isReduced;
+      isMobileRef.current = isMobile;
+      setIsMobile(isMobile);
+    });
 
-    return () => {
-      reducedMotionQuery.removeEventListener('change', handleReducedMotionChange);
-      window.removeEventListener('resize', checkMobile);
-    };
+    return () => mm.revert();
   }, []);
 
-  // Optimized parallax with frame skipping (desktop only)
-  const updateParallax = useCallback(() => {
-    // Skip parallax on mobile for performance
-    if (isMobile) return;
+  // Visibility Observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isInViewRef.current = entry.isIntersecting;
+      },
+      { threshold: 0.1, rootMargin: '50px' }
+    );
 
-    // Skip every other frame for performance
-    frameCountRef.current++;
-    if (frameCountRef.current % 2 !== 0) return;
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
 
-    if (!globalMousePos.active || !isInView || isReducedMotion) return;
+    return () => observer.disconnect();
+  }, []);
 
-    const centerX = window.innerWidth / 2;
-    const centerY = window.innerHeight / 2;
-    const xRel = (globalMousePos.x - centerX) / centerX;
-    const yRel = (globalMousePos.y - centerY) / centerY;
+  // Parallax Ticker - Persistent Reference
+  useEffect(() => {
+    const updateParallax = () => {
+      // Logic checks using refs to avoid closure staleness
+      if (isMobileRef.current) return;
 
-    // Smooth Multi-layer Parallax using cached quickTo functions
-    const refs = quickToRefs.current;
-    refs.contentX?.(xRel * 12);
-    refs.contentY?.(yRel * 12);
-    refs.bg1X?.(-xRel * 35);
-    refs.bg1Y?.(-yRel * 35);
-    refs.bg2X?.(-xRel * 70);
-    refs.bg2Y?.(-yRel * 70);
-  }, [isInView, isReducedMotion, isMobile]);
+      // Frame skip
+      frameCountRef.current++;
+      if (frameCountRef.current % 2 !== 0) return;
 
+      if (!globalMousePos.active || !isInViewRef.current || isReducedMotionRef.current) return;
+
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      // Safety check for 0 division, though unlikely standard window
+      if (centerX === 0 || centerY === 0) return;
+
+      const xRel = (globalMousePos.x - centerX) / centerX;
+      const yRel = (globalMousePos.y - centerY) / centerY;
+
+      const refs = quickToRefs.current;
+      refs.contentX?.(xRel * 12);
+      refs.contentY?.(yRel * 12);
+      refs.bg1X?.(-xRel * 35);
+      refs.bg1Y?.(-yRel * 35);
+      refs.bg2X?.(-xRel * 70);
+      refs.bg2Y?.(-yRel * 70);
+    };
+
+    gsap.ticker.add(updateParallax);
+    return () => {
+      gsap.ticker.remove(updateParallax);
+    };
+  }, []); // Empty dependency array ensures this never re-binds unnecessarily
+
+  // Main GSAP Setup (Entrance & Local Animations)
   useLayoutEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
 
-    const ctx = gsap.context(() => {
+    const mm = gsap.matchMedia();
+
+    mm.add({
+      isDesktop: "(min-width: 768px)",
+      isMobile: "(max-width: 767px)",
+      isReduced: "(prefers-reduced-motion: reduce)"
+    }, (context) => {
+      const { isMobile } = context.conditions as { isMobile: boolean };
+
       const content = contentRef.current;
       const bg1 = bgLayer1Ref.current;
       const bg2 = bgLayer2Ref.current;
       const title = titleRef.current;
 
-      // 1. Setup QuickTo functions for sub-pixel smoothness
+      // 1. Setup QuickTo
       if (content) {
         quickToRefs.current.contentX = gsap.quickTo(content, 'x', { duration: 0.8, ease: 'power2.out' });
         quickToRefs.current.contentY = gsap.quickTo(content, 'y', { duration: 0.8, ease: 'power2.out' });
@@ -116,17 +157,20 @@ const HeroSection: React.FC = () => {
         quickToRefs.current.bg2Y = gsap.quickTo(bg2, 'y', { duration: 2.0, ease: 'power4.out' });
       }
 
-      // 2. Cache DOM queries for entrance animation
-      const part1Chars = title?.querySelectorAll('.part-1 .letter-reveal');
-      const part2Chars = title?.querySelectorAll('.part-2 .letter-reveal');
+      // 2. Cache letters for hover
+      if (title) {
+        letterRefs.current = title.querySelectorAll('.letter-reveal');
+      }
+
+      // 3. Entrance Animation
       const heroBadge = section.querySelector('.hero-badge');
       const heroDesc = section.querySelector('.hero-desc');
       const heroBtns = section.querySelector('.hero-btns');
+      const part1Chars = title?.querySelectorAll('.part-1 .letter-reveal');
+      const part2Chars = title?.querySelectorAll('.part-2 .letter-reveal');
 
-      // Batch set initial states
-      if (heroBadge && heroDesc && heroBtns) {
-        gsap.set([heroBadge, heroDesc, heroBtns], { opacity: 0, y: 30 });
-      }
+      // Set initial state
+      if (heroBadge && heroDesc && heroBtns) gsap.set([heroBadge, heroDesc, heroBtns], { opacity: 0, y: 30 });
       if (part1Chars && part2Chars) {
         gsap.set([part1Chars, part2Chars], {
           opacity: 0,
@@ -136,70 +180,50 @@ const HeroSection: React.FC = () => {
         });
       }
 
-      // 3. Entrance Animation (faster on mobile)
-      const delay = isPageTransition ? 0.7 : 0.1;
-      const durationMultiplier = isMobile ? 0.7 : 1; // Faster animations on mobile
-      const entranceTl = gsap.timeline({
+      const delay = isPageTransition ? 0.3 : 0.1; // Reduced delays
+      const durationMult = isMobile ? 0.7 : 1;
+
+      const tl = gsap.timeline({
         delay,
-        defaults: { ease: 'expo.out', force3D: true },
-        onStart: () => setIsInView(true),
+        defaults: { ease: 'expo.out', force3D: true }
       });
 
-      entranceTl
-        .to(heroBadge, { opacity: 1, y: 0, duration: 1.2 * durationMultiplier })
+      tl.to(heroBadge, { opacity: 1, y: 0, duration: 1.2 * durationMult })
         .to(part1Chars, {
           opacity: 1, y: 0, rotateX: 0,
-          duration: 1.6 * durationMultiplier,
+          duration: 1.6 * durationMult,
           stagger: { amount: isMobile ? 0.3 : 0.6, from: 'start' }
         }, "-=0.8")
         .to(part2Chars, {
           opacity: 1, y: 0, rotateX: 0,
-          duration: 1.6 * durationMultiplier,
+          duration: 1.6 * durationMult,
           stagger: { amount: isMobile ? 0.3 : 0.6, from: 'center' }
         }, "-=1.2")
-        .to(heroDesc, { opacity: 1, y: 0, duration: 1.2 * durationMultiplier }, "-=1.0")
+        .to(heroDesc, { opacity: 1, y: 0, duration: 1.2 * durationMult }, "-=1.0")
         .to(heroBtns, {
-          opacity: 1, y: 0, duration: 1.2 * durationMultiplier, ease: 'back.out(1.7)'
+          opacity: 1, y: 0, duration: 1.2 * durationMult, ease: 'back.out(1.7)'
         }, "-=0.8");
 
-      // 4. Ticker-based Parallax (only when not reduced motion and not mobile)
-      if (!isReducedMotion && !isMobile) {
-        gsap.ticker.add(updateParallax);
-      }
+    }, sectionRef); // Scope to section
 
-      // 5. Intersection Observer for visibility optimization
-      observerRef.current = new IntersectionObserver(
-        ([entry]) => setIsInView(entry.isIntersecting),
-        { threshold: 0.1, rootMargin: '50px' }
-      );
-      observerRef.current.observe(section);
+    return () => mm.revert();
+  }, [isPageTransition]);
+  // Dependency on isPageTransition is fine as it likely doesn't change after mount/initial transition
 
-    }, section);
-
-    return () => {
-      ctx.revert();
-      observerRef.current?.disconnect();
-      gsap.ticker.remove(updateParallax);
-    };
-  }, [isPageTransition, isReducedMotion, isMobile, updateParallax]);
-
-  // Optimized title hover (desktop only - no hover on touch devices)
   const handleTitleHover = useCallback((isEnter: boolean) => {
-    // Skip on mobile/touch devices
-    if (isMobile || isReducedMotion || !titleRef.current) return;
+    if (isMobileRef.current || isReducedMotionRef.current || !titleRef.current) return;
 
     const title = titleRef.current;
-    const currentlyActive = title.classList.contains("hover-active");
 
-    // Only proceed if state actually changes
-    if (isEnter === currentlyActive) return;
-
+    // Toggle class for CSS transforms
     title.classList.toggle("hover-active", isEnter);
 
-    // Simple letter animation without Flip (which wasn't imported)
-    const allLetters = title.querySelectorAll('.letter-reveal');
-    if (allLetters.length > 0) {
-      gsap.to(allLetters, {
+    // GSAP animation for letters
+    // Use cached refs if available, otherwise query
+    const letters = letterRefs.current;
+
+    if (letters && letters.length > 0) {
+      gsap.to(letters, {
         rotateX: isEnter ? 360 : 0,
         duration: 0.8,
         ease: "power2.out",
@@ -210,9 +234,8 @@ const HeroSection: React.FC = () => {
         overwrite: 'auto'
       });
     }
-  }, [isReducedMotion, isMobile]);
+  }, []);
 
-  // Memoized scroll handler
   const handleExploreClick = useCallback(() => {
     window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
   }, []);
@@ -276,25 +299,6 @@ const HeroSection: React.FC = () => {
           </button>
         </div>
       </div>
-
-      <style>{`
-        .hero-title.hover-active .part-1 {
-          transform: scale(0.65) translateY(40px) translateZ(-100px);
-          opacity: 0.4;
-          filter: blur(4px);
-        }
-        .hero-title.hover-active .part-2 {
-          transform: scale(1.15) translateZ(150px);
-          filter: drop-shadow(0 0 50px rgba(37, 99, 235, 0.6));
-        }
-        .hero-title.hover-active {
-          flex-direction: column-reverse;
-        }
-        .letter-reveal {
-          transform-style: preserve-3d;
-          backface-visibility: hidden;
-        }
-      `}</style>
     </section>
   );
 };

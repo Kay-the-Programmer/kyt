@@ -15,11 +15,13 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
     const containerRef = useRef<HTMLDivElement>(null);
     const headlineRef = useRef<HTMLHeadingElement>(null);
     const imageRef = useRef<HTMLImageElement>(null);
+    const floatingCardRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const container = containerRef.current;
         const headline = headlineRef.current;
         const image = imageRef.current;
+        const floatingCard = floatingCardRef.current;
 
         if (!container || !headline) return;
 
@@ -29,91 +31,236 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
 
         const ctx = gsap.context(() => {
             const mm = gsap.matchMedia();
+            const revealTargets = container.querySelectorAll('.reveal-target');
+            const headlineChars = headline.querySelectorAll('.split-text-char');
 
-            // Mobile animations
-            mm.add('(max-width: 1023px)', () => {
-                // Headline stagger reveal
-                const headlineChars = headline.querySelectorAll('.split-text-char');
+            // Common setup for all animations
+            const setupAnimation = () => {
+                // Set initial states with will-change for better performance
+                gsap.set([headlineChars, revealTargets, image, floatingCard].filter(Boolean), {
+                    willChange: 'opacity, transform',
+                });
+
                 if (headlineChars.length > 0) {
                     gsap.set(headlineChars, {
                         opacity: 0,
-                        y: 35,
-                        rotationX: -25,
-                        transformPerspective: 700
+                        y: 20,
+                        rotationX: -15,
+                        transformPerspective: 800,
+                        transformStyle: 'preserve-3d'
                     });
+                }
 
+                if (revealTargets.length > 0) {
+                    gsap.set(revealTargets, {
+                        opacity: 0,
+                        y: 20
+                    });
+                }
+
+                if (image) {
+                    gsap.set(image, {
+                        scale: 1.05,
+                        opacity: 0.7
+                    });
+                }
+
+                if (floatingCard) {
+                    gsap.set(floatingCard, {
+                        opacity: 0,
+                        y: 30,
+                        scale: 0.95
+                    });
+                }
+            };
+
+            // Mobile animations - more subtle
+            mm.add('(max-width: 1023px)', () => {
+                setupAnimation();
+
+                // Headline reveal with softer easing
+                if (headlineChars.length > 0) {
                     gsap.to(headlineChars, {
                         opacity: 1,
                         y: 0,
                         rotationX: 0,
                         stagger: {
-                            each: 0.025,
-                            from: 'start'
+                            each: 0.015,
+                            from: 'start',
+                            ease: 'power2.inOut'
                         },
-                        duration: 0.7,
-                        ease: 'power3.out',
-                        scrollTrigger: {
-                            trigger: container,
-                            start: 'top 80%',
-                            once: true
-                        }
-                    });
-                }
-
-                // Reveal targets
-                const revealTargets = container.querySelectorAll('.reveal-target');
-                if (revealTargets.length > 0) {
-                    gsap.set(revealTargets, {
-                        opacity: 0,
-                        y: 30
-                    });
-
-                    gsap.to(revealTargets, {
-                        opacity: 1,
-                        y: 0,
-                        stagger: 0.1,
-                        duration: 0.7,
-                        delay: 0.3,
+                        duration: 0.6,
                         ease: 'power2.out',
                         scrollTrigger: {
                             trigger: container,
-                            start: 'top 80%',
+                            start: 'top 85%',
+                            once: true,
+                            markers: false // Disable debug markers
+                        }
+                    });
+                }
+
+                // Reveal targets with more subtle stagger
+                if (revealTargets.length > 0) {
+                    gsap.to(revealTargets, {
+                        opacity: 1,
+                        y: 0,
+                        stagger: 0.06,
+                        duration: 0.5,
+                        delay: 0.2,
+                        ease: 'power2.out',
+                        scrollTrigger: {
+                            trigger: container,
+                            start: 'top 85%',
                             once: true
                         }
                     });
                 }
 
-                // Image reveal
+                // Image reveal - more subtle
                 if (image) {
-                    gsap.set(image, {
-                        scale: 1.15,
-                        opacity: 0
-                    });
-
                     gsap.to(image, {
                         scale: 1,
-                        opacity: 0.9,
-                        duration: 1,
+                        opacity: 0.85,
+                        duration: 0.8,
+                        delay: 0.3,
+                        ease: 'power2.inOut',
+                        scrollTrigger: {
+                            trigger: container,
+                            start: 'top 85%',
+                            once: true
+                        }
+                    });
+                }
+
+                // Floating card reveal
+                if (floatingCard) {
+                    gsap.to(floatingCard, {
+                        opacity: 1,
+                        y: 0,
+                        scale: 1,
+                        duration: 0.6,
                         delay: 0.4,
                         ease: 'power2.out',
                         scrollTrigger: {
                             trigger: container,
-                            start: 'top 80%',
+                            start: 'top 85%',
                             once: true
                         }
                     });
                 }
             });
 
-            // Desktop - set initial state for horizontal scroll parent to animate
+            // Desktop animations - Self-contained entrance animations
+            // SalePilotPanel is the FIRST panel and is excluded from the parent's
+            // containerAnimation-based animations. We need our own ScrollTrigger.
             mm.add('(min-width: 1024px)', () => {
-                const headlineChars = headline.querySelectorAll('.split-text-char');
+                // Headline characters - IdentitySection-style dramatic letter reveal
+                // Using scrub-based animation for smooth scroll-linked effect
                 if (headlineChars.length > 0) {
-                    gsap.set(headlineChars, {
-                        opacity: 0,
-                        y: 50,
-                        rotationX: -40,
-                        transformPerspective: 900
+                    gsap.fromTo(headlineChars,
+                        {
+                            y: '120%',
+                            opacity: 0,
+                            rotateX: -60,
+                            transformPerspective: 1000,
+                            transformStyle: 'preserve-3d'
+                        },
+                        {
+                            scrollTrigger: {
+                                trigger: headline,
+                                start: 'top 85%',
+                                end: 'top 50%',
+                                scrub: 0.6
+                            },
+                            y: '0%',
+                            opacity: 1,
+                            rotateX: 0,
+                            stagger: 0.02,
+                            ease: 'power3.out'
+                        }
+                    );
+                }
+
+                // Reveal targets - staggered entrance with scrub
+                if (revealTargets.length > 0) {
+                    gsap.fromTo(revealTargets,
+                        {
+                            opacity: 0,
+                            y: 40,
+                            scale: 0.95
+                        },
+                        {
+                            scrollTrigger: {
+                                trigger: container,
+                                start: 'top 80%',
+                                end: 'top 40%',
+                                scrub: 0.5
+                            },
+                            opacity: 1,
+                            y: 0,
+                            scale: 1,
+                            stagger: 0.08,
+                            ease: 'power2.out'
+                        }
+                    );
+                }
+
+                // Image - zoom reveal with scrub
+                if (image) {
+                    gsap.fromTo(image,
+                        {
+                            scale: 1.15,
+                            opacity: 0,
+                            filter: 'blur(4px)'
+                        },
+                        {
+                            scrollTrigger: {
+                                trigger: container,
+                                start: 'top 75%',
+                                end: 'top 35%',
+                                scrub: 0.8
+                            },
+                            scale: 1,
+                            opacity: 0.9,
+                            filter: 'blur(0px)',
+                            ease: 'power2.out'
+                        }
+                    );
+                }
+
+                // Floating card - dramatic pop-in with elastic ease
+                if (floatingCard) {
+                    gsap.fromTo(floatingCard,
+                        {
+                            opacity: 0,
+                            y: 60,
+                            scale: 0.7,
+                            rotationZ: -12
+                        },
+                        {
+                            scrollTrigger: {
+                                trigger: container,
+                                start: 'top 70%',
+                                end: 'top 30%',
+                                scrub: 0.6
+                            },
+                            opacity: 1,
+                            y: 0,
+                            scale: 1,
+                            rotationZ: 0,
+                            ease: 'back.out(1.4)'
+                        }
+                    );
+
+                    // Subtle floating animation after entrance
+                    gsap.to(floatingCard, {
+                        y: '+=10',
+                        duration: 2.5,
+                        repeat: -1,
+                        yoyo: true,
+                        ease: 'sine.inOut',
+                        delay: 2
                     });
                 }
             });
@@ -125,7 +272,7 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
     return (
         <div
             ref={containerRef}
-            className="horizontal-panel w-full lg:w-screen min-h-screen lg:h-screen flex items-center justify-center p-6 md:p-12 lg:p-24 relative overflow-hidden shrink-0 z-[1] will-change-transform"
+            className="horizontal-panel w-full lg:w-screen min-h-screen lg:h-screen flex items-center justify-center p-6 md:p-12 lg:p-24 relative overflow-hidden shrink-0 will-change-transform"
         >
             <div className="max-w-[90rem] w-full grid grid-cols-1 lg:grid-cols-2 gap-12 sm:gap-16 lg:gap-24 items-center">
                 <div className="salepilot-title relative z-10">
@@ -175,13 +322,16 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
                                 src={salePilotImg}
                                 width="1200"
                                 height="900"
-                                className="w-full h-full object-cover grayscale opacity-90 transition-all duration-1000 hover:grayscale-0 hover:scale-105"
+                                className="w-full h-full object-cover grayscale opacity-90 transition-all duration-1000 hover:grayscale-0"
                                 alt="SalePilot Hub"
                             />
                         </div>
                     </div>
-                    <div className="floating-card absolute -bottom-6 sm:-bottom-10 right-2 sm:right-0 lg:-bottom-16 lg:-right-16 w-32 h-32 sm:w-40 sm:h-40 md:w-52 md:h-52 lg:w-72 lg:h-72 bg-gray-900 dark:bg-white rounded-[2rem] sm:rounded-[3rem] md:rounded-[4rem] lg:rounded-[6rem] flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 lg:p-12 shadow-3xl z-20 group hover:-rotate-6 hover:scale-105 transition-all duration-700">
-                        <i className="fa-solid fa-brain text-blue-500 text-2xl sm:text-3xl lg:text-5xl mb-3 sm:mb-4 lg:mb-6 group-hover:scale-110 transition-transform" />
+                    <div
+                        ref={floatingCardRef}
+                        className="floating-card absolute -bottom-6 sm:-bottom-10 right-2 sm:right-0 lg:-bottom-16 lg:-right-16 w-32 h-32 sm:w-40 sm:h-40 md:w-52 md:h-52 lg:w-72 lg:h-72 bg-gray-900 dark:bg-white rounded-[2rem] sm:rounded-[3rem] md:rounded-[4rem] lg:rounded-[6rem] flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 lg:p-12 shadow-3xl z-20 group hover:-rotate-3 hover:scale-102 transition-all duration-500"
+                    >
+                        <i className="fa-solid fa-brain text-blue-500 text-2xl sm:text-3xl lg:text-5xl mb-3 sm:mb-4 lg:mb-6 group-hover:scale-105 transition-transform" />
                         <span className="text-[7px] sm:text-[8px] lg:text-xs font-black uppercase tracking-[0.3em] sm:tracking-[0.4em] text-center text-white dark:text-gray-900 leading-relaxed">
                             Cognitive <br />Insights Engine
                         </span>
@@ -193,4 +343,3 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
 };
 
 export default SalePilotPanel;
-

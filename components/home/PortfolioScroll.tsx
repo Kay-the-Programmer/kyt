@@ -329,7 +329,11 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
           willChange: 'transform, opacity, filter'
         });
 
+        // Panel entrance animations - also skip first panel for same reason
         panels.forEach((panel, i) => {
+          // Skip first panel - SalePilotPanel is already visible when horizontal scroll starts
+          if (i === 0) return;
+
           gsap.to(panel, {
             scale: 1,
             rotationY: 0,
@@ -349,59 +353,137 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
         });
 
         // 5. Batch internal element animations
+        // Skip the first panel (index 0) - it has its own self-contained entrance animations
+        // since it's already visible when horizontal scroll starts
         panels.forEach((panel, panelIndex) => {
+          // Skip first panel - SalePilotPanel handles its own animations
+          if (panelIndex === 0) return;
+
           const textTargets = panel.querySelectorAll('.split-text-char, .split-text-word');
           if (textTargets.length > 0) {
-            gsap.from(textTargets, {
-              y: 100,
-              rotationX: 45,
-              opacity: 0,
+            gsap.to(textTargets, {
+              y: 0,
+              rotationX: 0,
+              rotationZ: 0,
+              scale: 1,
+              opacity: 1,
+              filter: 'blur(0px)',
               stagger: {
-                each: 0.03,
+                each: 0.02,
                 from: panelIndex % 2 === 0 ? 'start' : 'end'
               },
-              duration: 1.2,
-              ease: 'back.out(1.7)',
+              duration: 1.4,
+              ease: 'back.out(1.5)',
               scrollTrigger: {
                 trigger: panel,
                 containerAnimation: scrollTween,
-                start: 'left center+=300',
-                toggleActions: 'play none none reverse'
+                start: 'left center+=350',
+                end: 'left center',
+                scrub: 0.8
               }
             });
           }
 
           const regularTargets = panel.querySelectorAll('.reveal-target');
           if (regularTargets.length > 0) {
-            gsap.from(regularTargets, {
-              y: 80,
-              opacity: 0,
-              scale: 0.8,
-              stagger: 0.1,
-              duration: 1,
+            gsap.to(regularTargets, {
+              y: 0,
+              opacity: 1,
+              scale: 1,
+              filter: 'blur(0px)',
+              stagger: 0.08,
+              duration: 1.2,
               ease: 'power3.out',
               scrollTrigger: {
                 trigger: panel,
                 containerAnimation: scrollTween,
-                start: 'left center+=200',
-                toggleActions: 'play none none reverse'
+                start: 'left center+=250',
+                end: 'left center-=50',
+                scrub: 0.6
               }
             });
           }
 
           const images = panel.querySelectorAll('img');
           if (images.length > 0) {
-            gsap.from(images, {
-              scale: 1.3,
-              opacity: 0,
-              stagger: 0.2,
+            gsap.to(images, {
+              scale: 1,
+              opacity: 1,
+              filter: 'blur(0px)',
+              stagger: 0.15,
               duration: 1.5,
-              ease: 'power3.out',
+              ease: 'power2.out',
               scrollTrigger: {
                 trigger: panel,
                 containerAnimation: scrollTween,
-                start: 'left center+=250',
-                toggleActions: 'play none none reverse'
+                start: 'left center+=300',
+                end: 'left center-=100',
+                scrub: 0.8
+              }
+            });
+          }
+
+          // Floating cards - dramatic pop-in entrance
+          const floatingCards = panel.querySelectorAll('.floating-card');
+          if (floatingCards.length > 0) {
+            gsap.to(floatingCards, {
+              scale: 1,
+              opacity: 1,
+              y: 0,
+              rotationZ: 0,
+              stagger: 0.2,
+              duration: 1.5,
+              ease: 'elastic.out(1, 0.6)',
+              scrollTrigger: {
+                trigger: panel,
+                containerAnimation: scrollTween,
+                start: 'left center+=150',
+                end: 'left center-=150',
+                scrub: 0.5
+              }
+            });
+          }
+        });
+
+        // 6. Background elements parallax reveal
+        const bgTextElements = horizontal.querySelectorAll('[class*="text-[30vw]"], [class*="text-[45vw]"]');
+        bgTextElements.forEach(bgText => {
+          const panel = bgText.closest('.horizontal-panel');
+          if (panel && bgText) {
+            gsap.to(bgText, {
+              opacity: 0.02,
+              scale: 1,
+              filter: 'blur(0px)',
+              duration: 2,
+              ease: 'power2.out',
+              scrollTrigger: {
+                trigger: panel,
+                containerAnimation: scrollTween,
+                start: 'left right',
+                end: 'left center',
+                scrub: 1
+              }
+            });
+          }
+        });
+
+        // Glow elements expansion animation
+        const glowElements = horizontal.querySelectorAll('[class*="blur-[180px]"], [class*="blur-[150px]"]');
+        glowElements.forEach(glow => {
+          const panel = glow.closest('.horizontal-panel');
+          if (panel && glow) {
+            gsap.to(glow, {
+              scale: 1,
+              opacity: 0.1,
+              filter: 'blur(180px)',
+              duration: 2,
+              ease: 'power1.out',
+              scrollTrigger: {
+                trigger: panel,
+                containerAnimation: scrollTween,
+                start: 'left center+=400',
+                end: 'left center-=200',
+                scrub: 1.2
               }
             });
           }

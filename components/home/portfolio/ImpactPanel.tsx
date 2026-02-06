@@ -134,22 +134,58 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea }) => {
 
             // Desktop animations (for horizontal scroll context)
             mm.add('(min-width: 1024px)', () => {
+                // Background glows - prepare for expansion reveal
+                if (blueGlow && purpleGlow) {
+                    gsap.set(blueGlow, {
+                        scale: 0.4,
+                        opacity: 0,
+                        filter: 'blur(200px)',
+                        willChange: 'transform, opacity, filter'
+                    });
+                    gsap.set(purpleGlow, {
+                        scale: 0.4,
+                        opacity: 0,
+                        filter: 'blur(200px)',
+                        willChange: 'transform, opacity, filter'
+                    });
+                }
+
+                // Headline characters - dramatic 3D entrance
                 const headlineChars = headline.querySelectorAll('.split-text-char');
                 if (headlineChars.length > 0) {
                     gsap.set(headlineChars, {
                         opacity: 0,
-                        y: 80,
-                        scale: 0.7,
-                        rotationX: -50,
-                        transformPerspective: 1200
+                        y: 100,
+                        scale: 0.6,
+                        rotationX: -60,
+                        rotationZ: 5,
+                        transformPerspective: 1400,
+                        transformStyle: 'preserve-3d',
+                        willChange: 'transform, opacity'
                     });
                 }
 
+                // CTA container and buttons - scale and slide entrance
                 if (ctaContainer) {
                     gsap.set(ctaContainer, {
                         opacity: 0,
-                        y: 50
+                        y: 60,
+                        scale: 0.9,
+                        willChange: 'transform, opacity'
                     });
+
+                    // Individual button preparation for staggered entrance
+                    const buttons = ctaContainer.querySelectorAll('a');
+                    if (buttons.length > 0) {
+                        gsap.set(buttons, {
+                            opacity: 0,
+                            y: 30,
+                            scale: 0.85,
+                            rotationX: 15,
+                            transformPerspective: 800,
+                            willChange: 'transform, opacity'
+                        });
+                    }
                 }
             });
         }, container);

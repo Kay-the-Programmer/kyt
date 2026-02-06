@@ -8,8 +8,8 @@ import { useSEO } from '../hooks/useSEO';
 // Modular Components
 import InteractiveHeroBackground from '../components/home/InteractiveHeroBackground';
 import HeroSection from '../components/home/HeroSection';
-import IdentitySection from '../components/home/IdentitySection';
 // Lazy load non-critical sections
+const IdentitySection = React.lazy(() => import('../components/home/IdentitySection'));
 const PortfolioScroll = React.lazy(() => import('../components/home/PortfolioScroll'));
 const CTASection = React.lazy(() => import('../components/home/CTASection'));
 const Footer = React.lazy(() => import('../components/Footer'));

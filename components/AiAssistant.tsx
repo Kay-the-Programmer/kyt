@@ -1,11 +1,11 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenAI } from "@google/genai";
+// GoogleGenAI will be imported dynamically
 import { gsap } from 'gsap';
 
 const AiAssistant: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<{role: 'user' | 'model', text: string}[]>([
+  const [messages, setMessages] = useState<{ role: 'user' | 'model', text: string }[]>([
     { role: 'model', text: 'Hi! I am Kytriq AI. How can I help you bring your digital idea to life today?' }
   ]);
   const [input, setInput] = useState('');
@@ -32,9 +32,10 @@ const AiAssistant: React.FC = () => {
     setIsTyping(true);
 
     try {
+      const { GoogleGenAI } = await import("@google/genai");
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.0-flash',
         contents: [...messages.map(m => ({ role: m.role, parts: [{ text: m.text }] })), { role: 'user', parts: [{ text: userMsg }] }],
         config: {
           systemInstruction: `You are the Kytriq Technologies AI Assistant. 
@@ -75,11 +76,10 @@ const AiAssistant: React.FC = () => {
           <div className="flex-grow overflow-y-auto p-5 space-y-4">
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${
-                  msg.role === 'user' 
-                  ? 'bg-blue-600 text-white rounded-tr-none' 
-                  : 'bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded-tl-none border border-gray-200 dark:border-gray-800'
-                }`}>
+                <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${msg.role === 'user'
+                    ? 'bg-blue-600 text-white rounded-tr-none'
+                    : 'bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded-tl-none border border-gray-200 dark:border-gray-800'
+                  }`}>
                   {msg.text}
                 </div>
               </div>
@@ -99,15 +99,15 @@ const AiAssistant: React.FC = () => {
           </div>
 
           <div className="p-4 border-t border-gray-100 dark:border-gray-900 flex space-x-2">
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
               placeholder="Ask me anything..."
               className="flex-grow bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-full px-4 py-2 text-sm outline-none focus:border-blue-500 dark:text-white"
             />
-            <button 
+            <button
               onClick={sendMessage}
               disabled={isTyping}
               className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-blue-500/20 active:scale-95 transition-transform"
@@ -117,16 +117,16 @@ const AiAssistant: React.FC = () => {
           </div>
         </div>
       )}
-      
-      <button 
+
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-16 h-16 bg-blue-600 rounded-full shadow-2xl flex items-center justify-center text-white hover:scale-110 active:scale-90 transition-transform relative"
       >
         <i className={`fa-solid ${isOpen ? 'fa-xmark' : 'fa-robot'} text-2xl`}></i>
         {!isOpen && (
-           <span className="absolute -top-1 -right-1 w-5 h-5 bg-pink-500 rounded-full border-2 border-white dark:border-brand-dark flex items-center justify-center">
-              <span className="w-2 h-2 bg-white rounded-full animate-ping"></span>
-           </span>
+          <span className="absolute -top-1 -right-1 w-5 h-5 bg-pink-500 rounded-full border-2 border-white dark:border-brand-dark flex items-center justify-center">
+            <span className="w-2 h-2 bg-white rounded-full animate-ping"></span>
+          </span>
         )}
       </button>
     </div>

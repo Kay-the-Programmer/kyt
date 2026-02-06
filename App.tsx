@@ -109,7 +109,7 @@ const TransitionOverlay = ({ isPageTransition }: { isPageTransition: boolean }) 
           {/* Reduced data stream - only 3 elements per panel */}
           <div className="absolute inset-0 flex flex-col items-center justify-center font-mono text-[8px] text-white/10 select-none">
             {[...Array(3)].map((_, j) => (
-              <DataFlicker key={j} />
+              <DataFlicker key={j} active={isPageTransition} />
             ))}
           </div>
         </div>
@@ -118,16 +118,18 @@ const TransitionOverlay = ({ isPageTransition }: { isPageTransition: boolean }) 
   );
 };
 
-const DataFlicker = React.memo(() => {
+const DataFlicker = React.memo(({ active }: { active: boolean }) => {
   const [val, setVal] = useState(() => Math.random().toString(16).substring(2, 10).toUpperCase());
 
   useEffect(() => {
+    if (!active) return;
+
     // Slower update rate to reduce re-renders during transitions
     const interval = setInterval(() => {
       setVal(Math.random().toString(16).substring(2, 10).toUpperCase());
     }, 300);
     return () => clearInterval(interval);
-  }, []);
+  }, [active]);
 
   return <div className="opacity-50">{val}</div>;
 });

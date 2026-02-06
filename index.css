@@ -1,67 +1,45 @@
-/* Add to your global CSS */
-@keyframes gradient-x {
+@import "tailwindcss";
 
-  0%,
-  100% {
-    background-position: 0% 50%;
+@theme {
+  --font-sans: "Inter", sans-serif;
+  --font-heading: "Outfit", sans-serif;
+  --color-brand-dark: #0a0a0a;
+  --color-brand-primary: #2563eb;
+}
+
+@layer utilities {
+  .clip-path-slant {
+    clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+  }
+  
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
 
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-.animate-gradient-x {
-  animation: gradient-x 3s ease infinite;
-  background-size: 200% 200%;
-}
-
-/* Native scrolling (smooth CSS interferes with touchpad) */
-
-/* Performance optimizations */
-.will-change-transform {
-  will-change: transform;
-}
-
-.backface-hidden {
-  backface-visibility: hidden;
-}
-
-/* Mobile touch feedback */
-@media (max-width: 1023px) {
-  .horizontal-panel {
-    -webkit-tap-highlight-color: transparent;
+  .text-glow {
+    text-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
   }
 
-  .horizontal-panel:active {
-    transform: scale(0.99);
-    transition: transform 0.1s ease;
+  .will-change-transform {
+    will-change: transform;
+    backface-visibility: hidden;
   }
 }
 
-/* Connection lines animation */
-.panel-connection-line::after {
-  content: '';
-  position: absolute;
-  top: -3px;
-  right: 0;
+/* Custom Scrollbar for Webkit */
+::-webkit-scrollbar {
   width: 8px;
-  height: 8px;
-  background: #3b82f6;
-  border-radius: 50%;
-  animation: pulse-dot 2s infinite;
 }
 
-@keyframes pulse-dot {
+::-webkit-scrollbar-track {
+  background: #0a0a0a; 
+}
 
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
+::-webkit-scrollbar-thumb {
+  background: #333; 
+  border-radius: 4px;
+}
 
-  50% {
-    transform: scale(1.5);
-    opacity: 0.5;
-  }
+::-webkit-scrollbar-thumb:hover {
+  background: #555; 
 }

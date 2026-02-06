@@ -49,21 +49,21 @@ const HeroSection: React.FC = () => {
 
   const sectionStyle = useMemo(() => ({ perspective: '2500px' }), []);
 
-  // Reduced motion detection
+  // Consolidated media query detection (reduced motion + mobile)
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setIsReducedMotion(mediaQuery.matches);
-    const handleChange = (e: MediaQueryListEvent) => setIsReducedMotion(e.matches);
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
+    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setIsReducedMotion(reducedMotionQuery.matches);
+    const handleReducedMotionChange = (e: MediaQueryListEvent) => setIsReducedMotion(e.matches);
+    reducedMotionQuery.addEventListener('change', handleReducedMotionChange);
 
-  // Mobile detection
-  useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile, { passive: true });
-    return () => window.removeEventListener('resize', checkMobile);
+
+    return () => {
+      reducedMotionQuery.removeEventListener('change', handleReducedMotionChange);
+      window.removeEventListener('resize', checkMobile);
+    };
   }, []);
 
   // Optimized parallax with frame skipping (desktop only)
@@ -240,7 +240,7 @@ const HeroSection: React.FC = () => {
       <div ref={contentRef} className="hero-section-content max-w-[95rem] w-full text-center relative z-10 will-change-transform px-2 sm:px-0">
         <div className="hero-badge inline-flex items-center space-x-2 px-3 sm:px-6 py-1.5 sm:py-2 bg-white/10 dark:bg-blue-500/5 border border-gray-200/50 dark:border-blue-500/10 rounded-full mb-6 sm:mb-8 md:mb-12 mx-auto backdrop-blur-md">
           <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.4em] sm:tracking-[0.7em] text-blue-600 dark:text-blue-400">
-            SYSTEM_STATUS: OPERATIONAL
+            KYTRIQ TECHNOLOGIES
           </span>
         </div>
 

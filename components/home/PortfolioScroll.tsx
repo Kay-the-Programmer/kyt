@@ -226,16 +226,13 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
         const panels = gsap.utils.toArray<HTMLElement>('.horizontal-panel');
         const scrollWidth = horizontal.scrollWidth - window.innerWidth;
 
-        // Pre-compute gradient colors to avoid string creation in loop
-        const gradientCache = new Map<number, string>();
-        const getGradient = (progress: number) => {
-          const key = Math.round(progress * 100);
-          if (!gradientCache.has(key)) {
-            const hue = 200 + progress * 160;
-            gradientCache.set(key, `linear-gradient(to right, hsl(${hue}, 100%, 60%) 0%, hsl(${hue + 20}, 100%, 60%) 50%, hsl(${hue + 40}, 100%, 60%) 100%)`);
-          }
-          return gradientCache.get(key)!;
-        };
+        // Pre-generate all gradient colors upfront (0-100%)
+        const gradientCache = Array.from({ length: 101 }, (_, i) => {
+          const progress = i / 100;
+          const hue = 200 + progress * 160;
+          return `linear-gradient(to right, hsl(${hue}, 100%, 60%) 0%, hsl(${hue + 20}, 100%, 60%) 50%, hsl(${hue + 40}, 100%, 60%) 100%)`;
+        });
+        const getGradient = (progress: number) => gradientCache[Math.round(progress * 100)];
 
         gsap.set(progressBar, {
           transformOrigin: "0% 50%",

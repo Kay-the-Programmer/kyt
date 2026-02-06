@@ -90,13 +90,15 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
                         scale: 1,
                         duration: 0.8,
                         ease: 'power3.out',
+                        onComplete: () => {
+                            // Release GPU memory after animation
+                            gsap.set(card, { willChange: 'auto' });
+                        },
                         scrollTrigger: {
                             trigger: card,
                             start: 'top 90%',
                             end: 'top 60%',
                             toggleActions: 'play none none reverse',
-                            // Add markers for debugging if needed
-                            // markers: true
                         }
                     });
 

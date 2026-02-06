@@ -19,6 +19,10 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(__dirname, '.'),
       }
     },
+    // Pre-bundle heavy dependencies for faster dev startup
+    optimizeDeps: {
+      include: ['gsap', 'gsap/ScrollTrigger', 'gsap/ScrollToPlugin', 'react', 'react-dom', 'react-router-dom']
+    },
     build: {
       // Enable CSS code splitting
       cssCodeSplit: true,

@@ -40,6 +40,17 @@ const Home: React.FC = () => {
   });
 
   useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    // Track visibility for performance optimization
+    let isGlowVisible = true;
+    const visibilityObserver = new IntersectionObserver(
+      ([entry]) => { isGlowVisible = entry.isIntersecting; },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+    visibilityObserver.observe(container);
+
     const ctx = gsap.context(() => {
       const glows = document.querySelectorAll('.hero-bg-glow');
 
@@ -49,9 +60,9 @@ const Home: React.FC = () => {
         glowYTo.current = gsap.quickTo(glows, "y", { duration: 3, ease: "power2.out" });
       }
 
-      // Reduced parallax intensity for subtler movement
+      // Reduced parallax intensity for subtler movement - only runs when visible
       const updateGlow = () => {
-        if (!globalMousePos.active) return;
+        if (!isGlowVisible || !globalMousePos.active) return;
         const xPos = (globalMousePos.x / window.innerWidth - 0.5) * 40;
         const yPos = (globalMousePos.y / window.innerHeight - 0.5) * 40;
 
@@ -116,7 +127,10 @@ const Home: React.FC = () => {
       };
     }, containerRef);
 
-    return () => ctx.revert();
+    return () => {
+      visibilityObserver.disconnect();
+      ctx.revert();
+    };
   }, [isPageTransition]);
 
 

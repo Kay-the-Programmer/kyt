@@ -232,12 +232,19 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
 
           // Special handling for First Panel (SalePilot)
           if (i === 0) {
-            // 1. Initial Entrance (On Mount) - play once
+            // 1. Initial Entrance - NOW TRIGGERED BY VIEWPORT 
+            // Only play when the Portfolio section actually enters the view
             const chars = q('.letter-reveal');
             const reveals = q('.reveal-target');
             const images = q('img, .floating-card');
 
-            const tl = gsap.timeline({ delay: 0.2 });
+            const tl = gsap.timeline({
+              scrollTrigger: {
+                trigger: container,
+                start: "top 60%", // Triggers when top of container is 60% down viewport
+                toggleActions: "play none none reverse"
+              }
+            });
 
             if (chars.length) {
               // Dramatic Flip In
@@ -289,8 +296,8 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
               scrollTrigger: {
                 trigger: panel,
                 containerAnimation: scrollTween,
-                start: 'left left',
-                end: 'right left',
+                start: 'left left', // When panel left edge hits viewport left
+                end: 'right left', // When panel right edge hits viewport left
                 scrub: true,
                 invalidateOnRefresh: true
               }
@@ -300,6 +307,10 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
           }
 
           // Other Panels - Scroll Scrubbed Entrance
+
+          // Trigger points:
+          // start: "left 75%" -> Starts animating when the panel's left edge is at 75% of viewport width (entering from right)
+          // end: "left 25%" -> Finishes animating when left edge is at 25% of viewport (fully visible)
 
           // Panel Container Entrance
           gsap.fromTo(panel,
@@ -319,8 +330,8 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
               scrollTrigger: {
                 trigger: panel,
                 containerAnimation: scrollTween,
-                start: () => "left " + (window.innerWidth * 0.95) + "px",
-                end: () => "left " + (window.innerWidth * 0.6) + "px",
+                start: "left 85%", // Started a bit earlier for the container itself
+                end: "left 50%",
                 scrub: 1,
                 invalidateOnRefresh: true
               }
@@ -349,8 +360,8 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
                 scrollTrigger: {
                   trigger: panel,
                   containerAnimation: scrollTween,
-                  start: () => "left " + (window.innerWidth * 0.85) + "px",
-                  end: () => "left " + (window.innerWidth * 0.5) + "px",
+                  start: "left 80%", // Wait until securely in view
+                  end: "left 40%",
                   scrub: 1,
                   invalidateOnRefresh: true
                 }
@@ -369,8 +380,8 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
                 scrollTrigger: {
                   trigger: panel,
                   containerAnimation: scrollTween,
-                  start: () => "left " + (window.innerWidth * 0.8) + "px",
-                  end: () => "left " + (window.innerWidth * 0.45) + "px",
+                  start: "left 75%",
+                  end: "left 35%",
                   scrub: 1,
                   invalidateOnRefresh: true
                 }
@@ -390,8 +401,8 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
                 scrollTrigger: {
                   trigger: panel,
                   containerAnimation: scrollTween,
-                  start: () => "left " + (window.innerWidth * 0.75) + "px",
-                  end: () => "left " + (window.innerWidth * 0.35) + "px",
+                  start: "left 70%", // Images come in last
+                  end: "left 30%",
                   scrub: 1,
                   invalidateOnRefresh: true
                 }
@@ -408,7 +419,7 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
                 scrollTrigger: {
                   trigger: panel,
                   containerAnimation: scrollTween,
-                  start: 'left right',
+                  start: 'left right', // Standard parallax spanning full intersection
                   end: 'right left',
                   scrub: true,
                   invalidateOnRefresh: true

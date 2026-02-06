@@ -107,56 +107,6 @@ const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea })
                 }
             });
 
-            // Desktop animations - prepare for horizontal scroll context
-            mm.add('(min-width: 1024px)', () => {
-                // Background text - dramatic scale entrance
-                if (bgText) {
-                    gsap.set(bgText, {
-                        opacity: 0,
-                        scale: 0.6,
-                        filter: 'blur(20px)',
-                        willChange: 'transform, opacity, filter'
-                    });
-                }
-
-                // Image container entrance for desktop - 3D rotation reveal
-                if (imageContainer) {
-                    gsap.set(imageContainer, {
-                        opacity: 0,
-                        scale: 0.8,
-                        rotationY: 25,
-                        rotationX: 10,
-                        x: 80,
-                        transformPerspective: 1500,
-                        transformStyle: 'preserve-3d',
-                        willChange: 'transform, opacity'
-                    });
-                }
-
-                // Headline preparation for horizontal scroll parent
-                const headlineChars = headline.querySelectorAll('.split-text-char');
-                if (headlineChars.length > 0) {
-                    gsap.set(headlineChars, {
-                        opacity: 0,
-                        y: 70,
-                        rotationX: -50,
-                        scale: 0.9,
-                        transformPerspective: 1200,
-                        transformStyle: 'preserve-3d',
-                        willChange: 'transform, opacity'
-                    });
-                }
-
-                // Paragraph - slide up reveal preparation
-                if (paragraph) {
-                    gsap.set(paragraph, {
-                        opacity: 0,
-                        y: 40,
-                        filter: 'blur(4px)',
-                        willChange: 'transform, opacity, filter'
-                    });
-                }
-            });
         }, container);
 
         return () => ctx.revert();

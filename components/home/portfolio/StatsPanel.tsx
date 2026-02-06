@@ -47,31 +47,6 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
         const ctx = gsap.context(() => {
             const mm = gsap.matchMedia();
 
-            // Desktop animations (horizontal scroll context handled by parent)
-            mm.add('(min-width: 1024px)', () => {
-                // Headline stagger animation
-                const headlineChars = headline.querySelectorAll('.split-text-char');
-                if (headlineChars.length > 0) {
-                    gsap.set(headlineChars, {
-                        opacity: 0,
-                        y: 60,
-                        rotationX: -45,
-                        transformStyle: 'preserve-3d'
-                    });
-                }
-
-                // Cards initial state with GPU-optimized transforms
-                gsap.set(cards, {
-                    opacity: 0,
-                    y: 80,
-                    scale: 0.9,
-                    rotationX: 15,
-                    transformPerspective: 1200,
-                    transformStyle: 'preserve-3d',
-                    willChange: 'transform, opacity'
-                });
-            });
-
             // Mobile animations (vertical scroll)
             mm.add('(max-width: 1023px)', () => {
                 // Simpler mobile animations for performance

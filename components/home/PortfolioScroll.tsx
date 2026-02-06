@@ -142,107 +142,52 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
 
     if (!container || !horizontal || !progressBar) return;
 
+    // Define ticker callback at top level of effect for scope visibility
+    const updateGlowPos = () => {
+      if (!cursorGlow) return;
+
+      if (!globalMousePos.active) {
+        gsap.to(cursorGlow, { opacity: 0, scale: 0, duration: 0.3, overwrite: 'auto' });
+        return;
+      }
+
+      const currentOpacity = parseFloat(cursorGlow.style.opacity || '0');
+      if (currentOpacity < 0.1) {
+        gsap.to(cursorGlow, { opacity: 1, scale: 1, duration: 0.4, overwrite: 'auto' });
+      }
+
+      // Use quickTo if available, otherwise direct set (fallback handled in setup)
+      if ((cursorGlow as any)._gsap?.xTo) {
+        (cursorGlow as any)._gsap.xTo(globalMousePos.x);
+        (cursorGlow as any)._gsap.yTo(globalMousePos.y);
+      } else {
+        // Fallback if quickTo hasn't initialized yet (rare)
+        gsap.set(cursorGlow, { left: globalMousePos.x, top: globalMousePos.y });
+      }
+    };
+
     const ctx = gsap.context(() => {
       const mm = gsap.matchMedia();
 
-      // 1. Optimized Cursor Glow with throttled interactive check
+      // 1. Optimized Cursor Glow
       if (cursorGlow && !isMobile) {
-        gsap.set(cursorGlow, {
-          scale: 0.8,
-          opacity: 0
-        });
+        gsap.set(cursorGlow, { scale: 0, opacity: 0 });
 
-        const xTo = gsap.quickTo(cursorGlow, "left", {
-          duration: 0.8,
-          ease: "power2.out"
-        });
-        const yTo = gsap.quickTo(cursorGlow, "top", {
-          duration: 0.8,
-          ease: "power2.out"
-        });
+        // Initialize quickTo and store on element property for easy access
+        const xTo = gsap.quickTo(cursorGlow, "left", { duration: 0.6, ease: "power2.out" });
+        const yTo = gsap.quickTo(cursorGlow, "top", { duration: 0.6, ease: "power2.out" });
+        (cursorGlow as any)._gsap = { xTo, yTo };
 
-        // Track current scale target to avoid redundant animations
-        let currentScaleTarget = 1;
-
-        let frameCount = 0;
-        const updateGlow = () => {
-          frameCount++;
-          // Skip every other frame for performance
-          if (frameCount % 2 !== 0) return;
-
-          if (!globalMousePos.active) {
-            gsap.set(cursorGlow, { opacity: 0 });
-            return;
-          }
-
-          // Enter animation on first move
-          const currentOpacity = parseFloat(cursorGlow.style.opacity || '0');
-          if (currentOpacity === 0) {
-            gsap.to(cursorGlow, { opacity: 1, duration: 0.8 });
-          }
-
-          xTo(globalMousePos.x);
-          yTo(globalMousePos.y);
-
-          // Throttled interactive element check (every 100ms)
-          const cache = interactiveCheckCache.current;
-          const now = performance.now();
-          const distMoved = Math.abs(globalMousePos.x - cache.x) + Math.abs(globalMousePos.y - cache.y);
-
-          if (now - cache.time > 100 || distMoved > 50) {
-            const hoverTarget = document.elementFromPoint(globalMousePos.x, globalMousePos.y);
-            cache.result = !!hoverTarget?.closest('.magnetic-area, button, a');
-            cache.x = globalMousePos.x;
-            cache.y = globalMousePos.y;
-            cache.time = now;
-          }
-
-          // Use gsap.to() for scale instead of quickTo (transform properties don't work with quickTo)
-          const newScaleTarget = cache.result ? 1.2 : 1;
-          if (newScaleTarget !== currentScaleTarget) {
-            currentScaleTarget = newScaleTarget;
-            gsap.to(cursorGlow, {
-              scale: newScaleTarget,
-              duration: 0.6,
-              ease: "power2.out",
-              overwrite: "auto"
-            });
-          }
-        };
-
-        gsap.ticker.add(updateGlow);
-
-        // Hide on scroll start
-        ScrollTrigger.create({
-          trigger: container,
-          start: "top top",
-          onEnter: () => gsap.set(cursorGlow, { opacity: 0 }),
-          onLeaveBack: () => gsap.to(cursorGlow, { opacity: 1, duration: 0.3 })
-        });
+        gsap.ticker.add(updateGlowPos);
       }
 
-      // 2. Desktop Horizontal Scroll with Optimized Effects
+      // 2. Desktop Horizontal Scroll
       mm.add("(min-width: 1024px)", () => {
         const panels = gsap.utils.toArray<HTMLElement>('.horizontal-panel');
         const scrollWidth = horizontal.scrollWidth - window.innerWidth;
 
-        // Pre-generate all gradient colors upfront (0-100%)
-        const gradientCache = Array.from({ length: 101 }, (_, i) => {
-          const progress = i / 100;
-          const hue = 200 + progress * 160;
-          return `linear-gradient(to right, hsl(${hue}, 100%, 60%) 0%, hsl(${hue + 20}, 100%, 60%) 50%, hsl(${hue + 40}, 100%, 60%) 100%)`;
-        });
-        const getGradient = (progress: number) => gradientCache[Math.round(progress * 100)];
-
-        gsap.set(progressBar, {
-          transformOrigin: "0% 50%",
-          scaleX: 0,
-          willChange: 'transform'
-        });
-
-        // Throttled scroll update handler
-        let lastProgress = 0;
-        let lastVelocityUpdate = 0;
+        // Progress Bar
+        gsap.set(progressBar, { scaleX: 0, transformOrigin: "0% 50%" });
 
         const scrollTween = gsap.to(horizontal, {
           x: -scrollWidth,
@@ -250,364 +195,184 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
           scrollTrigger: {
             trigger: container,
             pin: true,
-            scrub: 1.5,
+            scrub: 1, // Smooth scrub
             end: () => `+=${scrollWidth}`,
             onUpdate: (self) => {
-              const now = performance.now();
-
-              // Update progress bar (throttled to significant changes)
-              if (Math.abs(self.progress - lastProgress) > 0.005) {
-                gsap.set(progressBar, {
-                  scaleX: self.progress,
-                  background: getGradient(self.progress)
-                });
-                lastProgress = self.progress;
-              }
-
-              // Velocity-based effects (throttled to 60fps)
-              if (now - lastVelocityUpdate > 16) {
-                const velocity = Math.min(Math.abs(self.getVelocity()), 1000);
-                if (velocity > 50) { // Only apply if moving significantly
-                  const skew = gsap.utils.clamp(-8, 8, velocity / 250);
-                  const rotation = gsap.utils.clamp(-2, 2, velocity / 500);
-
-                  gsap.to(horizontal, {
-                    skewX: skew,
-                    rotationY: rotation,
-                    duration: 0.6,
-                    ease: 'power2.out',
-                    overwrite: 'auto'
-                  });
-                }
-                lastVelocityUpdate = now;
-              }
-            },
-            onEnter: () => {
-              gsap.fromTo(progressBar,
-                { opacity: 0, y: 20 },
-                { opacity: 1, y: 0, duration: 0.8, ease: 'back.out(1.7)' }
-              );
+              gsap.set(progressBar, { scaleX: self.progress });
             }
           }
         });
 
-        // 3. Simplified Background Parallax
-        const bgElements = [
-          { ref: gridLayer1Ref.current, depth: 0.1 },
-          { ref: gridLayer2Ref.current, depth: 0.25 },
-          { ref: gridLayer3Ref.current, depth: 0.45 },
-          { ref: glowRef.current, depth: 0.3 }
+        // Background Parallax (optimized)
+        const bgLayers = [
+          { ref: gridLayer3Ref.current, x: -scrollWidth * 0.5 },
+          { ref: gridLayer2Ref.current, x: -scrollWidth * 0.25 },
+          { ref: gridLayer1Ref.current, x: -scrollWidth * 0.1 },
+          { ref: glowRef.current, x: -scrollWidth * 0.3 }
         ];
 
-        bgElements.forEach(item => {
-          if (item.ref) {
-            gsap.set(item.ref, { willChange: 'transform' });
-            gsap.to(item.ref, {
-              x: -scrollWidth * item.depth,
+        bgLayers.forEach(layer => {
+          if (layer.ref) {
+            gsap.to(layer.ref, {
+              x: layer.x,
               ease: 'none',
               scrollTrigger: {
                 trigger: container,
-                scrub: true,
                 start: 'top top',
-                end: () => `+=${scrollWidth}`
+                end: () => `+=${scrollWidth}`,
+                scrub: true
               }
             });
           }
         });
 
-        // 4. Optimized Panel Entrances - batch similar operations
-        const panelsToAnimate = panels.slice(1); // Skip first panel
-
-        // Set initial state for all panels at once
-        gsap.set(panelsToAnimate, {
-          scale: 0.9,
-          rotationY: 30,
-          x: 200,
-          filter: 'brightness(0.4) blur(15px)',
-          autoAlpha: 0,
-          transformPerspective: 2000,
-          willChange: 'transform, opacity, filter'
-        });
-
-        // Panel entrance animations - also skip first panel for same reason
+        // Centralized Panel Animations
         panels.forEach((panel, i) => {
-          // Skip first panel - SalePilotPanel is already visible when horizontal scroll starts
+          // Skip first panel (SalePilot) for major entrance as it's visible initially
           if (i === 0) return;
 
-          gsap.to(panel, {
-            scale: 1,
-            rotationY: 0,
-            x: 0,
-            filter: 'brightness(1) blur(0px)',
-            autoAlpha: 1,
-            duration: 1.5,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: panel,
-              containerAnimation: scrollTween,
-              start: 'left center+=400',
-              end: 'left center-=200',
-              scrub: 1
-            }
-          });
-        });
-
-        // 5. Batch internal element animations
-        // Skip the first panel (index 0) - it has its own self-contained entrance animations
-        // since it's already visible when horizontal scroll starts
-        panels.forEach((panel, panelIndex) => {
-          // Skip first panel - SalePilotPanel handles its own animations
-          if (panelIndex === 0) return;
-
-          const textTargets = panel.querySelectorAll('.split-text-char, .split-text-word');
-          if (textTargets.length > 0) {
-            gsap.to(textTargets, {
-              y: 0,
-              rotationX: 0,
-              rotationZ: 0,
-              scale: 1,
-              opacity: 1,
-              filter: 'blur(0px)',
-              stagger: {
-                each: 0.02,
-                from: panelIndex % 2 === 0 ? 'start' : 'end'
-              },
-              duration: 1.4,
-              ease: 'back.out(1.5)',
-              scrollTrigger: {
-                trigger: panel,
-                containerAnimation: scrollTween,
-                start: 'left center+=350',
-                end: 'left center',
-                scrub: 0.8
-              }
-            });
-          }
-
-          const regularTargets = panel.querySelectorAll('.reveal-target');
-          if (regularTargets.length > 0) {
-            gsap.to(regularTargets, {
-              y: 0,
+          // Panel container entrance
+          gsap.fromTo(panel,
+            {
+              opacity: 0,
+              scale: 0.9,
+              filter: 'blur(10px)',
+              x: 100
+            },
+            {
               opacity: 1,
               scale: 1,
               filter: 'blur(0px)',
-              stagger: 0.08,
-              duration: 1.2,
-              ease: 'power3.out',
-              scrollTrigger: {
-                trigger: panel,
-                containerAnimation: scrollTween,
-                start: 'left center+=250',
-                end: 'left center-=50',
-                scrub: 0.6
-              }
-            });
-          }
-
-          const images = panel.querySelectorAll('img');
-          if (images.length > 0) {
-            gsap.to(images, {
-              scale: 1,
-              opacity: 1,
-              filter: 'blur(0px)',
-              stagger: 0.15,
-              duration: 1.5,
+              x: 0,
+              duration: 1,
               ease: 'power2.out',
               scrollTrigger: {
                 trigger: panel,
                 containerAnimation: scrollTween,
-                start: 'left center+=300',
-                end: 'left center-=100',
-                scrub: 0.8
-              }
-            });
-          }
-
-          // Floating cards - dramatic pop-in entrance
-          const floatingCards = panel.querySelectorAll('.floating-card');
-          if (floatingCards.length > 0) {
-            gsap.to(floatingCards, {
-              scale: 1,
-              opacity: 1,
-              y: 0,
-              rotationZ: 0,
-              stagger: 0.2,
-              duration: 1.5,
-              ease: 'elastic.out(1, 0.6)',
-              scrollTrigger: {
-                trigger: panel,
-                containerAnimation: scrollTween,
-                start: 'left center+=150',
-                end: 'left center-=150',
-                scrub: 0.5
-              }
-            });
-          }
-        });
-
-        // 6. Background elements parallax reveal
-        const bgTextElements = horizontal.querySelectorAll('[class*="text-[30vw]"], [class*="text-[45vw]"]');
-        bgTextElements.forEach(bgText => {
-          const panel = bgText.closest('.horizontal-panel');
-          if (panel && bgText) {
-            gsap.to(bgText, {
-              opacity: 0.02,
-              scale: 1,
-              filter: 'blur(0px)',
-              duration: 2,
-              ease: 'power2.out',
-              scrollTrigger: {
-                trigger: panel,
-                containerAnimation: scrollTween,
-                start: 'left right',
-                end: 'left center',
+                start: 'left 90%',
+                end: 'left 60%',
                 scrub: 1
               }
-            });
-          }
-        });
-
-        // Glow elements expansion animation
-        const glowElements = horizontal.querySelectorAll('[class*="blur-[180px]"], [class*="blur-[150px]"]');
-        glowElements.forEach(glow => {
-          const panel = glow.closest('.horizontal-panel');
-          if (panel && glow) {
-            gsap.to(glow, {
-              scale: 1,
-              opacity: 0.1,
-              filter: 'blur(180px)',
-              duration: 2,
-              ease: 'power1.out',
-              scrollTrigger: {
-                trigger: panel,
-                containerAnimation: scrollTween,
-                start: 'left center+=400',
-                end: 'left center-=200',
-                scrub: 1.2
-              }
-            });
-          }
-        });
-
-        // 6. Pre-create connection lines (moved outside scroll callback)
-        connectionLinesRef.current = [];
-        for (let i = 0; i < panels.length - 1; i++) {
-          const line = document.createElement('div');
-          line.className = 'panel-connection-line';
-          line.style.cssText = `
-            position: absolute;
-            top: 50%;
-            left: ${100 * (i + 1)}%;
-            width: 100px;
-            height: 2px;
-            background: linear-gradient(90deg, rgba(59,130,246,0.8), transparent);
-            transform: translateY(-50%);
-            z-index: 10;
-            opacity: 0;
-            will-change: opacity, transform;
-          `;
-          container.appendChild(line);
-          connectionLinesRef.current.push(line);
-
-          gsap.to(line, {
-            opacity: 0.6,
-            scaleX: 1,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: panels[i],
-              containerAnimation: scrollTween,
-              start: 'right center',
-              end: 'right center+=100',
-              scrub: true
             }
-          });
-        }
+          );
+        });
+
+        // Content Animations inside Panels (including first panel if re-entering?)
+        // Actually, we animate specific elements inside all panels as they scroll in
+        panels.forEach((panel, i) => {
+          const q = gsap.utils.selector(panel);
+
+          // SplitText characters
+          const chars = q('.split-text-char');
+          if (chars.length) {
+            gsap.fromTo(chars,
+              { opacity: 0, y: 50, rotateX: -40 },
+              {
+                opacity: 1, y: 0, rotateX: 0,
+                stagger: 0.05,
+                ease: 'back.out(1.2)',
+                scrollTrigger: {
+                  trigger: panel,
+                  containerAnimation: scrollTween,
+                  start: 'left 80%',
+                  end: 'left 50%', // Finish earlier for visibility
+                  scrub: 1
+                }
+              }
+            );
+          }
+
+          // Reveal targets (standard fade-up)
+          const reveals = q('.reveal-target');
+          if (reveals.length) {
+            gsap.fromTo(reveals,
+              { opacity: 0, y: 40 },
+              {
+                opacity: 1, y: 0,
+                stagger: 0.1,
+                ease: 'power2.out',
+                scrollTrigger: {
+                  trigger: panel,
+                  containerAnimation: scrollTween,
+                  start: 'left 75%',
+                  end: 'left 45%',
+                  scrub: 1
+                }
+              }
+            );
+          }
+
+          // Images / Cards - specialized entrance
+          const images = q('img, .floating-card');
+          if (images.length) {
+            gsap.fromTo(images,
+              { opacity: 0, scale: 0.8, rotate: 5 },
+              {
+                opacity: 1, scale: 1, rotate: 0,
+                stagger: 0.1,
+                duration: 1.5, // Longer feel
+                ease: 'power3.out',
+                scrollTrigger: {
+                  trigger: panel,
+                  containerAnimation: scrollTween,
+                  start: 'left 70%',
+                  end: 'left 40%',
+                  scrub: 1
+                }
+              }
+            );
+          }
+
+          // Background Giant Text Parallax
+          const bgText = q('[class*="text-[30vw]"], [class*="text-[45vw]"]');
+          if (bgText.length) {
+            gsap.fromTo(bgText,
+              { x: 100, opacity: 0 },
+              {
+                x: -100, opacity: 0.05,
+                scrollTrigger: {
+                  trigger: panel,
+                  containerAnimation: scrollTween,
+                  start: 'left right',
+                  end: 'right left',
+                  scrub: true
+                }
+              }
+            );
+          }
+        });
+
+        // Connection Lines (Draw between panels)
+        // Re-implement if desired, or simplify. 
+        // A simple line drawing from right of one panel to left of next
+        panels.forEach((panel, i) => {
+          if (i === panels.length - 1) return;
+          // logic for lines if needed... omitting for cleaner UI as per modern trend
+        });
+
       });
 
-      // 7. Enhanced Mobile Animations - Made MORE DRAMATIC for visibility
+      // 3. Mobile Animations (Vertical)
       mm.add("(max-width: 1023px)", () => {
-        const panels = gsap.utils.toArray<HTMLElement>('.horizontal-panel');
-
-        // More dramatic initial state for noticeable entrance
-        gsap.set(panels, {
-          y: 100,          // Larger offset - more noticeable slide up
-          opacity: 0,
-          scale: 0.92,     // More scale difference for visual impact
-          rotationX: 8,    // Slight 3D tilt for depth
-          transformOrigin: 'center top',
-          transformPerspective: 1000,
-          willChange: 'transform, opacity'
-        });
-
-        panels.forEach((panel) => {
-          // Dramatic panel entrance with bounce
-          gsap.to(panel, {
-            y: 0,
-            opacity: 1,
-            scale: 1,
-            rotationX: 0,
-            duration: 1.2,           // Longer duration - more noticeable
-            ease: 'back.out(1.4)',   // Bouncy overshoot for impact
-            scrollTrigger: {
-              trigger: panel,
-              start: 'top 92%',      // Trigger when panel enters viewport
-              end: 'top 50%',
-              toggleActions: 'play none none reverse'
-            }
-          });
-        });
-
-        // Mobile progress indicator
-        if (!mobileProgressRef.current) {
-          const mobileProgress = document.createElement('div');
-          mobileProgress.className = 'mobile-progress-indicator';
-          mobileProgress.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
-            z-index: 9999;
-            width: 0%;
-            will-change: width;
-            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-          `;
-          document.body.appendChild(mobileProgress);
-          mobileProgressRef.current = mobileProgress;
-        }
-
-        let lastMobileProgress = 0;
+        // Mobile Progress Bar
         ScrollTrigger.create({
           trigger: container,
           start: 'top top',
           end: 'bottom bottom',
           onUpdate: (self) => {
-            // Smooth update with threshold
-            if (Math.abs(self.progress - lastMobileProgress) > 0.008) {
-              gsap.to(mobileProgressRef.current, {
-                width: `${self.progress * 100}%`,
-                duration: 0.2,
-                ease: 'none',
-                overwrite: true
-              });
-              lastMobileProgress = self.progress;
-            }
+            gsap.set(progressBar, { scaleX: self.progress });
           }
         });
+
+        // Panels simple fade in up is handled by child components (Stats, etc.)
+        // We can add a global coordinate here if we want enforced consistency
       });
 
     }, container);
 
     return () => {
       ctx.revert();
-      // Clean up mobile progress indicator
-      if (mobileProgressRef.current) {
-        mobileProgressRef.current.remove();
-        mobileProgressRef.current = null;
-      }
-      // Clean up connection lines
-      connectionLinesRef.current.forEach(line => line.remove());
-      connectionLinesRef.current = [];
+      gsap.ticker.remove(updateGlowPos); // Ensure ticker is removed
     };
   }, [isMobile]);
 

@@ -325,33 +325,106 @@ const IdentitySection: React.FC = () => {
     featureRefs.current[index] = el;
   }, []);
 
-  // Main animation setup - useLayoutEffect for synchronous setup
+  // Main animation setup
   useLayoutEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
 
+    // Use GSAP's selector utility for efficient querying scoped to this component
+    const q = gsap.utils.selector(section);
+
     ctxRef.current = gsap.context(() => {
       const mm = gsap.matchMedia();
 
-      // Entrance animation
-      const entranceTl = gsap.timeline({
+      // Master timeline for coordinated entrance
+      const masterTl = gsap.timeline({
         scrollTrigger: {
           trigger: section,
-          start: 'top 90%',
-          end: 'top 50%',
-          scrub: 0.6
+          start: 'top 75%', // Start slightly earlier for better visibility
+          end: 'bottom 20%',
+          toggleActions: 'play none none reverse',
+          // Remove scrub for entrance to ensure it plays through smoothly once triggered
         }
       });
 
-      entranceTl.fromTo(section,
-        { opacity: 0, y: 60 },
-        { opacity: 1, y: 0, ease: 'power2.out' }
-      );
+      // 1. Initial Badge Pop
+      masterTl.fromTo(q('.identity-intro-badge'),
+        { opacity: 0, y: 20, scale: 0.9 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: 'back.out(1.7)' }
+      )
 
+        // 2. Title Stagger (Letters)
+        .fromTo(q('.identity-title .letter-reveal'),
+          { y: '120%', opacity: 0, rotateX: -60 },
+          {
+            y: '0%',
+            opacity: 1,
+            rotateX: 0,
+            stagger: 0.03, // Slightly tighter stagger
+            duration: 0.8,
+            ease: 'power3.out'
+          },
+          '-=0.4' // Overlap with badge
+        )
+
+        // 3. Description Fade Up
+        .fromTo(q('.identity-description'),
+          { opacity: 0, y: 30 },
+          { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' },
+          '-=0.6'
+        )
+
+        // 4. Features Stagger
+        .fromTo(q('.feature-item'),
+          { opacity: 0, x: -40 },
+          {
+            opacity: 1,
+            x: 0,
+            stagger: 0.12, // Distinct stagger
+            duration: 0.8,
+            ease: 'power2.out',
+            clearProps: 'transform' // Clear transform after animation to avoid conflict with hover effects
+          },
+          '-=0.6'
+        )
+
+        // 5. Image Reveal (Simultaneous with features)
+        .fromTo(q('.image-reveal-wrapper'),
+          {
+            clipPath: 'inset(20% 0 20% 0 round 3rem)', // Vertical reveal feel
+            opacity: 0,
+            scale: 0.95,
+            y: 40
+          },
+          {
+            clipPath: 'inset(0% 0% 0% 0% round 3rem)',
+            opacity: 1,
+            scale: 1,
+            y: 0,
+            duration: 1.2,
+            ease: 'expo.out'
+          },
+          '<+=0.2' // Start slightly after features start
+        )
+
+        // 6. Stats Badge Pop
+        .fromTo(badgeRef.current,
+          { opacity: 0, scale: 0.5, rotation: -10 },
+          {
+            opacity: 1,
+            scale: 1,
+            rotation: 0,
+            duration: 0.8,
+            ease: 'elastic.out(1, 0.6)'
+          },
+          '-=0.8'
+        );
+
+      // Parallax effects (separate scroll-bound triggers)
       mm.add("(min-width: 768px)", () => {
-        // Parallax background number
-        gsap.to('.identity-parallax-bg', {
-          y: -100,
+        // Background Number Parallax
+        gsap.to(q('.identity-parallax-bg'), {
+          y: -150,
           ease: 'none',
           scrollTrigger: {
             trigger: section,
@@ -361,118 +434,21 @@ const IdentitySection: React.FC = () => {
           }
         });
 
-        // Floating badge animation
+        // Floating badge continuous hover effect (after entrance)
         if (badgeRef.current) {
           gsap.to(badgeRef.current, {
-            y: -20,
-            x: 10,
+            y: -15,
+            x: 5,
             rotation: 2,
-            duration: 4,
+            duration: 5,
             repeat: -1,
             yoyo: true,
             ease: 'sine.inOut',
-            force3D: true
+            delay: 2 // Wait for entrance to finish
           });
         }
       });
 
-      // Title letters animation
-      const letterReveals = section.querySelectorAll('.identity-title .letter-reveal');
-      if (letterReveals.length > 0) {
-        gsap.fromTo(letterReveals,
-          {
-            y: '120%',
-            opacity: 0,
-            rotateX: -60
-          },
-          {
-            scrollTrigger: {
-              trigger: '.identity-title',
-              start: 'top 85%',
-              end: 'top 50%',
-              scrub: 0.6
-            },
-            y: '0%',
-            opacity: 1,
-            rotateX: 0,
-            stagger: 0.02,
-            ease: 'power3.out'
-          }
-        );
-      }
-
-      // Description fade
-      gsap.fromTo('.identity-description',
-        { opacity: 0, y: 25 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: '.identity-description',
-            start: 'top 85%',
-            toggleActions: 'play none none reverse'
-          }
-        }
-      );
-
-      // Feature items stagger
-      gsap.fromTo('.feature-item',
-        { opacity: 0, x: -30 },
-        {
-          scrollTrigger: {
-            trigger: '.feature-list',
-            start: 'top 80%',
-            toggleActions: 'play none none reverse'
-          },
-          opacity: 1,
-          x: 0,
-          stagger: 0.1,
-          duration: 0.6,
-          ease: 'power2.out'
-        }
-      );
-
-      // Image wrapper reveal
-      gsap.fromTo('.image-reveal-wrapper',
-        {
-          clipPath: 'inset(10% 10% 10% 10% round 3rem)',
-          opacity: 0,
-          scale: 0.92
-        },
-        {
-          clipPath: 'inset(0% 0% 0% 0% round 3rem)',
-          opacity: 1,
-          scale: 1,
-          duration: 1.2,
-          ease: 'expo.out',
-          scrollTrigger: {
-            trigger: '.image-reveal-wrapper',
-            start: 'top 80%',
-            toggleActions: 'play none none reverse'
-          }
-        }
-      );
-
-      // Badge entrance
-      if (badgeRef.current) {
-        gsap.fromTo(badgeRef.current,
-          { opacity: 0, y: 40, scale: 0.9 },
-          {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            duration: 0.8,
-            ease: 'back.out(1.4)',
-            scrollTrigger: {
-              trigger: badgeRef.current,
-              start: 'top 90%',
-              toggleActions: 'play none none reverse'
-            }
-          }
-        );
-      }
     }, section);
 
     return () => ctxRef.current?.revert();

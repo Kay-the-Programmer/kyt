@@ -73,7 +73,7 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
                         ease: 'power2.out',
                         scrollTrigger: {
                             trigger: container,
-                            start: 'top 80%',
+                            start: 'top 35%',
                             once: true
                         }
                     });
@@ -102,7 +102,7 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
                         },
                         scrollTrigger: {
                             trigger: container,
-                            start: 'top 80%',
+                            start: 'top 35%',
                             once: true
                         }
                     });
@@ -117,7 +117,7 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
                             ease: 'back.out(1.7)',
                             scrollTrigger: {
                                 trigger: container,
-                                start: 'top 80%',
+                                start: 'top 35%',
                                 once: true
                             }
                         });

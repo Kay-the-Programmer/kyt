@@ -49,7 +49,7 @@ const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea })
                         ease: 'power2.out',
                         scrollTrigger: {
                             trigger: container,
-                            start: 'top 80%',
+                            start: 'top 40%',
                             once: true
                         }
                     });
@@ -78,7 +78,7 @@ const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea })
                         ease: 'power3.out',
                         scrollTrigger: {
                             trigger: container,
-                            start: 'top 80%',
+                            start: 'top 40%',
                             once: true
                         }
                     });
@@ -100,7 +100,7 @@ const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea })
                         ease: 'power2.out',
                         scrollTrigger: {
                             trigger: container,
-                            start: 'top 80%',
+                            start: 'top 40%',
                             once: true
                         }
                     });

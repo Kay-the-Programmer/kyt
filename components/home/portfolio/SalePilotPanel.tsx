@@ -93,7 +93,7 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
                         ease: 'power2.out',
                         scrollTrigger: {
                             trigger: container,
-                            start: 'top 85%',
+                            start: 'top 40%',
                             once: true,
                             markers: false // Disable debug markers
                         }
@@ -111,7 +111,7 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
                         ease: 'power2.out',
                         scrollTrigger: {
                             trigger: container,
-                            start: 'top 85%',
+                            start: 'top 40%',
                             once: true
                         }
                     });
@@ -127,7 +127,7 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
                         ease: 'power2.inOut',
                         scrollTrigger: {
                             trigger: container,
-                            start: 'top 85%',
+                            start: 'top 40%',
                             once: true
                         }
                     });
@@ -144,7 +144,7 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
                         ease: 'power2.out',
                         scrollTrigger: {
                             trigger: container,
-                            start: 'top 85%',
+                            start: 'top 40%',
                             once: true
                         }
                     });

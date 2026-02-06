@@ -99,7 +99,31 @@ const Home: React.FC = () => {
         }
       );
 
-      // Enhanced scroll reveal with multi-property stagger
+      // Enhanced scroll reveal for main sections
+      const sections = gsap.utils.toArray<HTMLElement>('.section-reveal');
+      sections.forEach((section, i) => {
+        gsap.fromTo(section,
+          { opacity: 0, y: 100 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 1.2,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: section,
+              start: 'top 85%',
+              end: 'top 50%',
+              toggleActions: 'play none none none', // Play once to avoid pinning conflicts on reverse
+            },
+            onComplete: () => {
+              // Vital for PortfolioScroll: remove transform context so position:fixed (pinning) works relative to viewport
+              gsap.set(section, { clearProps: 'transform' });
+            }
+          }
+        );
+      });
+
+      // existing reveal-on-scroll logic
       gsap.utils.toArray<HTMLElement>('.reveal-on-scroll').forEach((el) => {
         const children = el.querySelectorAll('.reveal-child');
 
@@ -141,23 +165,33 @@ const Home: React.FC = () => {
         <div className="hero-bg-glow absolute -top-[20%] -right-[10%] w-[100vw] h-[100vw] bg-blue-600/5 dark:bg-blue-500/10 rounded-full blur-[120px] opacity-0"></div>
         <div className="hero-bg-glow absolute -bottom-[30%] -left-[10%] w-[100vw] h-[100vw] bg-purple-600/5 dark:bg-purple-500/10 rounded-full blur-[150px] opacity-0"></div>
       </div>
+
+      {/* Hero Section handles its own entrance */}
       <HeroSection />
 
-      <React.Suspense fallback={<div className="min-h-screen" />}>
-        <IdentitySection />
-      </React.Suspense>
+      <div className="section-reveal">
+        <React.Suspense fallback={<div className="min-h-screen" />}>
+          <IdentitySection />
+        </React.Suspense>
+      </div>
 
-      <React.Suspense fallback={<div className="min-h-screen" />}>
-        <PortfolioScroll />
-      </React.Suspense>
+      <div className="section-reveal">
+        <React.Suspense fallback={<div className="min-h-screen" />}>
+          <PortfolioScroll />
+        </React.Suspense>
+      </div>
 
-      <React.Suspense fallback={<div className="min-h-[50vh]" />}>
-        <CTASection />
-      </React.Suspense>
+      <div className="section-reveal">
+        <React.Suspense fallback={<div className="min-h-[50vh]" />}>
+          <CTASection />
+        </React.Suspense>
+      </div>
 
-      <React.Suspense fallback={<div className="min-h-[40vh]" />}>
-        <Footer />
-      </React.Suspense>
+      <div className="section-reveal">
+        <React.Suspense fallback={<div className="min-h-[40vh]" />}>
+          <Footer />
+        </React.Suspense>
+      </div>
     </div>
   );
 };

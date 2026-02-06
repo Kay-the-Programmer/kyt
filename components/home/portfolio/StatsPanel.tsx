@@ -72,8 +72,8 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
                         duration: 0.6,
                         ease: 'power2.out',
                         scrollTrigger: {
-                            trigger: container,
-                            start: 'top 35%',
+                            trigger: headline,
+                            start: 'top 85%',
                             once: true
                         }
                     });
@@ -101,8 +101,8 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
                             gsap.set(card, { willChange: 'auto' });
                         },
                         scrollTrigger: {
-                            trigger: container,
-                            start: 'top 35%',
+                            trigger: card,
+                            start: 'top 85%',
                             once: true
                         }
                     });
@@ -116,8 +116,8 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
                             delay: 0.5 + (index * 0.15),
                             ease: 'back.out(1.7)',
                             scrollTrigger: {
-                                trigger: container,
-                                start: 'top 35%',
+                                trigger: card,
+                                start: 'top 85%',
                                 once: true
                             }
                         });

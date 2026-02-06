@@ -120,8 +120,8 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea }) => {
                         duration: 1, // Slower duration
                         ease: 'power3.out', // Smoother ease
                         scrollTrigger: {
-                            trigger: container,
-                            start: 'top 40%',
+                            trigger: headline,
+                            start: 'top 85%',
                             once: true
                         }
                     });
@@ -147,8 +147,8 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea }) => {
                         delay: 0.4,
                         ease: 'back.out(1.5)',
                         scrollTrigger: {
-                            trigger: container,
-                            start: 'top 40%',
+                            trigger: ctaContainer,
+                            start: 'top 85%',
                             once: true
                         },
                         onComplete: () => {

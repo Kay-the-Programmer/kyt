@@ -49,7 +49,7 @@ const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea })
                         ease: 'power2.out',
                         scrollTrigger: {
                             trigger: container,
-                            start: 'top 40%',
+                            start: 'top 85%',
                             once: true
                         }
                     });
@@ -77,8 +77,8 @@ const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea })
                         duration: 0.7,
                         ease: 'power3.out',
                         scrollTrigger: {
-                            trigger: container,
-                            start: 'top 40%',
+                            trigger: headline,
+                            start: 'top 85%',
                             once: true
                         }
                     });
@@ -99,8 +99,8 @@ const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea })
                         delay: 0.4,
                         ease: 'power2.out',
                         scrollTrigger: {
-                            trigger: container,
-                            start: 'top 40%',
+                            trigger: paragraph,
+                            start: 'top 85%',
                             once: true
                         }
                     });
@@ -135,9 +135,7 @@ const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea })
                         className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-heading font-black text-gray-900 dark:text-white mb-6 sm:mb-8 lg:mb-12 tracking-tighter leading-[0.85]"
                     >
                         <SplitText text="Visionary" className="block" />
-                        <span className="gradient-text">
-                            <SplitText text="Engineering." />
-                        </span>
+                        <SplitText isGradient={true} text="Engineering." />
                     </h2>
                     <p
                         ref={paragraphRef}

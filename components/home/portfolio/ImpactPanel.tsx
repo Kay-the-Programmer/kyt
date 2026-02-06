@@ -48,27 +48,50 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea }) => {
                     // Blue glow expands first
                     gsap.to(blueGlow, {
                         scale: 1,
-                        opacity: 0.1,
+                        opacity: 0.15, // Slightly brighter for impact
                         duration: 1.5,
                         ease: 'power2.out',
                         scrollTrigger: {
                             trigger: container,
-                            start: 'top 80%',
+                            start: 'top 75%', // Early trigger
                             once: true
+                        },
+                        onComplete: () => {
+                            // Continuous breathing animation
+                            gsap.to(blueGlow, {
+                                scale: 1.1,
+                                opacity: 0.1,
+                                duration: 3,
+                                yoyo: true,
+                                repeat: -1,
+                                ease: 'sine.inOut'
+                            });
                         }
                     });
 
                     // Purple glow follows with delay
                     gsap.to(purpleGlow, {
                         scale: 1,
-                        opacity: 0.1,
+                        opacity: 0.15,
                         duration: 1.5,
                         delay: 0.3,
                         ease: 'power2.out',
                         scrollTrigger: {
                             trigger: container,
-                            start: 'top 80%',
+                            start: 'top 75%',
                             once: true
+                        },
+                        onComplete: () => {
+                            // Continuous breathing animation
+                            gsap.to(purpleGlow, {
+                                scale: 1.1,
+                                opacity: 0.1,
+                                duration: 4,
+                                delay: 1, // Offset phase
+                                yoyo: true,
+                                repeat: -1,
+                                ease: 'sine.inOut'
+                            });
                         }
                     });
                 }
@@ -78,9 +101,9 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea }) => {
                 if (headlineChars.length > 0) {
                     gsap.set(headlineChars, {
                         opacity: 0,
-                        y: 60,
-                        scale: 0.8,
-                        rotationX: -40,
+                        y: 40, // Reduced from 60 for tighter feel
+                        scale: 0.9,
+                        rotationX: -20, // Reduced rotation
                         transformPerspective: 1000,
                         willChange: 'transform, opacity'
                     });
@@ -94,11 +117,11 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea }) => {
                             each: 0.02,
                             from: 'center'
                         },
-                        duration: 0.8,
-                        ease: 'back.out(1.4)',
+                        duration: 1, // Slower duration
+                        ease: 'power3.out', // Smoother ease
                         scrollTrigger: {
                             trigger: container,
-                            start: 'top 80%',
+                            start: 'top 70%',
                             once: true
                         }
                     });
@@ -110,8 +133,8 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea }) => {
 
                     gsap.set(buttons, {
                         opacity: 0,
-                        y: 40,
-                        scale: 0.9,
+                        y: 30,
+                        scale: 0.95,
                         willChange: 'transform, opacity'
                     });
 
@@ -119,14 +142,24 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea }) => {
                         opacity: 1,
                         y: 0,
                         scale: 1,
-                        stagger: 0.15,
-                        duration: 0.7,
-                        delay: 0.5,
-                        ease: 'back.out(1.7)',
+                        stagger: 0.1,
+                        duration: 0.8,
+                        delay: 0.4,
+                        ease: 'back.out(1.5)',
                         scrollTrigger: {
                             trigger: container,
-                            start: 'top 80%',
+                            start: 'top 70%',
                             once: true
+                        },
+                        onComplete: () => {
+                            // Subtle float for interactivity feel
+                            gsap.to(ctaContainer, {
+                                y: -5,
+                                duration: 2.5,
+                                ease: 'sine.inOut',
+                                yoyo: true,
+                                repeat: -1
+                            });
                         }
                     });
                 }
@@ -168,7 +201,7 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea }) => {
 
                 <h2
                     ref={headlineRef}
-                    className="flex flex-col items-center text-4xl sm:text-6xl md:text-8xl lg:text-[11rem] font-heading font-bold mb-10 sm:mb-16 tracking-tighter leading-[0.85]"
+                    className="flex flex-col items-center text-5xl sm:text-6xl md:text-8xl lg:text-[11rem] font-heading font-bold mb-10 sm:mb-16 tracking-tighter leading-[0.85]"
                 >
                     <SplitText text="Let's Build" />
                     <SplitText text="Your Idea" isGradient={true} />
@@ -178,12 +211,12 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea }) => {
                 {/* CTA Buttons */}
                 <div
                     ref={ctaContainerRef}
-                    className="reveal-target flex flex-col md:flex-row items-center justify-center space-y-6 sm:space-y-10 md:space-y-0 md:space-x-14"
+                    className="reveal-target flex flex-col md:flex-row items-center justify-center w-full space-y-6 sm:space-y-10 md:space-y-0 md:space-x-14"
                 >
                     <Link
                         ref={primaryButtonRef as React.RefObject<HTMLAnchorElement>}
                         to="/contact"
-                        className="magnetic-area group px-10 sm:px-16 py-6 sm:py-8 bg-blue-600 text-white rounded-full font-black text-xl sm:text-2xl hover:bg-blue-700 transition-all duration-500 shadow-3xl shadow-blue-600/30 active:scale-95 hover:scale-105 hover:shadow-blue-600/50"
+                        className="magnetic-area group w-full max-w-xs md:w-auto md:max-w-none px-10 sm:px-16 py-6 sm:py-8 bg-blue-600 text-white rounded-full font-black text-xl sm:text-2xl hover:bg-blue-700 transition-all duration-500 shadow-3xl shadow-blue-600/30 active:scale-95 hover:scale-105 hover:shadow-blue-600/50 flex justify-center items-center"
                     >
                         Contact us
                     </Link>

@@ -7,9 +7,10 @@ gsap.registerPlugin(ScrollTrigger);
 
 interface VisionaryPanelProps {
     registerMagneticArea?: (el: HTMLDivElement | null) => void;
+    desktopTween?: gsap.core.Tween | null;
 }
 
-const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea }) => {
+const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea, desktopTween }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const headlineRef = useRef<HTMLHeadingElement>(null);
     const paragraphRef = useRef<HTMLParagraphElement>(null);
@@ -107,10 +108,84 @@ const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea })
                 }
             });
 
+            // Desktop Animations
+            mm.add('(min-width: 1024px)', () => {
+                if (!desktopTween) return;
+
+                // Headline Stagger
+                const headlineChars = headline.querySelectorAll('.split-text-char');
+                if (headlineChars.length > 0) {
+                    gsap.fromTo(headlineChars,
+                        {
+                            opacity: 0,
+                            rotateX: -90,
+                            y: 50,
+                            transformOrigin: "50% 50% -50px",
+                            scaleY: 0.5
+                        },
+                        {
+                            opacity: 1,
+                            rotateX: 0,
+                            y: 0,
+                            scaleY: 1,
+                            stagger: 0.04,
+                            ease: 'back.out(1.5)',
+                            scrollTrigger: {
+                                trigger: headline,
+                                containerAnimation: desktopTween,
+                                start: "left 60%",
+                                end: "left 20%",
+                                scrub: 1,
+                                invalidateOnRefresh: true
+                            }
+                        }
+                    );
+                }
+
+                // Paragraph Fade
+                if (paragraph) {
+                    gsap.fromTo(paragraph,
+                        { opacity: 0, y: 30, filter: 'blur(5px)' },
+                        {
+                            opacity: 1, y: 0, filter: 'blur(0px)',
+                            ease: 'power2.out',
+                            scrollTrigger: {
+                                trigger: paragraph,
+                                containerAnimation: desktopTween,
+                                start: "left 65%",
+                                end: "left 30%",
+                                scrub: 1,
+                                invalidateOnRefresh: true
+                            }
+                        }
+                    );
+                }
+
+                // Image Entrance
+                if (imageContainer) {
+                    gsap.fromTo(imageContainer,
+                        { opacity: 0, scale: 0.85, rotate: 12, filter: 'blur(8px)' },
+                        {
+                            opacity: 1, scale: 1, rotate: 6, filter: 'blur(0px)',
+                            duration: 1.5,
+                            ease: 'power3.out',
+                            scrollTrigger: {
+                                trigger: imageContainer,
+                                containerAnimation: desktopTween,
+                                start: "left 60%",
+                                end: "left 20%",
+                                scrub: 1,
+                                invalidateOnRefresh: true
+                            }
+                        }
+                    );
+                }
+            });
+
         }, container);
 
         return () => ctx.revert();
-    }, []);
+    }, [desktopTween]);
 
     return (
         <div

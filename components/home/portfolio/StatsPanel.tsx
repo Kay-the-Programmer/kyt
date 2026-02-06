@@ -12,6 +12,7 @@ interface StatsPanelProps {
     glowRef: React.RefObject<HTMLDivElement>;
     vignetteRef: React.RefObject<HTMLDivElement>;
     registerMagneticArea?: (el: HTMLDivElement | null) => void;
+    desktopTween?: gsap.core.Tween | null;
 }
 
 const STATS_DATA = [
@@ -26,7 +27,8 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
     gridLayer3Ref,
     glowRef,
     vignetteRef,
-    registerMagneticArea
+    registerMagneticArea,
+    desktopTween
 }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const statsCardsRef = useRef<(HTMLDivElement | null)[]>([]);
@@ -124,10 +126,65 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
                     }
                 });
             });
+
+            // Desktop Animations
+            mm.add('(min-width: 1024px)', () => {
+                if (!desktopTween) return;
+
+                // Headline Desktop
+                const headlineChars = headline.querySelectorAll('.split-text-char');
+                if (headlineChars.length > 0) {
+                    gsap.fromTo(headlineChars,
+                        {
+                            opacity: 0,
+                            rotateX: -90,
+                            y: 50,
+                            transformOrigin: "50% 50% -50px",
+                            scaleY: 0.5
+                        },
+                        {
+                            opacity: 1,
+                            rotateX: 0,
+                            y: 0,
+                            scaleY: 1,
+                            stagger: 0.04,
+                            ease: 'back.out(1.5)',
+                            scrollTrigger: {
+                                trigger: headline,
+                                containerAnimation: desktopTween,
+                                start: "left 60%", // Triggers when headline enters 60% of viewport width
+                                end: "left 20%",
+                                scrub: 1,
+                                invalidateOnRefresh: true
+                            }
+                        }
+                    );
+                }
+
+                // Stats Cards Desktop - Individual Triggers
+                cards.forEach((card, index) => {
+                    gsap.fromTo(card,
+                        { opacity: 0, scale: 0.8, y: 50, filter: 'blur(5px)' },
+                        {
+                            opacity: 1, scale: 1, y: 0, filter: 'blur(0px)',
+                            ease: 'power2.out',
+                            scrollTrigger: {
+                                trigger: card,
+                                containerAnimation: desktopTween,
+                                start: "left 70%", // Triggers when the card itself enters
+                                end: "left 30%",
+                                scrub: 1,
+                                invalidateOnRefresh: true
+                            }
+                        }
+                    );
+                });
+            });
+
         }, container);
 
         return () => ctx.revert();
-    }, []);
+    }, [desktopTween]);
 
     // Register magnetic areas for desktop hover effects
     const setCardRef = useCallback((el: HTMLDivElement | null, index: number) => {

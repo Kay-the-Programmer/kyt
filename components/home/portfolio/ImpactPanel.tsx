@@ -8,9 +8,10 @@ gsap.registerPlugin(ScrollTrigger);
 
 interface ImpactPanelProps {
     registerMagneticArea?: (el: HTMLDivElement | null) => void;
+    desktopTween?: gsap.core.Tween | null;
 }
 
-const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea }) => {
+const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea, desktopTween }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const headlineRef = useRef<HTMLHeadingElement>(null);
     const ctaContainerRef = useRef<HTMLDivElement>(null);
@@ -165,10 +166,63 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea }) => {
                 }
             });
 
+            // Desktop animations
+            mm.add('(min-width: 1024px)', () => {
+                if (!desktopTween) return;
+
+                // Headline reveal
+                const headlineChars = headline.querySelectorAll('.split-text-char');
+                if (headlineChars.length > 0) {
+                    gsap.set(headlineChars, {
+                        opacity: 0,
+                        rotateX: -90,
+                        y: 50,
+                        transformOrigin: "50% 50% -50px",
+                        scaleY: 0.5
+                    });
+
+                    gsap.to(headlineChars, {
+                        opacity: 1,
+                        rotateX: 0,
+                        y: 0,
+                        scaleY: 1,
+                        stagger: 0.04,
+                        ease: 'back.out(1.5)',
+                        scrollTrigger: {
+                            trigger: headlineRef.current,
+                            containerAnimation: desktopTween,
+                            start: "left 60%", // Triggers when headline enters 60% of viewport width
+                            end: "left 20%",
+                            scrub: 1,
+                            invalidateOnRefresh: true
+                        }
+                    });
+                }
+
+                // CTA Entrance
+                if (ctaContainerRef.current) {
+                    gsap.fromTo(ctaContainerRef.current,
+                        { opacity: 0, y: 30 },
+                        {
+                            opacity: 1, y: 0,
+                            ease: 'power2.out',
+                            scrollTrigger: {
+                                trigger: ctaContainerRef.current,
+                                containerAnimation: desktopTween,
+                                start: "left 65%",
+                                end: "left 30%",
+                                scrub: 1,
+                                invalidateOnRefresh: true
+                            }
+                        }
+                    );
+                }
+            });
+
         }, container);
 
         return () => ctx.revert();
-    }, []);
+    }, [desktopTween]);
 
     // Register magnetic areas for desktop
     useEffect(() => {

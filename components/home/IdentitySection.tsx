@@ -67,11 +67,6 @@ const FeatureItem = memo<FeatureItemProps>(({ item, index, isActive, onHover, on
       </p>
     </div>
 
-    {/* Arrow indicator */}
-    <div className={`self-center transition-all duration-300 ${isActive ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'
-      }`}>
-      <i className="fa-solid fa-chevron-right text-blue-500 text-sm" />
-    </div>
   </div>
 ));
 
@@ -498,7 +493,6 @@ const IdentitySection: React.FC = () => {
         {/* Left content */}
         <div>
           <div className="identity-intro-badge inline-flex items-center gap-3 mb-8 px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-900/50">
-            <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
             <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">What We Do</span>
           </div>
 

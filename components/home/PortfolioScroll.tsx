@@ -228,16 +228,46 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
 
         // Centralized Panel Animations
         panels.forEach((panel, i) => {
-          // Skip first panel (SalePilot) for major entrance as it's visible initially
-          if (i === 0) return;
+          // Special handling for First Panel (SalePilot) - immediate entrance
+          if (i === 0) {
+            const q = gsap.utils.selector(panel);
+            const commonTargets = q('.reveal-target, .split-text-char, img, .floating-card');
 
-          // Panel container entrance
+            if (commonTargets.length) {
+              gsap.set(commonTargets, {
+                opacity: 0,
+                y: 30,
+                scale: 0.95,
+                filter: 'blur(5px)'
+              });
+
+              // Play immediately on mount/desktop active since it's the landing panel
+              gsap.to(commonTargets, {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                filter: 'blur(0px)',
+                stagger: 0.05,
+                duration: 1.2,
+                ease: 'power3.out',
+                delay: 0.2
+              });
+            }
+            return;
+          }
+
+          // Other Panels - Scroll Scrubbed Entrance
+
+          // 1. Panel Container Entrance (Fade/Blur/Scale)
+          // Use precise calculations for consistent feel across aspect ratios
+          const viewportW = window.innerWidth;
+
           gsap.fromTo(panel,
             {
               opacity: 0,
-              scale: 0.9,
-              filter: 'blur(10px)',
-              x: 100
+              scale: 0.92,
+              filter: 'blur(8px)',
+              x: viewportW * 0.1 // Slight parallax slide in
             },
             {
               opacity: 1,
@@ -249,33 +279,38 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
               scrollTrigger: {
                 trigger: panel,
                 containerAnimation: scrollTween,
-                start: 'left 90%',
-                end: 'left 60%',
+                // Start when left edge of panel hits 95% of viewport width (just entering)
+                start: () => "left " + (viewportW * 0.95) + "px",
+                // End when left edge hits 60% (fully visible)
+                end: () => "left " + (viewportW * 0.6) + "px",
                 scrub: 1
               }
             }
           );
         });
 
-        // Content Animations inside Panels (including first panel if re-entering?)
-        // Actually, we animate specific elements inside all panels as they scroll in
+        // Content Animations inside Panels
         panels.forEach((panel, i) => {
-          const q = gsap.utils.selector(panel);
+          if (i === 0) return; // Handled above
 
-          // SplitText characters
+          const q = gsap.utils.selector(panel);
+          const viewportW = window.innerWidth;
+
+          // SplitText characters - Dramatic letters
           const chars = q('.split-text-char');
           if (chars.length) {
             gsap.fromTo(chars,
-              { opacity: 0, y: 50, rotateX: -40 },
+              { opacity: 0, y: 80, rotateX: -60 },
               {
                 opacity: 1, y: 0, rotateX: 0,
-                stagger: 0.05,
-                ease: 'back.out(1.2)',
+                stagger: 0.03,
+                ease: 'back.out(1.4)',
                 scrollTrigger: {
                   trigger: panel,
                   containerAnimation: scrollTween,
-                  start: 'left 80%',
-                  end: 'left 50%', // Finish earlier for visibility
+                  // Tighter trigger zone for text to ensure it's readable quickly
+                  start: () => "left " + (viewportW * 0.85) + "px",
+                  end: () => "left " + (viewportW * 0.5) + "px",
                   scrub: 1
                 }
               }
@@ -286,7 +321,7 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
           const reveals = q('.reveal-target');
           if (reveals.length) {
             gsap.fromTo(reveals,
-              { opacity: 0, y: 40 },
+              { opacity: 0, y: 50 },
               {
                 opacity: 1, y: 0,
                 stagger: 0.1,
@@ -294,8 +329,8 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
                 scrollTrigger: {
                   trigger: panel,
                   containerAnimation: scrollTween,
-                  start: 'left 75%',
-                  end: 'left 45%',
+                  start: () => "left " + (viewportW * 0.8) + "px",
+                  end: () => "left " + (viewportW * 0.45) + "px",
                   scrub: 1
                 }
               }
@@ -306,17 +341,17 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
           const images = q('img, .floating-card');
           if (images.length) {
             gsap.fromTo(images,
-              { opacity: 0, scale: 0.8, rotate: 5 },
+              { opacity: 0, scale: 0.85, rotate: 8, filter: 'blur(5px)' },
               {
-                opacity: 1, scale: 1, rotate: 0,
-                stagger: 0.1,
-                duration: 1.5, // Longer feel
+                opacity: 1, scale: 1, rotate: 0, filter: 'blur(0px)',
+                stagger: 0.15,
+                duration: 1.5,
                 ease: 'power3.out',
                 scrollTrigger: {
                   trigger: panel,
                   containerAnimation: scrollTween,
-                  start: 'left 70%',
-                  end: 'left 40%',
+                  start: () => "left " + (viewportW * 0.75) + "px",
+                  end: () => "left " + (viewportW * 0.35) + "px",
                   scrub: 1
                 }
               }
@@ -327,15 +362,15 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
           const bgText = q('[class*="text-[30vw]"], [class*="text-[45vw]"]');
           if (bgText.length) {
             gsap.fromTo(bgText,
-              { x: 100, opacity: 0 },
+              { x: viewportW * 0.2, opacity: 0 },
               {
-                x: -100, opacity: 0.05,
+                x: -viewportW * 0.2, opacity: 0.05,
                 scrollTrigger: {
                   trigger: panel,
                   containerAnimation: scrollTween,
                   start: 'left right',
                   end: 'right left',
-                  scrub: true
+                  scrub: true // Raw scrub for parallax
                 }
               }
             );

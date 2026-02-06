@@ -160,10 +160,9 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
           duration: 0.8,
           ease: "power2.out"
         });
-        const scaleTo = gsap.quickTo(cursorGlow, "scale", {
-          duration: 0.6,
-          ease: "power2.out"
-        });
+
+        // Track current scale target to avoid redundant animations
+        let currentScaleTarget = 1;
 
         let frameCount = 0;
         const updateGlow = () => {
@@ -198,7 +197,17 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
             cache.time = now;
           }
 
-          scaleTo(cache.result ? 1.2 : 1);
+          // Use gsap.to() for scale instead of quickTo (transform properties don't work with quickTo)
+          const newScaleTarget = cache.result ? 1.2 : 1;
+          if (newScaleTarget !== currentScaleTarget) {
+            currentScaleTarget = newScaleTarget;
+            gsap.to(cursorGlow, {
+              scale: newScaleTarget,
+              duration: 0.6,
+              ease: "power2.out",
+              overwrite: "auto"
+            });
+          }
         };
 
         gsap.ticker.add(updateGlow);
@@ -436,33 +445,34 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
         }
       });
 
-      // 7. Enhanced Mobile Animations
+      // 7. Enhanced Mobile Animations - Made MORE DRAMATIC for visibility
       mm.add("(max-width: 1023px)", () => {
         const panels = gsap.utils.toArray<HTMLElement>('.horizontal-panel');
 
-        // Only set initial state for panels themselves - let child components handle internal elements
-        // This prevents conflicts where both parent and child try to animate the same elements
+        // More dramatic initial state for noticeable entrance
         gsap.set(panels, {
-          y: 50,
+          y: 100,          // Larger offset - more noticeable slide up
           opacity: 0,
-          scale: 0.98,
+          scale: 0.92,     // More scale difference for visual impact
+          rotationX: 8,    // Slight 3D tilt for depth
           transformOrigin: 'center top',
+          transformPerspective: 1000,
           willChange: 'transform, opacity'
         });
 
         panels.forEach((panel) => {
-          // Main panel entrance - this is the only animation parent should do
-          // Start when panel is almost in view for a smooth feel
+          // Dramatic panel entrance with bounce
           gsap.to(panel, {
             y: 0,
             opacity: 1,
             scale: 1,
-            duration: 0.8,
-            ease: 'power2.out',
+            rotationX: 0,
+            duration: 1.2,           // Longer duration - more noticeable
+            ease: 'back.out(1.4)',   // Bouncy overshoot for impact
             scrollTrigger: {
               trigger: panel,
-              start: 'top 95%',  // Start earlier - when panel is just entering viewport
-              end: 'top 60%',
+              start: 'top 92%',      // Trigger when panel enters viewport
+              end: 'top 50%',
               toggleActions: 'play none none reverse'
             }
           });

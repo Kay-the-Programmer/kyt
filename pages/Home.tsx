@@ -41,17 +41,19 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Optimized Background Parallax using quickTo (created once, called on mousemove)
       const glows = document.querySelectorAll('.hero-bg-glow');
+
+      // Smoother parallax with longer duration and softer easing
       if (glows.length > 0) {
-        glowXTo.current = gsap.quickTo(glows, "x", { duration: 2.5, ease: "sine.out" });
-        glowYTo.current = gsap.quickTo(glows, "y", { duration: 2.5, ease: "sine.out" });
+        glowXTo.current = gsap.quickTo(glows, "x", { duration: 3, ease: "power2.out" });
+        glowYTo.current = gsap.quickTo(glows, "y", { duration: 3, ease: "power2.out" });
       }
 
+      // Reduced parallax intensity for subtler movement
       const updateGlow = () => {
         if (!globalMousePos.active) return;
-        const xPos = (globalMousePos.x / window.innerWidth - 0.5) * 60;
-        const yPos = (globalMousePos.y / window.innerHeight - 0.5) * 60;
+        const xPos = (globalMousePos.x / window.innerWidth - 0.5) * 40;
+        const yPos = (globalMousePos.y / window.innerHeight - 0.5) * 40;
 
         glowXTo.current?.(xPos);
         glowYTo.current?.(yPos);
@@ -59,33 +61,52 @@ const Home: React.FC = () => {
 
       gsap.ticker.add(updateGlow);
 
-      // Hero Entrance Orchestration - Slightly faster
+      // Ambient floating effect for background glows
+      glows.forEach((glow, i) => {
+        gsap.to(glow, {
+          y: i === 0 ? '+=15' : '-=12',
+          x: i === 0 ? '-=10' : '+=8',
+          duration: 6 + i * 2,
+          ease: 'sine.inOut',
+          repeat: -1,
+          yoyo: true
+        });
+      });
+
+      // Hero Entrance with refined timing and subtle scale
       const tl = gsap.timeline({ delay: isPageTransition ? 0.6 : 0.02 });
 
       tl.fromTo('.hero-bg-glow',
-        { opacity: 0, scale: 0.8 },
+        { opacity: 0, scale: 0.85, filter: 'blur(160px)' },
         {
-          opacity: (i) => i === 0 ? 0.3 : 0.15,
+          opacity: (i) => i === 0 ? 0.35 : 0.18,
           scale: 1,
-          duration: 1.2,
-          stagger: 0.15,
-          ease: 'power3.out'
+          filter: 'blur(120px)',
+          duration: 1.8,
+          stagger: 0.2,
+          ease: 'power2.out'
         }
       );
 
-      // Global Reveal orchestration
+      // Enhanced scroll reveal with multi-property stagger
       gsap.utils.toArray<HTMLElement>('.reveal-on-scroll').forEach((el) => {
-        gsap.from(el.querySelectorAll('.reveal-child'), {
+        const children = el.querySelectorAll('.reveal-child');
+
+        gsap.set(children, { opacity: 0, y: 24, scale: 0.98 });
+
+        gsap.to(children, {
           scrollTrigger: {
             trigger: el,
-            start: 'top 92%',
+            start: 'top 88%',
+            end: 'top 60%',
             toggleActions: 'play none none reverse'
           },
-          y: 30,
-          opacity: 0,
-          duration: 0.8,
-          stagger: 0.08,
-          ease: 'power2.out'
+          y: 0,
+          opacity: 1,
+          scale: 1,
+          duration: 1,
+          stagger: 0.1,
+          ease: 'power3.out'
         });
       });
 

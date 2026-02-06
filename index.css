@@ -1,7 +1,14 @@
 /* Add to your global CSS */
 @keyframes gradient-x {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 .animate-gradient-x {
@@ -9,10 +16,7 @@
   background-size: 200% 200%;
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
+/* Native scrolling (smooth CSS interferes with touchpad) */
 
 /* Performance optimizations */
 .will-change-transform {
@@ -28,7 +32,7 @@ html {
   .horizontal-panel {
     -webkit-tap-highlight-color: transparent;
   }
-  
+
   .horizontal-panel:active {
     transform: scale(0.99);
     transition: transform 0.1s ease;
@@ -49,6 +53,15 @@ html {
 }
 
 @keyframes pulse-dot {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.5); opacity: 0.5; }
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.5);
+    opacity: 0.5;
+  }
 }

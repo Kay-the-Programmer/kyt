@@ -330,8 +330,8 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
               scrollTrigger: {
                 trigger: panel,
                 containerAnimation: scrollTween,
-                start: "left 85%", // Started a bit earlier for the container itself
-                end: "left 50%",
+                start: "left 70%",
+                end: "left 40%",
                 scrub: 1,
                 invalidateOnRefresh: true
               }
@@ -360,8 +360,8 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
                 scrollTrigger: {
                   trigger: panel,
                   containerAnimation: scrollTween,
-                  start: "left 80%", // Wait until securely in view
-                  end: "left 40%",
+                  start: "left 60%",
+                  end: "left 25%",
                   scrub: 1,
                   invalidateOnRefresh: true
                 }
@@ -380,8 +380,8 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
                 scrollTrigger: {
                   trigger: panel,
                   containerAnimation: scrollTween,
-                  start: "left 75%",
-                  end: "left 35%",
+                  start: "left 60%",
+                  end: "left 25%",
                   scrub: 1,
                   invalidateOnRefresh: true
                 }
@@ -401,8 +401,8 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
                 scrollTrigger: {
                   trigger: panel,
                   containerAnimation: scrollTween,
-                  start: "left 70%", // Images come in last
-                  end: "left 30%",
+                  start: "left 55%",
+                  end: "left 20%",
                   scrub: 1,
                   invalidateOnRefresh: true
                 }

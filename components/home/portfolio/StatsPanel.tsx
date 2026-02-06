@@ -82,49 +82,7 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
                     willChange: 'transform, opacity'
                 });
 
-                // Staggered card entrance on mobile
-                cards.forEach((card, index) => {
-                    gsap.to(card, {
-                        opacity: 1,
-                        y: 0,
-                        scale: 1,
-                        duration: 0.8,
-                        ease: 'power3.out',
-                        onComplete: () => {
-                            // Release GPU memory after animation
-                            gsap.set(card, { willChange: 'auto' });
-                        },
-                        scrollTrigger: {
-                            trigger: card,
-                            start: 'top 90%',
-                            end: 'top 60%',
-                            toggleActions: 'play none none reverse',
-                        }
-                    });
-
-                    // Icon bounce effect on reveal
-                    const icon = card.querySelector('.stats-icon');
-                    if (icon) {
-                        gsap.set(icon, {
-                            scale: 0,
-                            rotation: -180
-                        });
-
-                        gsap.to(icon, {
-                            scale: 1,
-                            rotation: 0,
-                            duration: 0.6,
-                            ease: 'back.out(1.7)',
-                            scrollTrigger: {
-                                trigger: card,
-                                start: 'top 85%',
-                                toggleActions: 'play none none reverse'
-                            }
-                        });
-                    }
-                });
-
-                // Headline animation for mobile
+                // Headline animation for mobile - triggers first
                 const headlineChars = headline.querySelectorAll('.split-text-char');
                 if (headlineChars.length > 0) {
                     gsap.set(headlineChars, {
@@ -139,12 +97,57 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
                         duration: 0.6,
                         ease: 'power2.out',
                         scrollTrigger: {
-                            trigger: headline,
-                            start: 'top 85%',
-                            toggleActions: 'play none none reverse'
+                            trigger: container,
+                            start: 'top 80%',
+                            once: true
                         }
                     });
                 }
+
+                // Staggered card entrance on mobile - use container trigger with delays
+                cards.forEach((card, index) => {
+                    // Icon initial state
+                    const icon = card.querySelector('.stats-icon');
+                    if (icon) {
+                        gsap.set(icon, {
+                            scale: 0,
+                            rotation: -180
+                        });
+                    }
+
+                    gsap.to(card, {
+                        opacity: 1,
+                        y: 0,
+                        scale: 1,
+                        duration: 0.8,
+                        delay: 0.3 + (index * 0.15),
+                        ease: 'power3.out',
+                        onComplete: () => {
+                            gsap.set(card, { willChange: 'auto' });
+                        },
+                        scrollTrigger: {
+                            trigger: container,
+                            start: 'top 80%',
+                            once: true
+                        }
+                    });
+
+                    // Icon bounce effect - coordinated with card animation
+                    if (icon) {
+                        gsap.to(icon, {
+                            scale: 1,
+                            rotation: 0,
+                            duration: 0.6,
+                            delay: 0.5 + (index * 0.15),
+                            ease: 'back.out(1.7)',
+                            scrollTrigger: {
+                                trigger: container,
+                                start: 'top 80%',
+                                once: true
+                            }
+                        });
+                    }
+                });
             });
         }, container);
 

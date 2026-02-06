@@ -53,9 +53,9 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
                         duration: 0.7,
                         ease: 'power3.out',
                         scrollTrigger: {
-                            trigger: headline,
-                            start: 'top 88%',
-                            toggleActions: 'play none none reverse'
+                            trigger: container,
+                            start: 'top 80%',
+                            once: true
                         }
                     });
                 }
@@ -73,11 +73,12 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
                         y: 0,
                         stagger: 0.1,
                         duration: 0.7,
+                        delay: 0.3,
                         ease: 'power2.out',
                         scrollTrigger: {
                             trigger: container,
-                            start: 'top 85%',
-                            toggleActions: 'play none none reverse'
+                            start: 'top 80%',
+                            once: true
                         }
                     });
                 }
@@ -93,11 +94,12 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
                         scale: 1,
                         opacity: 0.9,
                         duration: 1,
+                        delay: 0.4,
                         ease: 'power2.out',
                         scrollTrigger: {
-                            trigger: image,
-                            start: 'top 85%',
-                            toggleActions: 'play none none reverse'
+                            trigger: container,
+                            start: 'top 80%',
+                            once: true
                         }
                     });
                 }

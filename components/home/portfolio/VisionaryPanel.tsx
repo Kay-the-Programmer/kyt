@@ -34,7 +34,7 @@ const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea })
 
             // Mobile animations (vertical scroll)
             mm.add('(max-width: 1023px)', () => {
-                // Background text parallax and fade
+                // Background text parallax and fade - use container trigger
                 if (bgText) {
                     gsap.set(bgText, {
                         opacity: 0,
@@ -49,9 +49,8 @@ const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea })
                         ease: 'power2.out',
                         scrollTrigger: {
                             trigger: container,
-                            start: 'top 95%',
-                            end: 'top 50%',
-                            scrub: 0.5
+                            start: 'top 80%',
+                            once: true
                         }
                     });
                 }
@@ -78,9 +77,9 @@ const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea })
                         duration: 0.7,
                         ease: 'power3.out',
                         scrollTrigger: {
-                            trigger: headline,
-                            start: 'top 88%',
-                            toggleActions: 'play none none reverse'
+                            trigger: container,
+                            start: 'top 80%',
+                            once: true
                         }
                     });
                 }
@@ -97,11 +96,12 @@ const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea })
                         opacity: 1,
                         y: 0,
                         duration: 0.8,
+                        delay: 0.4,
                         ease: 'power2.out',
                         scrollTrigger: {
-                            trigger: paragraph,
-                            start: 'top 90%',
-                            toggleActions: 'play none none reverse'
+                            trigger: container,
+                            start: 'top 80%',
+                            once: true
                         }
                     });
                 }

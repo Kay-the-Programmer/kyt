@@ -53,8 +53,8 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea }) => {
                         ease: 'power2.out',
                         scrollTrigger: {
                             trigger: container,
-                            start: 'top 90%',
-                            toggleActions: 'play none none reverse'
+                            start: 'top 80%',
+                            once: true
                         }
                     });
 
@@ -67,8 +67,8 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea }) => {
                         ease: 'power2.out',
                         scrollTrigger: {
                             trigger: container,
-                            start: 'top 90%',
-                            toggleActions: 'play none none reverse'
+                            start: 'top 80%',
+                            once: true
                         }
                     });
                 }
@@ -97,9 +97,9 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea }) => {
                         duration: 0.8,
                         ease: 'back.out(1.4)',
                         scrollTrigger: {
-                            trigger: headline,
-                            start: 'top 85%',
-                            toggleActions: 'play none none reverse'
+                            trigger: container,
+                            start: 'top 80%',
+                            once: true
                         }
                     });
                 }
@@ -121,11 +121,12 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea }) => {
                         scale: 1,
                         stagger: 0.15,
                         duration: 0.7,
+                        delay: 0.5,
                         ease: 'back.out(1.7)',
                         scrollTrigger: {
-                            trigger: ctaContainer,
-                            start: 'top 92%',
-                            toggleActions: 'play none none reverse'
+                            trigger: container,
+                            start: 'top 80%',
+                            once: true
                         }
                     });
                 }
@@ -184,13 +185,15 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea }) => {
 
             {/* Content */}
             <div className="relative z-10 text-center text-white max-w-5xl px-4 sm:px-6">
+
                 <h2
                     ref={headlineRef}
-                    className="text-4xl sm:text-6xl md:text-8xl lg:text-[11rem] font-heading font-bold mb-10 sm:mb-16 tracking-tighter leading-[0.85]"
+                    className="flex flex-col items-center text-4xl sm:text-6xl md:text-8xl lg:text-[11rem] font-heading font-bold mb-10 sm:mb-16 tracking-tighter leading-[0.85]"
                 >
-                    <SplitText text="Let's Build" className="block" />
-                    <SplitText text="Your Idea" isGradient={true} className="block" />
+                    <SplitText text="Let's Build" />
+                    <SplitText text="Your Idea" isGradient={true} />
                 </h2>
+
 
                 {/* CTA Buttons */}
                 <div

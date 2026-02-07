@@ -1,15 +1,80 @@
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo, Suspense, createContext, useContext } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
 import SalePilotPanel from './portfolio/SalePilotPanel';
-import StatsPanel from './portfolio/StatsPanel';
-import VisionaryPanel from './portfolio/VisionaryPanel';
-import ImpactPanel from './portfolio/ImpactPanel';
 import { CursorGlow, ScrollDirectionIndicator, PortfolioProgressBar } from './portfolio/ScrollComponents';
 import { useSharedMousePos, globalMousePos } from '../../hooks/useSharedMousePos';
 
+// Lazy load non-initial panels for viewport-based rendering
+const StatsPanel = React.lazy(() => import('./portfolio/StatsPanel'));
+const VisionaryPanel = React.lazy(() => import('./portfolio/VisionaryPanel'));
+const ImpactPanel = React.lazy(() => import('./portfolio/ImpactPanel'));
+
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
+
+// Context to share scroll progress with lazy panels
+const ScrollProgressContext = createContext<number>(0);
+
+// Scroll-progress-based lazy panel wrapper for horizontal scroll
+// Uses render prop pattern to defer React.lazy evaluation until needed
+interface LazyPanelProps {
+  render: () => React.ReactNode; // Render function - only called when ready
+  progressThreshold: number; // 0-1, when this panel should start rendering
+  isMobile: boolean;
+}
+
+const LazyPanel: React.FC<LazyPanelProps> = ({ render, progressThreshold, isMobile }) => {
+  const scrollProgress = useContext(ScrollProgressContext);
+  const [hasRendered, setHasRendered] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // For mobile, use IntersectionObserver; for desktop, use scroll progress
+  useEffect(() => {
+    if (isMobile) {
+      const element = ref.current;
+      if (!element || hasRendered) return;
+
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setHasRendered(true);
+            observer.disconnect();
+          }
+        },
+        { rootMargin: '200px' }
+      );
+      observer.observe(element);
+      return () => observer.disconnect();
+    }
+  }, [isMobile, hasRendered]);
+
+  // For desktop horizontal scroll, trigger based on scroll progress
+  useEffect(() => {
+    if (!isMobile && scrollProgress >= progressThreshold && !hasRendered) {
+      setHasRendered(true);
+    }
+  }, [scrollProgress, progressThreshold, isMobile, hasRendered]);
+
+  return (
+    <div ref={ref}>
+      {hasRendered ? (
+        <Suspense fallback={
+          <div className="horizontal-panel w-screen lg:w-[100vw] h-auto lg:h-screen flex items-center justify-center">
+            <div className="w-12 h-12 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+          </div>
+        }>
+          {render()}
+        </Suspense>
+      ) : (
+        <div className="horizontal-panel w-screen lg:w-[100vw] h-auto lg:h-screen flex items-center justify-center bg-transparent">
+          <div className="w-12 h-12 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin opacity-20" />
+        </div>
+      )}
+    </div>
+  );
+};
+
 
 // Throttle utility for performance
 const throttle = <T extends (...args: unknown[]) => void>(fn: T, delay: number): T => {
@@ -45,6 +110,12 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== 'undefined' ? window.innerWidth < 1024 : false
   );
+
+  // Track scroll progress to trigger lazy panel rendering
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  // Store the desktop horizontal scroll tween for panel animations
+  const [desktopTween, setDesktopTween] = useState<gsap.core.Tween | null>(null);
 
   useSharedMousePos();
 
@@ -203,9 +274,13 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
             end: () => `+=${scrollWidth}`,
             onUpdate: (self) => {
               gsap.set(progressBar, { scaleX: self.progress });
+              setScrollProgress(self.progress);
             }
           }
         });
+
+        // Store tween for panel animations
+        setDesktopTween(scrollTween);
 
         // Background Parallax (optimized)
         const bgLayers = [
@@ -484,29 +559,38 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
   }), []);
 
   return (
-    <div ref={innerRef} className="portfolio-scroll-container relative w-full overflow-hidden lg:overflow-visible">
-      <PortfolioProgressBar ref={progressBarRef} />
-      {!isMobile && <CursorGlow ref={cursorGlowRef} />}
-      <ScrollDirectionIndicator />
+    <ScrollProgressContext.Provider value={scrollProgress}>
+      <div ref={innerRef} className="portfolio-scroll-container relative w-full overflow-hidden lg:overflow-visible">
+        <PortfolioProgressBar ref={progressBarRef} />
+        {!isMobile && <CursorGlow ref={cursorGlowRef} />}
+        <ScrollDirectionIndicator />
 
-      <div
-        ref={horizontalRef}
-        className="horizontal-scroller flex flex-col lg:flex-row w-full lg:w-auto h-auto lg:h-screen relative will-change-transform"
-        style={horizontalStyle}
-      >
-        <SalePilotPanel registerMagneticArea={registerMagneticArea} />
-        <StatsPanel
-          gridLayer1Ref={gridLayer1Ref}
-          gridLayer2Ref={gridLayer2Ref}
-          gridLayer3Ref={gridLayer3Ref}
-          glowRef={glowRef}
-          vignetteRef={vignetteRef}
-          registerMagneticArea={registerMagneticArea}
-        />
-        <VisionaryPanel registerMagneticArea={registerMagneticArea} />
-        <ImpactPanel registerMagneticArea={registerMagneticArea} />
+        <div
+          ref={horizontalRef}
+          className="horizontal-scroller flex flex-col lg:flex-row w-full lg:w-auto h-auto lg:h-screen relative will-change-transform"
+          style={horizontalStyle}
+        >
+          <SalePilotPanel registerMagneticArea={registerMagneticArea} />
+          <LazyPanel progressThreshold={0.15} isMobile={isMobile} render={() => (
+            <StatsPanel
+              gridLayer1Ref={gridLayer1Ref}
+              gridLayer2Ref={gridLayer2Ref}
+              gridLayer3Ref={gridLayer3Ref}
+              glowRef={glowRef}
+              vignetteRef={vignetteRef}
+              registerMagneticArea={registerMagneticArea}
+              desktopTween={desktopTween}
+            />
+          )} />
+          <LazyPanel progressThreshold={0.40} isMobile={isMobile} render={() => (
+            <VisionaryPanel registerMagneticArea={registerMagneticArea} desktopTween={desktopTween} />
+          )} />
+          <LazyPanel progressThreshold={0.65} isMobile={isMobile} render={() => (
+            <ImpactPanel registerMagneticArea={registerMagneticArea} desktopTween={desktopTween} />
+          )} />
+        </div>
       </div>
-    </div>
+    </ScrollProgressContext.Provider>
   );
 });
 

@@ -7,10 +7,70 @@ import { useSEO } from '../hooks/useSEO';
 
 gsap.registerPlugin(ScrollTrigger);
 
+const philosophyItems = [
+  {
+    title: 'Intelligence Driven',
+    desc: 'Every line of code is infused with purpose and predictive logic.',
+    icon: (
+      <svg className="w-6 h-6 md:w-7 md:h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 4.5a2.5 2.5 0 0 0-4.96-.46 2.5 2.5 0 0 0-1.98 3 2.5 2.5 0 0 0-1.32 4.24 3 3 0 0 0 .34 5.58 2.5 2.5 0 0 0 2.96 3.08A2.5 2.5 0 0 0 12 19.5a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 12 4.5" />
+        <path d="m15.7 10.4-.9.4" />
+        <path d="m9.2 13.2-.9.4" />
+        <path d="m13.6 15.7-.4-.9" />
+        <path d="m10.8 9.2-.4-.9" />
+        <path d="m15.7 13.5-.9-.4" />
+        <path d="m9.2 10.9-.9-.4" />
+        <path d="m10.5 15.7.4-.9" />
+        <path d="m13.1 9.2.4-.9" />
+      </svg>
+    )
+  },
+  {
+    title: 'Zero Friction',
+    desc: 'We design for the human experience first, technology second.',
+    icon: (
+      <svg className="w-6 h-6 md:w-7 md:h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+        <path d="M5 3v4" />
+        <path d="M19 17v4" />
+        <path d="M3 5h4" />
+        <path d="M17 19h4" />
+      </svg>
+    )
+  },
+  {
+    title: 'Global Scale',
+    desc: 'Our architectures are built to handle the demands of tomorrow.',
+    icon: (
+      <svg className="w-6 h-6 md:w-7 md:h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+        <path d="M2 12h20" />
+      </svg>
+    )
+  },
+  {
+    title: 'Radical Trust',
+    desc: 'Security and transparency are baked into our DNA.',
+    icon: (
+      <svg className="w-6 h-6 md:w-7 md:h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+        <path d="m9 12 2 2 4-4" />
+      </svg>
+    )
+  }
+];
+
+const stats = [
+  { label: 'Active Systems', value: 12, suffix: '+' },
+  { label: 'Success Rate', value: 99, suffix: '%' },
+  { label: 'Lines of Code', value: 250, suffix: 'k+' },
+  { label: 'Uptime Core', value: 99, suffix: '.9%' }
+];
+
 const About: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // SEO Configuration
   useSEO({
     title: 'About Us | Kytriq Technologies',
     description: 'Learn about Kytriq Technologies - a software development company with the heart of a pioneer and precision of a master engineer. We architect digital life.',
@@ -20,172 +80,260 @@ const About: React.FC = () => {
   useLayoutEffect(() => {
     if (!containerRef.current) return;
 
-    // Check for reduced motion preference
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const duration = prefersReducedMotion ? 0.01 : 1;
-    const staggerDuration = prefersReducedMotion ? 0 : 0.12;
+    const stagger = prefersReducedMotion ? 0 : 0.1;
 
     const ctx = gsap.context(() => {
-      // Cache DOM queries for performance
-      const headerItems = containerRef.current!.querySelectorAll('.about-header > *');
-      const imgRevealItems = containerRef.current!.querySelectorAll<HTMLElement>('.img-reveal');
-      const revealItems = containerRef.current!.querySelectorAll<HTMLElement>('.reveal-item');
-      const statNumbers = containerRef.current!.querySelectorAll<HTMLElement>('.stat-number');
-      const cardItems = containerRef.current!.querySelectorAll<HTMLElement>('.card-item');
-      const splitTexts = containerRef.current!.querySelectorAll<HTMLElement>('.split-text');
+      const container = containerRef.current!;
 
-      // Batch set initial states for performance (avoids layout thrashing)
-      gsap.set(headerItems, { y: 80, opacity: 0 });
-      gsap.set(imgRevealItems, { clipPath: 'inset(100% 0% 0% 0%)', scale: 1.1 });
-      gsap.set(revealItems, { y: 50, opacity: 0 });
-      gsap.set(cardItems, { y: 60, opacity: 0, rotateX: 15 });
-      gsap.set(splitTexts, { y: 40, opacity: 0, filter: 'blur(8px)' });
+      // Cache all DOM elements
+      const headerLabel = container.querySelector('.header-label');
+      const headerTitle = container.querySelector('.header-title');
+      const headerDesc = container.querySelector('.header-desc');
+      const missionCard = container.querySelector('.mission-card');
+      const visionCard = container.querySelector('.vision-card');
+      const missionIcon = container.querySelector('.mission-icon');
+      const missionLabel = container.querySelector('.mission-label');
+      const missionTitle = container.querySelector('.mission-title');
+      const missionText = container.querySelector('.mission-text');
+      const visionIcon = container.querySelector('.vision-icon');
+      const visionLabel = container.querySelector('.vision-label');
+      const visionTitle = container.querySelector('.vision-title');
+      const visionText = container.querySelector('.vision-text');
+      const imgContainer = container.querySelector('.img-reveal');
+      const philosophyHeader = container.querySelector('.philosophy-header');
+      const philosophyTitle = container.querySelector('.philosophy-title');
+      const philosophyDesc = container.querySelector('.philosophy-desc');
+      const philosophyCards = container.querySelectorAll<HTMLElement>('.philosophy-card');
+      const statsHeader = container.querySelector('.stats-header');
+      const statItems = container.querySelectorAll<HTMLElement>('.stat-item');
+      const statNumbers = container.querySelectorAll<HTMLElement>('.stat-number');
+      const decorElements = container.querySelectorAll<HTMLElement>('.decor-element');
 
-      // Entrance animation with cascading effect
-      gsap.to(headerItems, {
-        y: 0,
-        opacity: 1,
-        duration: duration * 1.4,
-        stagger: staggerDuration * 1.5,
-        ease: 'power4.out',
-        force3D: 'auto',
-        clearProps: 'transform',
+      // ===== SET INITIAL STATES =====
+      gsap.set([headerLabel, headerTitle, headerDesc], { y: 80, opacity: 0 });
+      gsap.set([missionCard, visionCard], { y: 100, opacity: 0, rotateX: 15, scale: 0.95 });
+      gsap.set([missionIcon, visionIcon], { scale: 0, rotation: -45 });
+      gsap.set([missionLabel, visionLabel], { x: -30, opacity: 0 });
+      gsap.set([missionTitle, visionTitle], { y: 40, opacity: 0 });
+      gsap.set([missionText, visionText], { y: 30, opacity: 0 });
+      gsap.set(imgContainer, { clipPath: 'inset(100% 0% 0% 0%)', scale: 1.1 });
+      gsap.set([philosophyHeader, philosophyTitle, philosophyDesc], { y: 50, opacity: 0 });
+      gsap.set(philosophyCards, { y: 60, opacity: 0, scale: 0.9 });
+      gsap.set([statsHeader], { y: 40, opacity: 0 });
+      gsap.set(statItems, { y: 50, opacity: 0, scale: 0.85 });
+      gsap.set(decorElements, { scale: 0, opacity: 0 });
+
+      // ===== HERO ENTRANCE TIMELINE =====
+      const heroTl = gsap.timeline({
+        scrollTrigger: {
+          trigger: '.about-header',
+          start: 'top 85%',
+          once: true
+        },
+        defaults: { ease: 'power4.out', force3D: true }
       });
+      heroTl
+        .to(headerLabel, { y: 0, opacity: 1, duration: duration * 1.2 })
+        .to(headerTitle, { y: 0, opacity: 1, duration: duration * 1.4 }, '-=0.9')
+        .to(headerDesc, { y: 0, opacity: 1, duration: duration * 1.2 }, '-=0.8');
 
-      // Clip Path Reveal for images with scale
-      imgRevealItems.forEach((img) => {
-        gsap.to(img, {
-          clipPath: 'inset(0% 0% 0% 0%)',
-          scale: 1,
-          duration: duration * 1.8,
-          ease: 'power4.inOut',
-          scrollTrigger: {
-            trigger: img,
-            start: 'top 80%',
-            once: true,
-          },
+      // ===== MISSION CARD TIMELINE =====
+      const missionTl = gsap.timeline({
+        scrollTrigger: { trigger: missionCard, start: 'top 80%', once: true }
+      });
+      missionTl
+        .to(missionCard, { y: 0, opacity: 1, rotateX: 0, scale: 1, duration: duration * 1.4, ease: 'power3.out' })
+        .to(missionIcon, { scale: 1, rotation: 0, duration: duration * 0.8, ease: 'back.out(2)' }, '-=0.8')
+        .to(missionLabel, { x: 0, opacity: 1, duration: duration * 0.6 }, '-=0.6')
+        .to(missionTitle, { y: 0, opacity: 1, duration: duration * 0.8 }, '-=0.4')
+        .to(missionText, { y: 0, opacity: 1, duration: duration * 0.8 }, '-=0.5');
+
+      // ===== VISION CARD TIMELINE =====
+      const visionTl = gsap.timeline({
+        scrollTrigger: { trigger: visionCard, start: 'top 80%', once: true }
+      });
+      visionTl
+        .to(visionCard, { y: 0, opacity: 1, rotateX: 0, scale: 1, duration: duration * 1.4, ease: 'power3.out', delay: 0.15 })
+        .to(visionIcon, { scale: 1, rotation: 0, duration: duration * 0.8, ease: 'back.out(2)' }, '-=0.8')
+        .to(visionLabel, { x: 0, opacity: 1, duration: duration * 0.6 }, '-=0.6')
+        .to(visionTitle, { y: 0, opacity: 1, duration: duration * 0.8 }, '-=0.4')
+        .to(visionText, { y: 0, opacity: 1, duration: duration * 0.8 }, '-=0.5');
+
+      // ===== CARD HOVER INTERACTIONS =====
+      const cards = container.querySelectorAll<HTMLElement>('.interactive-card');
+      cards.forEach((card) => {
+        const inner = card.querySelector('.card-inner');
+        const icon = card.querySelector('.card-icon-wrap');
+
+        card.addEventListener('mouseenter', () => {
+          gsap.to(card, { scale: 1.02, duration: 0.4, ease: 'power2.out' });
+          gsap.to(inner, { y: -5, duration: 0.4, ease: 'power2.out' });
+          if (icon) gsap.to(icon, { scale: 1.15, rotation: 5, duration: 0.4, ease: 'power2.out' });
+        });
+
+        card.addEventListener('mouseleave', () => {
+          gsap.to(card, { scale: 1, duration: 0.4, ease: 'power2.out' });
+          gsap.to(inner, { y: 0, duration: 0.4, ease: 'power2.out' });
+          if (icon) gsap.to(icon, { scale: 1, rotation: 0, duration: 0.4, ease: 'power2.out' });
+        });
+
+        // 3D tilt effect on mouse move
+        card.addEventListener('mousemove', (e) => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const centerX = rect.width / 2;
+          const centerY = rect.height / 2;
+          const rotateX = (y - centerY) / 20;
+          const rotateY = (centerX - x) / 20;
+          gsap.to(card, { rotateX: rotateX, rotateY: rotateY, duration: 0.3, ease: 'power2.out' });
+        });
+
+        card.addEventListener('mouseleave', () => {
+          gsap.to(card, { rotateX: 0, rotateY: 0, duration: 0.5, ease: 'power2.out' });
         });
       });
 
-      // Scroll reveals with smooth entrance
-      revealItems.forEach((item) => {
-        gsap.to(item, {
-          y: 0,
-          opacity: 1,
-          duration: duration * 1.2,
-          ease: 'power3.out',
-          force3D: 'auto',
-          clearProps: 'transform',
-          scrollTrigger: {
-            trigger: item,
-            start: 'top 85%',
-            once: true,
-          },
+      // ===== IMAGE REVEAL =====
+      gsap.to(imgContainer, {
+        clipPath: 'inset(0% 0% 0% 0%)',
+        scale: 1,
+        duration: duration * 2,
+        ease: 'power4.inOut',
+        scrollTrigger: { trigger: imgContainer, start: 'top 80%', once: true }
+      });
+
+      // ===== PHILOSOPHY SECTION =====
+      const philoTl = gsap.timeline({
+        scrollTrigger: { trigger: philosophyHeader, start: 'top 85%', once: true }
+      });
+      philoTl
+        .to(philosophyHeader, { y: 0, opacity: 1, duration: duration })
+        .to(philosophyTitle, { y: 0, opacity: 1, duration: duration }, '-=0.7')
+        .to(philosophyDesc, { y: 0, opacity: 1, duration: duration }, '-=0.6');
+
+      // Philosophy cards with staggered entrance
+      philosophyCards.forEach((card, i) => {
+        const icon = card.querySelector('.philosophy-icon');
+        const title = card.querySelector('h4');
+        const desc = card.querySelector('p');
+
+        const cardTl = gsap.timeline({
+          scrollTrigger: { trigger: card, start: 'top 88%', once: true }
+        });
+
+        cardTl
+          .to(card, { y: 0, opacity: 1, scale: 1, duration: duration * 1.1, delay: i * stagger * 1.5, ease: 'power3.out' })
+          .from(icon, { scale: 0, rotation: -30, duration: duration * 0.6, ease: 'back.out(2)' }, '-=0.7')
+          .from(title, { y: 20, opacity: 0, duration: duration * 0.5 }, '-=0.4')
+          .from(desc, { y: 15, opacity: 0, duration: duration * 0.5 }, '-=0.3');
+
+        // Hover interaction for philosophy cards
+        card.addEventListener('mouseenter', () => {
+          gsap.to(card, { y: -8, scale: 1.03, duration: 0.3, ease: 'power2.out' });
+          if (icon) gsap.to(icon, { scale: 1.2, backgroundColor: 'rgb(59, 130, 246)', color: 'white', duration: 0.3 });
+        });
+
+        card.addEventListener('mouseleave', () => {
+          gsap.to(card, { y: 0, scale: 1, duration: 0.3, ease: 'power2.out' });
+          if (icon) gsap.to(icon, { scale: 1, clearProps: 'backgroundColor,color', duration: 0.3 });
         });
       });
 
-      // Card items with 3D perspective effect
-      cardItems.forEach((card, index) => {
-        gsap.to(card, {
-          y: 0,
-          opacity: 1,
-          rotateX: 0,
-          duration: duration * 1.2,
-          delay: index * staggerDuration,
-          ease: 'power3.out',
-          force3D: 'auto',
-          clearProps: 'transform',
-          scrollTrigger: {
-            trigger: card,
-            start: 'top 88%',
-            once: true,
-          },
+      // ===== STATS SECTION =====
+      const statsTl = gsap.timeline({
+        scrollTrigger: { trigger: statsHeader, start: 'top 85%', once: true }
+      });
+      statsTl.to(statsHeader, { y: 0, opacity: 1, duration: duration });
+
+      statItems.forEach((item, i) => {
+        const number = item.querySelector('.stat-number');
+        const label = item.querySelector('p');
+
+        const itemTl = gsap.timeline({
+          scrollTrigger: { trigger: item, start: 'top 90%', once: true }
+        });
+
+        itemTl
+          .to(item, { y: 0, opacity: 1, scale: 1, duration: duration, delay: i * stagger * 1.2, ease: 'power3.out' })
+          .from(label, { y: 10, opacity: 0, duration: duration * 0.5 }, '-=0.4');
+
+        // Hover
+        item.addEventListener('mouseenter', () => {
+          gsap.to(item, { scale: 1.08, duration: 0.3, ease: 'power2.out' });
+        });
+        item.addEventListener('mouseleave', () => {
+          gsap.to(item, { scale: 1, duration: 0.3, ease: 'power2.out' });
         });
       });
 
-      // Split text blur reveal
-      splitTexts.forEach((text, index) => {
-        gsap.to(text, {
-          y: 0,
-          opacity: 1,
-          filter: 'blur(0px)',
-          duration: duration * 1.3,
-          delay: index * staggerDuration * 0.8,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: text,
-            start: 'top 85%',
-            once: true,
-          },
-        });
-      });
-
-      // Stats counter animation
+      // Counter animation
       statNumbers.forEach((stat) => {
         const value = parseInt(stat.getAttribute('data-value') || '0', 10);
-        gsap.fromTo(stat,
-          { innerText: 0 },
-          {
-            innerText: value,
-            duration: prefersReducedMotion ? 0.1 : 2.5,
-            snap: { innerText: 1 },
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: stat,
-              start: 'top 90%',
-              once: true,
-            },
-          }
-        );
+        gsap.fromTo(stat, { innerText: 0 }, {
+          innerText: value,
+          duration: prefersReducedMotion ? 0.1 : 2.5,
+          snap: { innerText: 1 },
+          ease: 'power2.out',
+          scrollTrigger: { trigger: stat, start: 'top 90%', once: true }
+        });
       });
+
+      // Decorative elements
+      decorElements.forEach((el) => {
+        gsap.to(el, {
+          scale: 1, opacity: 1, duration: duration * 2, ease: 'power2.out',
+          scrollTrigger: { trigger: el, start: 'top 95%', once: true }
+        });
+      });
+
     }, containerRef);
 
     return () => ctx.revert();
   }, []);
 
   return (
-    <div ref={containerRef} className="min-h-screen pt-32 md:pt-40 pb-20 md:pb-32 px-6 bg-white dark:bg-brand-dark transition-colors duration-300 overflow-hidden">
+    <div ref={containerRef} className="min-h-screen pt-32 md:pt-40 pb-20 md:pb-32 px-6 bg-white dark:bg-brand-dark transition-colors duration-300 overflow-hidden" style={{ perspective: '1500px' }}>
       <div className="max-w-7xl mx-auto">
 
-        {/* Header Section */}
+        {/* Header */}
         <header className="about-header mb-24 md:mb-40 max-w-5xl">
-          <h2 className="text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.5em] mb-6 md:mb-8">
+          <h2 className="header-label text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.5em] mb-6 md:mb-8">
             01 // Who We Are
           </h2>
-          <h1 className="text-5xl md:text-[7rem] lg:text-[9rem] font-heading font-extrabold leading-[0.9] tracking-tighter mb-10 md:mb-14 text-gray-900 dark:text-white">
+          <h1 className="header-title text-5xl md:text-[7rem] lg:text-[9rem] font-heading font-extrabold leading-[0.9] tracking-tighter mb-10 md:mb-14 text-gray-900 dark:text-white">
             ARCHITECTING <br /> <span className="gradient-text">DIGITAL LIFE.</span>
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-lg md:text-2xl font-light leading-relaxed max-w-3xl">
+          <p className="header-desc text-gray-600 dark:text-gray-400 text-lg md:text-2xl font-light leading-relaxed max-w-3xl">
             Kytriq Technologies was founded on a simple premise: <strong className="text-gray-900 dark:text-white">Digital ideas deserve to live.</strong> We are a startup with the heart of a pioneer and the precision of a master engineer.
           </p>
         </header>
 
-        {/* Mission & Vision Section */}
+        {/* Mission & Vision Cards */}
         <section className="mb-24 md:mb-40">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12" style={{ perspective: '1200px' }}>
 
             {/* Mission Card */}
-            <div className="card-item group relative">
-              <div className="relative overflow-hidden rounded-[2rem] md:rounded-[3rem] bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 p-8 md:p-12 lg:p-16 h-full min-h-[400px] md:min-h-[480px]">
-                {/* Decorative Elements */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-400/10 rounded-full blur-2xl transform -translate-x-1/2 translate-y-1/2"></div>
+            <div className="mission-card interactive-card group relative cursor-pointer" style={{ transformStyle: 'preserve-3d' }}>
+              <div className="card-inner relative overflow-hidden rounded-[2rem] md:rounded-[3rem] bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 p-8 md:p-12 lg:p-16 h-full min-h-[420px] md:min-h-[500px]">
+                <div className="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full blur-3xl transform translate-x-1/3 -translate-y-1/3"></div>
+                <div className="absolute bottom-0 left-0 w-56 h-56 bg-blue-400/10 rounded-full blur-2xl transform -translate-x-1/3 translate-y-1/3"></div>
 
                 <div className="relative z-10 h-full flex flex-col">
                   <div className="mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white/10 backdrop-blur-sm mb-6 group-hover:scale-110 transition-transform duration-500">
-                      <svg className="w-8 h-8 md:w-10 md:h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    <div className="mission-icon card-icon-wrap inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white/10 backdrop-blur-sm mb-6">
+                      <svg className="w-8 h-8 md:w-10 md:h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                       </svg>
                     </div>
-                    <span className="text-xs font-bold text-blue-200 uppercase tracking-[0.4em]">Our Mission</span>
+                    <span className="mission-label text-xs font-bold text-blue-200 uppercase tracking-[0.4em]">Our Mission</span>
                   </div>
-
-                  <h3 className="text-2xl md:text-3xl lg:text-4xl font-heading font-bold text-white mb-6 leading-tight">
+                  <h3 className="mission-title text-2xl md:text-3xl lg:text-4xl font-heading font-bold text-white mb-6 leading-tight">
                     Empowering Businesses Through Intelligent Software
                   </h3>
-
-                  <p className="text-blue-100/90 text-base md:text-lg leading-relaxed mt-auto">
+                  <p className="mission-text text-blue-100/90 text-base md:text-lg leading-relaxed mt-auto">
                     We exist to transform bold ideas into powerful digital realities. By combining cutting-edge AI with human-centered design, we build software that doesn't just work—it thinks, adapts, and grows with your business.
                   </p>
                 </div>
@@ -193,28 +341,25 @@ const About: React.FC = () => {
             </div>
 
             {/* Vision Card */}
-            <div className="card-item group relative">
-              <div className="relative overflow-hidden rounded-[2rem] md:rounded-[3rem] bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 p-8 md:p-12 lg:p-16 h-full min-h-[400px] md:min-h-[480px]">
-                {/* Decorative Elements */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-2xl transform -translate-x-1/2 translate-y-1/2"></div>
+            <div className="vision-card interactive-card group relative cursor-pointer" style={{ transformStyle: 'preserve-3d' }}>
+              <div className="card-inner relative overflow-hidden rounded-[2rem] md:rounded-[3rem] bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 p-8 md:p-12 lg:p-16 h-full min-h-[420px] md:min-h-[500px]">
+                <div className="absolute top-0 right-0 w-72 h-72 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-3xl transform translate-x-1/3 -translate-y-1/3"></div>
+                <div className="absolute bottom-0 left-0 w-56 h-56 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-2xl transform -translate-x-1/3 translate-y-1/3"></div>
 
                 <div className="relative z-10 h-full flex flex-col">
                   <div className="mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 mb-6 group-hover:scale-110 transition-transform duration-500">
-                      <svg className="w-8 h-8 md:w-10 md:h-10 text-blue-600 dark:text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    <div className="vision-icon card-icon-wrap inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 mb-6">
+                      <svg className="w-8 h-8 md:w-10 md:h-10 text-blue-600 dark:text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                       </svg>
                     </div>
-                    <span className="text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.4em]">Our Vision</span>
+                    <span className="vision-label text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.4em]">Our Vision</span>
                   </div>
-
-                  <h3 className="text-2xl md:text-3xl lg:text-4xl font-heading font-bold text-gray-900 dark:text-white mb-6 leading-tight">
+                  <h3 className="vision-title text-2xl md:text-3xl lg:text-4xl font-heading font-bold text-gray-900 dark:text-white mb-6 leading-tight">
                     A World Where Every Business Has Access to Intelligent Technology
                   </h3>
-
-                  <p className="text-gray-600 dark:text-gray-400 text-base md:text-lg leading-relaxed mt-auto">
+                  <p className="vision-text text-gray-600 dark:text-gray-400 text-base md:text-lg leading-relaxed mt-auto">
                     We envision a future where advanced AI and seamless digital experiences are not exclusive to tech giants. Every entrepreneur, every small business, and every dreamer deserves tools that amplify their potential.
                   </p>
                 </div>
@@ -223,7 +368,7 @@ const About: React.FC = () => {
           </div>
         </section>
 
-        {/* Philosophy Image Section */}
+        {/* Philosophy Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24 items-center mb-24 md:mb-40">
           <div className="img-reveal order-2 lg:order-1 relative">
             <div className="aspect-[4/5] rounded-[2.5rem] md:rounded-[4rem] overflow-hidden border border-gray-100 dark:border-gray-800 p-2 bg-gray-50 dark:bg-gray-900/20">
@@ -234,31 +379,28 @@ const About: React.FC = () => {
                 className="w-full h-full object-cover rounded-[2.2rem] md:rounded-[3.5rem] grayscale hover:grayscale-0 transition-all duration-1000"
               />
             </div>
-            <div className="absolute -bottom-10 -left-10 w-48 md:w-64 h-48 md:h-64 bg-blue-600/10 rounded-full blur-[60px] md:blur-[80px] -z-10"></div>
-            <div className="absolute -top-6 -right-6 w-32 h-32 bg-indigo-500/10 rounded-full blur-[40px] -z-10"></div>
+            <div className="decor-element absolute -bottom-10 -left-10 w-48 md:w-64 h-48 md:h-64 bg-blue-600/10 rounded-full blur-[60px] md:blur-[80px] -z-10"></div>
+            <div className="decor-element absolute -top-6 -right-6 w-32 h-32 bg-indigo-500/10 rounded-full blur-[40px] -z-10"></div>
           </div>
 
-          <div className="reveal-item order-1 lg:order-2 space-y-10 md:space-y-12">
+          <div className="order-1 lg:order-2 space-y-10 md:space-y-12">
             <div>
-              <h2 className="text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.5em] mb-6">02 // Philosophy</h2>
-              <h3 className="text-3xl md:text-5xl font-heading font-bold mb-8 text-gray-900 dark:text-white leading-tight">
+              <h2 className="philosophy-header text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.5em] mb-6">02 // Philosophy</h2>
+              <h3 className="philosophy-title text-3xl md:text-5xl font-heading font-bold mb-8 text-gray-900 dark:text-white leading-tight">
                 Software That <span className="gradient-text">Feels Alive</span>
               </h3>
-              <p className="text-gray-600 dark:text-gray-400 text-base md:text-lg leading-relaxed mb-10">
+              <p className="philosophy-desc text-gray-600 dark:text-gray-400 text-base md:text-lg leading-relaxed mb-10">
                 We believe that software is a living entity. It shouldn't just function; it should evolve. At Kytriq, we bridge the gap between human ambition and technological reality by building systems that feel human and act intelligent.
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                {[
-                  { title: 'Intelligence Driven', desc: 'Every line of code is infused with purpose and predictive logic.', icon: '🧠' },
-                  { title: 'Zero Friction', desc: 'We design for the human experience first, technology second.', icon: '✨' },
-                  { title: 'Global Scale', desc: 'Our architectures are built to handle the demands of tomorrow.', icon: '🌍' },
-                  { title: 'Radical Trust', desc: 'Security and transparency are baked into our DNA.', icon: '🔐' }
-                ].map((item, i) => (
-                  <div key={i} className="split-text group p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/30 border border-gray-100 dark:border-gray-800 hover:border-blue-500/30 dark:hover:border-blue-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/5">
-                    <span className="text-2xl mb-4 block">{item.icon}</span>
-                    <h4 className="font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-500 transition-colors">{item.title}</h4>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{item.desc}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
+                {philosophyItems.map((item, i) => (
+                  <div key={i} className="philosophy-card cursor-pointer p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/30 border border-gray-100 dark:border-gray-800 transition-shadow duration-300">
+                    <div className="philosophy-icon w-12 h-12 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-500 mb-4 transition-all duration-300">
+                      {item.icon}
+                    </div>
+                    <h4 className="font-bold text-gray-900 dark:text-white mb-2 transition-colors">{item.title}</h4>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{item.desc}</p>
                   </div>
                 ))}
               </div>
@@ -267,20 +409,15 @@ const About: React.FC = () => {
         </div>
 
         {/* Stats Section */}
-        <section className="reveal-item py-16 md:py-28 border-t border-b border-gray-100 dark:border-gray-800/50 mb-16">
-          <div className="text-center mb-12 md:mb-16">
+        <section className="py-16 md:py-28 border-t border-b border-gray-100 dark:border-gray-800/50 mb-16">
+          <div className="stats-header text-center mb-12 md:mb-16">
             <h2 className="text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.5em] mb-4">03 // By The Numbers</h2>
             <h3 className="text-3xl md:text-5xl font-heading font-bold text-gray-900 dark:text-white">Our Impact</h3>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-12 text-center">
-            {[
-              { label: 'Active Systems', value: 12, suffix: '+' },
-              { label: 'Success Rate', value: 99, suffix: '%' },
-              { label: 'Lines of Code', value: 250, suffix: 'k+' },
-              { label: 'Uptime Core', value: 99, suffix: '.9%' }
-            ].map((stat, i) => (
-              <div key={i} className="group">
-                <div className="flex items-center justify-center text-4xl md:text-7xl font-heading font-extrabold text-gray-900 dark:text-white mb-3 md:mb-4 group-hover:text-blue-600 dark:group-hover:text-blue-500 transition-colors duration-300">
+            {stats.map((stat, i) => (
+              <div key={i} className="stat-item cursor-pointer">
+                <div className="flex items-center justify-center text-4xl md:text-7xl font-heading font-extrabold text-gray-900 dark:text-white mb-3 md:mb-4 transition-colors duration-300">
                   <span className="stat-number" data-value={stat.value}>0</span>
                   <span>{stat.suffix}</span>
                 </div>
@@ -296,3 +433,4 @@ const About: React.FC = () => {
 };
 
 export default About;
+

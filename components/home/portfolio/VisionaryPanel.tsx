@@ -216,7 +216,7 @@ const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea, d
                         ref={paragraphRef}
                         className="reveal-target text-base sm:text-xl md:text-2xl text-gray-500 dark:text-gray-400 font-light leading-relaxed mb-8 sm:mb-12 max-w-lg"
                     >
-                        We don't just build applications. We architect digital organisms that adapt, learn, and grow alongside your evolving business mission.
+                        We architect digital solutions that adapt, learn, and grow alongside your evolving business mission.
                     </p>
                 </div>
 

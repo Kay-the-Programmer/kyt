@@ -187,7 +187,7 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
                         Moving beyond traditional POS by simplifying operations and providing AI-driven insights into everyday operations. Scalable, usability-first, and resilient.
                     </p>
                     <div className="grid grid-cols-2 gap-6 sm:gap-8 mb-8 sm:mb-12 reveal-target">
-                        {[{ label: 'Automation', val: 'Low Overhead' }, { label: 'Reliability', val: 'Offline Core' }].map((f, i) => (
+                        {[{ label: 'Integrated', val: 'Accounting' }, { label: 'Inventory', val: 'Management' }].map((f, i) => (
                             <div key={i} className="border-l border-blue-600/20 pl-4 sm:pl-6 py-2 hover:border-blue-600 transition-colors duration-500">
                                 <div className="text-[8px] sm:text-[9px] font-black text-blue-500 uppercase tracking-widest mb-2">{f.label}</div>
                                 <div className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{f.val}</div>
@@ -225,7 +225,7 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
                     >
                         <i className="fa-solid fa-brain text-blue-500 text-2xl sm:text-3xl lg:text-5xl mb-3 sm:mb-4 lg:mb-6 group-hover:scale-105 transition-transform" />
                         <span className="text-[7px] sm:text-[8px] lg:text-xs font-black uppercase tracking-[0.3em] sm:tracking-[0.4em] text-center text-white dark:text-gray-900 leading-relaxed">
-                            Cognitive <br />Insights Engine
+                            Intelligent <br /> POS
                         </span>
                     </div>
                 </div>

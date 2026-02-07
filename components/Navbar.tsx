@@ -330,14 +330,6 @@ const Navbar: React.FC = () => {
               <i className={`fa-solid ${isDark ? 'fa-sun' : 'fa-moon'}`}></i>
             </button>
           </span>
-          <span className="nav-item">
-            <Link
-              to="/contact"
-              className="magnetic-area bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-full text-sm font-semibold transition-all shadow-lg shadow-blue-500/20 block"
-            >
-              Get Started
-            </Link>
-          </span>
         </div>
 
         {/* Mobile Toggle */}

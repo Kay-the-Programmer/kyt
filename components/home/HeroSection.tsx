@@ -278,7 +278,7 @@ const HeroSection = () => {
         </h1>
 
         <p className="hero-desc text-base sm:text-lg md:text-xl lg:text-2xl text-gray-400 dark:text-gray-300 max-w-3xl mx-auto mt-6 sm:mt-8 md:mt-12 lg:mt-16 font-light leading-relaxed tracking-tight px-2">
-          Engineering <span className="font-semibold text-blue-500">high-performance systems</span> with radical precision.
+          Engineering <span className="font-semibold text-blue-500">high-performance systems</span> with stunning designs.
         </p>
 
         <div className="hero-btns mt-8 sm:mt-10 md:mt-16 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-0 sm:space-x-8 px-4 sm:px-0">

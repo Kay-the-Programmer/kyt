@@ -308,15 +308,11 @@ const Footer: React.FC = memo(() => {
       onTouchEnd={handleGlobalMouseUp}
       onMouseMove={updateMousePosition}
       onTouchMove={updateMousePosition}
-      className="relative bg-white dark:bg-brand-dark pt-0 pb-16 px-6 transition-colors duration-300 overflow-hidden"
+      className="relative bg-transparent pt-0 pb-16 px-6 transition-colors duration-300 overflow-hidden"
     >
 
       {/* INTERACTIVE PHYSICS ARENA */}
       <div className="max-w-7xl mx-auto my-16 md:my-24">
-        <div className="flex items-center space-x-4 mb-10">
-          <div className="h-px w-10 bg-blue-600"></div>
-          <span className="text-[10px] font-black uppercase tracking-[0.6em] text-blue-600">Interact</span>
-        </div>
 
         <div
           ref={arenaRef}

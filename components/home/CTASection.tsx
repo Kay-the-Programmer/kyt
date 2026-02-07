@@ -238,7 +238,7 @@ const CTASection: React.FC = () => {
           <div className="max-w-7xl mx-auto relative z-10">
             <div
               ref={containerRef}
-              className="relative p-12 md:p-32 rounded-[3.5rem] lg:rounded-[7rem] bg-gray-50/10 dark:bg-white/[0.01] border border-gray-100/20 dark:border-white/5 backdrop-blur-2xl overflow-hidden group shadow-[0_50px_100px_-20px_rgba(0,0,0,0.05)]"
+              className="relative p-12 md:p-32 rounded-[3.5rem] lg:rounded-[7rem] bg-transparent border border-gray-100/20 dark:border-white/5 backdrop-blur-2xl overflow-hidden group shadow-[0_50px_100px_-20px_rgba(0,0,0,0.05)]"
             >
               {/* Animated Border Glow Follower */}
               <div ref={glowBorderRef} className="absolute w-[800px] h-[800px] bg-blue-600/10 dark:bg-blue-600/20 rounded-full blur-[120px] pointer-events-none -translate-x-1/2 -translate-y-1/2 opacity-0 z-0" />
@@ -261,14 +261,6 @@ const CTASection: React.FC = () => {
               <div className="cta-hud-line absolute bottom-0 left-1/2 -translate-x-1/2 w-64 h-[1px] bg-gradient-to-r from-transparent via-blue-600/50 to-transparent" />
 
               <div className="max-w-4xl mx-auto text-center relative z-10">
-                <div className="mb-12 inline-flex items-center space-x-4 px-6 py-2 bg-blue-600/5 border border-blue-600/10 rounded-full">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600" />
-                  </span>
-                  <span className="text-[10px] font-black uppercase tracking-[0.6em] text-blue-600">Digital Evolution</span>
-                </div>
-
                 <h2 className="cta-title text-6xl md:text-8xl lg:text-[11rem] font-heading font-black mb-12 text-gray-900 dark:text-white tracking-tighter leading-[0.85]">
                   <SplitText text="Ready to" className="block" />
                   <SplitText text="Transcend?" isGradient={true} className="block" />
@@ -288,22 +280,9 @@ const CTASection: React.FC = () => {
                       <i className="fa-solid fa-bolt-lightning text-lg group-hover/btn:translate-x-2 group-hover/btn:-translate-y-2 transition-transform duration-300" />
                     </Link>
                   </div>
-
-                  <div className="cta-btn-wrap">
-                    <Link
-                      to="/services"
-                      className="px-12 py-6 border-b border-gray-200 dark:border-gray-800 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-500 hover:border-blue-600 transition-all duration-300 text-lg font-bold tracking-widest uppercase"
-                    >
-                      Capabilities
-                    </Link>
-                  </div>
                 </div>
               </div>
 
-              {/* Background Decorative Tech Text */}
-              <div className="absolute -bottom-12 -left-12 text-[15rem] font-black opacity-[0.03] dark:opacity-[0.01] pointer-events-none select-none font-heading italic tracking-tighter">
-                EST. 2024
-              </div>
             </div>
           </div>
         </>

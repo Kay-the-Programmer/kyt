@@ -195,35 +195,6 @@ const Contact: React.FC = () => {
           {/* AI Helper & Contact info */}
           <div className="flex flex-col justify-between py-2">
             <div className="space-y-10 md:space-y-12">
-              <div className="bg-blue-600/5 dark:bg-blue-600/10 border border-blue-600/10 dark:border-blue-500/20 p-8 rounded-[2rem] hover:bg-blue-600/10 transition-colors duration-500">
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                    <i className="fa-solid fa-wand-magic-sparkles text-white text-xs"></i>
-                  </div>
-                  <h4 className="font-heading font-bold text-gray-900 dark:text-white">AI Inquiry Draftsman</h4>
-                </div>
-                <p className="text-xs md:text-sm text-gray-600 dark:text-gray-300 mb-6 italic leading-relaxed">
-                  "Not sure how to start? Tell me what you need, and I'll draft a professional message for you."
-                </p>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {[
-                    "New AI product",
-                    "E-commerce POS",
-                    "Custom Mobile App",
-                    "Cloud Architecture"
-                  ].map(q => (
-                    <button
-                      key={q}
-                      onClick={() => getAiHelp(q)}
-                      disabled={aiLoading}
-                      className="px-3 py-2 bg-white dark:bg-blue-600/10 border border-gray-200 dark:border-blue-500/20 rounded-full text-[10px] text-blue-600 dark:text-blue-300 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600/20 transition-all flex items-center space-x-2 shadow-sm"
-                    >
-                      {aiLoading ? <i className="fa-solid fa-spinner fa-spin"></i> : <span>{q}</span>}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               <div>
                 <h3 className="text-xl md:text-2xl font-heading font-bold mb-6 md:mb-8 text-gray-900 dark:text-white">Contact Info</h3>
                 <div className="space-y-6">
@@ -231,14 +202,26 @@ const Contact: React.FC = () => {
                     <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-50 dark:bg-gray-900 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-500 border border-gray-100 dark:border-gray-800 shadow-sm shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-all">
                       <i className="fa-solid fa-location-dot text-sm"></i>
                     </div>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm group-hover:text-blue-600 transition-colors">Tech Hub Central, Palo Alto, CA</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm group-hover:text-blue-600 transition-colors">Lusaka, Zambia</p>
                   </div>
                   <div className="flex items-center space-x-4 group cursor-pointer">
                     <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-50 dark:bg-gray-900 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-500 border border-gray-100 dark:border-gray-800 shadow-sm shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-all">
                       <i className="fa-solid fa-envelope text-sm"></i>
                     </div>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm group-hover:text-blue-600 transition-colors">hello@kytriq.com</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm group-hover:text-blue-600 transition-colors">info@kytriq.com</p>
                   </div>
+                  <a href="tel:+260570135415" className="flex items-center space-x-4 group cursor-pointer">
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-50 dark:bg-gray-900 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-500 border border-gray-100 dark:border-gray-800 shadow-sm shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                      <i className="fa-solid fa-phone text-sm"></i>
+                    </div>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm group-hover:text-blue-600 transition-colors">  +260 570 135 415</p>
+                  </a>
+                  <a href="https://wa.me/260570135415" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-4 group cursor-pointer">
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-50 dark:bg-gray-900 rounded-xl flex items-center justify-center text-green-600 dark:text-green-500 border border-gray-100 dark:border-gray-800 shadow-sm shrink-0 group-hover:bg-green-600 group-hover:text-white transition-all">
+                      <i className="fa-brands fa-whatsapp text-lg"></i>
+                    </div>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm group-hover:text-green-600 transition-colors">Chat on WhatsApp</p>
+                  </a>
                 </div>
               </div>
             </div>

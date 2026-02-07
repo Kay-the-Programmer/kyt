@@ -24,7 +24,7 @@ interface FeatureItemProps {
 const FeatureItem = memo<FeatureItemProps>(({ item, index, isActive, onHover, onLeave, featureRef }) => (
   <div
     ref={featureRef}
-    className={`feature-item group relative flex items-start gap-6 p-5 rounded-2xl cursor-pointer transition-all duration-500 ${isActive
+    className={`feature-item group relative flex items-start gap-6 p-5 rounded-2xl cursor-pointer transition-all duration-500 will-change-transform ${isActive
       ? 'bg-gradient-to-r from-blue-50 to-indigo-50/50 dark:from-blue-950/40 dark:to-indigo-950/20 shadow-lg shadow-blue-500/5 translate-x-2'
       : 'hover:bg-gray-50/50 dark:hover:bg-gray-900/30'
       }`}
@@ -182,13 +182,34 @@ const IdentitySection: React.FC = () => {
 
     if (!container) return;
 
+    // Use context if available to track these tweens
+    const addTween = <T extends gsap.core.Tween | gsap.core.Timeline>(tween: T): T => {
+      if (ctxRef.current && ctxRef.current.add) {
+        ctxRef.current.add(() => tween);
+      }
+      return tween;
+    };
+
     // Single consolidated timeline
-    const tl = gsap.timeline({
-      defaults: { overwrite: 'auto', ease: 'power3.inOut' }
-    });
+    const tl = addTween(gsap.timeline({
+      defaults: { overwrite: 'auto', ease: 'power3.inOut' },
+      onComplete: () => {
+        // Cleanup simple properties if needed
+      }
+    }));
 
     // Image morphing transition
     if (fromImage && toImage) {
+      // Ensure we set initial state for stability
+      gsap.set(toImage, {
+        zIndex: 2,
+        willChange: 'transform, opacity, filter'
+      });
+      gsap.set(fromImage, {
+        zIndex: 1,
+        willChange: 'transform, opacity, filter'
+      });
+
       // Prepare next image
       gsap.set(toImage, {
         opacity: 0,
@@ -201,7 +222,8 @@ const IdentitySection: React.FC = () => {
         opacity: 0,
         scale: 1.02,
         filter: 'blur(3px) brightness(0.9)',
-        duration: 0.5
+        duration: 0.5,
+        clearProps: 'zIndex,willChange' // Cleanup
       }, 0);
 
       // Animate in new image with slight delay
@@ -209,7 +231,8 @@ const IdentitySection: React.FC = () => {
         opacity: 1,
         scale: 1.08,
         filter: 'blur(0px) brightness(1)',
-        duration: 0.7
+        duration: 0.7,
+        clearProps: 'zIndex,willChange' // Cleanup
       }, 0.1);
 
       // Container morph effect
@@ -291,7 +314,8 @@ const IdentitySection: React.FC = () => {
       delayedCallRef.current = null;
     }
     if (progressTweenRef.current) {
-      progressTweenRef.current.pause();
+      progressTweenRef.current.kill(); // Ensure we kill instead of pause to preventing memory leaks
+      progressTweenRef.current = null;
     }
   }, []);
 
@@ -333,11 +357,16 @@ const IdentitySection: React.FC = () => {
       const masterTl = gsap.timeline({
         scrollTrigger: {
           trigger: section,
-          start: 'top 75%', // Start slightly earlier for better visibility
+          start: 'top 80%', // Optimized for mobile - start earlier
           end: 'bottom 20%',
           toggleActions: 'play none none reverse',
           // Remove scrub for entrance to ensure it plays through smoothly once triggered
         }
+      });
+
+      // 0. Set Initial states (Hardware Acceleration)
+      gsap.set([q('.feature-item'), q('.image-reveal-wrapper'), badgeRef.current], {
+        willChange: 'transform, opacity'
       });
 
       // 1. Initial Badge Pop

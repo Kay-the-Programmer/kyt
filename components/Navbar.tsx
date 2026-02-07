@@ -143,6 +143,27 @@ const Navbar: React.FC = () => {
               {link.name}
             </Link>
           ))}
+
+          {/* Contact Icons - Desktop */}
+          <span className="nav-item flex items-center space-x-2 mr-2">
+            <a
+              href="https://wa.me/+260570135415"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="magnetic-area w-10 h-10 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-green-500 hover:text-green-500 transition-all"
+              aria-label="Contact via WhatsApp"
+            >
+              <i className="fa-brands fa-whatsapp text-lg"></i>
+            </a>
+            <a
+              href="tel:+260570135415"
+              className="magnetic-area w-10 h-10 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-blue-500 hover:text-blue-500 transition-all"
+              aria-label="Call Us"
+            >
+              <i className="fa-solid fa-phone text-sm"></i>
+            </a>
+          </span>
+
           <span className="nav-item">
             <button
               ref={themeBtnRef}
@@ -219,13 +240,29 @@ const Navbar: React.FC = () => {
             {link.name}
           </Link>
         ))}
-        <div className="mobile-nav-item pt-4">
+        <div className="mobile-nav-item pt-4 flex flex-col space-y-4">
+          <div className="flex items-center justify-center space-x-4">
+            <a
+              href="https://wa.me/+260570135415"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-12 h-12 rounded-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400 transition-all"
+            >
+              <i className="fa-brands fa-whatsapp text-xl"></i>
+            </a>
+            <a
+              href="tel:+260570135415"
+              className="w-12 h-12 rounded-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all"
+            >
+              <i className="fa-solid fa-phone text-lg"></i>
+            </a>
+          </div>
           <Link
             to="/contact"
             onClick={() => setIsOpen(false)}
             className="block w-full bg-blue-600 text-white text-center py-4 rounded-2xl font-bold text-lg"
           >
-            Get Started
+            Contact Us
           </Link>
         </div>
       </div>

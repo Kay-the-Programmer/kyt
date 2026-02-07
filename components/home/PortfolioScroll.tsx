@@ -170,13 +170,17 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
       const mm = gsap.matchMedia();
 
       // 1. Optimized Cursor Glow
-      if (cursorGlow && !isMobile) {
+      if (cursorGlow && cursorGlow instanceof HTMLElement && !isMobile) {
         gsap.set(cursorGlow, { scale: 0, opacity: 0 });
 
         // Initialize quickTo and store on element property for easy access
         const xTo = gsap.quickTo(cursorGlow, "left", { duration: 0.6, ease: "power2.out" });
         const yTo = gsap.quickTo(cursorGlow, "top", { duration: 0.6, ease: "power2.out" });
-        (cursorGlow as any)._gsap = { xTo, yTo };
+
+        // Safely assign to _gsap without overwriting
+        const el = cursorGlow as any;
+        if (!el._gsap) el._gsap = {};
+        Object.assign(el._gsap, { xTo, yTo });
 
         gsap.ticker.add(updateGlowPos);
       }

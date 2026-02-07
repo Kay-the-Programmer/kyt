@@ -238,12 +238,9 @@ const Projects: React.FC = () => {
 
       <div className="max-w-7xl mx-auto">
         <header className="project-header mb-24 md:mb-40 max-w-5xl">
-          <div className="project-header-badge inline-flex items-center space-x-3 px-6 py-2 bg-emerald-600/10 dark:bg-emerald-500/10 border border-emerald-600/20 dark:border-emerald-500/30 rounded-full mb-10 backdrop-blur-md">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]"></span>
-            <span className="text-[11px] font-black uppercase tracking-[0.7em] text-emerald-600 dark:text-emerald-400">Featured Core Systems</span>
-          </div>
           <h1 className="text-6xl md:text-8xl lg:text-[11rem] font-heading font-black leading-[0.85] tracking-tighter mb-12 text-gray-900 dark:text-white">
             <SplitText text="SELECTED" className="block" />
+            <br />
             <SplitText isGradient={true} text="WORK." />
           </h1>
           <p className="project-header-desc text-xl md:text-3xl text-gray-500 dark:text-gray-400 font-light leading-relaxed max-w-4xl border-l-4 border-emerald-500/30 pl-10">

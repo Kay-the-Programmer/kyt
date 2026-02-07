@@ -82,10 +82,21 @@ const About: React.FC = () => {
     if (!containerRef.current) return;
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const duration = prefersReducedMotion ? 0.01 : 1;
-    const stagger = prefersReducedMotion ? 0 : 0.1;
 
-    const ctx = gsap.context(() => {
+    const mm = gsap.matchMedia();
+
+    mm.add({
+      // Desktop specific animations
+      isDesktop: "(min-width: 769px)",
+      // Mobile specific animations
+      isMobile: "(max-width: 768px)",
+      // Global animations
+      all: "all"
+    }, (context) => {
+      const { isDesktop } = context.conditions as { isDesktop: boolean };
+      const baseDuration = prefersReducedMotion ? 0.01 : 1;
+      const baseStagger = prefersReducedMotion ? 0 : 0.1;
+
       const container = containerRef.current;
       if (!container) return;
 
@@ -96,13 +107,7 @@ const About: React.FC = () => {
       const missionCard = container.querySelector('.mission-card');
       const visionCard = container.querySelector('.vision-card');
       const missionIcon = container.querySelector('.mission-icon');
-      const missionLabel = container.querySelector('.mission-label');
-      const missionTitle = container.querySelector('.mission-title');
-      const missionText = container.querySelector('.mission-text');
       const visionIcon = container.querySelector('.vision-icon');
-      const visionLabel = container.querySelector('.vision-label');
-      const visionTitle = container.querySelector('.vision-title');
-      const visionText = container.querySelector('.vision-text');
       const imgContainer = container.querySelector('.img-reveal');
       const philosophyHeader = container.querySelector('.philosophy-header');
       const philosophyTitle = container.querySelector('.philosophy-title');
@@ -132,155 +137,201 @@ const About: React.FC = () => {
       };
 
       // ===== SET INITIAL STATES =====
-      safeAnimate('set', [headerLabel, headerTitle, headerDesc], { y: 80, opacity: 0 });
-      safeAnimate('set', [missionCard, visionCard], { y: 100, opacity: 0, rotateX: 15, scale: 0.95 });
-      safeAnimate('set', [missionIcon, visionIcon], { scale: 0, rotation: -45 });
-      safeAnimate('set', [missionLabel, visionLabel], { x: -30, opacity: 0 });
-      safeAnimate('set', [missionTitle, visionTitle], { y: 40, opacity: 0 });
-      safeAnimate('set', [missionText, visionText], { y: 30, opacity: 0 });
-      safeAnimate('set', imgContainer, { clipPath: 'inset(100% 0% 0% 0%)', scale: 1.1 });
-      safeAnimate('set', [philosophyHeader, philosophyTitle, philosophyDesc], { y: 50, opacity: 0 });
-      safeAnimate('set', Array.from(philosophyCards), { y: 60, opacity: 0, scale: 0.9 });
+      safeAnimate('set', [headerLabel, headerTitle, headerDesc], {
+        y: 80,
+        opacity: 0,
+        filter: prefersReducedMotion ? 'none' : 'blur(10px)',
+        rotation: prefersReducedMotion ? 0 : -2
+      });
+
+      safeAnimate('set', [missionCard, visionCard], {
+        y: 100,
+        opacity: 0,
+        rotateX: isDesktop ? 15 : 0,
+        scale: 0.95,
+        filter: isDesktop && !prefersReducedMotion ? 'blur(8px)' : 'none'
+      });
+
+      safeAnimate('set', [missionIcon, visionIcon], { scale: 0, rotation: -45, opacity: 0 });
+      safeAnimate('set', imgContainer, { clipPath: 'inset(100% 0% 0% 0%)', scale: 1.1, filter: isDesktop ? 'blur(5px)' : 'none' });
+      safeAnimate('set', [philosophyHeader, philosophyTitle, philosophyDesc], { y: 50, opacity: 0, filter: isDesktop ? 'blur(5px)' : 'none' });
+      safeAnimate('set', Array.from(philosophyCards), { y: 60, opacity: 0, scale: 0.9, filter: isDesktop ? 'blur(5px)' : 'none' });
       safeAnimate('set', statsHeader, { y: 40, opacity: 0 });
       safeAnimate('set', Array.from(statItems), { y: 50, opacity: 0, scale: 0.85 });
-      safeAnimate('set', Array.from(decorElements), { scale: 0, opacity: 0 });
+      safeAnimate('set', Array.from(decorElements), { scale: 0, opacity: 0, filter: isDesktop ? 'blur(20px)' : 'none' });
 
       // ===== HERO ENTRANCE TIMELINE =====
       const heroTl = gsap.timeline({
         scrollTrigger: {
           trigger: '.about-header',
-          start: 'top 85%',
+          start: isDesktop ? 'top 85%' : 'top 95%',
           once: true
         },
-        defaults: { ease: 'power4.out', force3D: true }
+        defaults: { ease: 'expo.out', force3D: true }
       });
-      safeAnimate('to', headerLabel, { y: 0, opacity: 1, duration: duration * 1.2 }, heroTl);
-      safeAnimate('to', headerTitle, { y: 0, opacity: 1, duration: duration * 1.4 }, heroTl, '-=0.9');
-      safeAnimate('to', headerDesc, { y: 0, opacity: 1, duration: duration * 1.2 }, heroTl, '-=0.8');
 
-      // ===== MISSION CARD TIMELINE =====
-      const missionTl = gsap.timeline({
-        scrollTrigger: { trigger: missionCard, start: 'top 80%', once: true }
-      });
-      safeAnimate('to', missionCard, { y: 0, opacity: 1, rotateX: 0, scale: 1, duration: duration * 1.4, ease: 'power3.out' }, missionTl);
-      safeAnimate('to', missionIcon, { scale: 1, rotation: 0, duration: duration * 0.8, ease: 'back.out(2)' }, missionTl, '-=0.8');
-      safeAnimate('to', missionLabel, { x: 0, opacity: 1, duration: duration * 0.6 }, missionTl, '-=0.6');
-      safeAnimate('to', missionTitle, { y: 0, opacity: 1, duration: duration * 0.8 }, missionTl, '-=0.4');
-      safeAnimate('to', missionText, { y: 0, opacity: 1, duration: duration * 0.8 }, missionTl, '-=0.5');
+      safeAnimate('to', headerLabel, { y: 0, opacity: 1, filter: 'blur(0px)', rotation: 0, duration: baseDuration * 1.2 }, heroTl);
+      safeAnimate('to', headerTitle, { y: 0, opacity: 1, filter: 'blur(0px)', rotation: 0, duration: baseDuration * 1.4 }, heroTl, '-=0.9');
+      safeAnimate('to', headerDesc, { y: 0, opacity: 1, filter: 'blur(0px)', rotation: 0, duration: baseDuration * 1.2 }, heroTl, '-=0.8');
 
-      // ===== VISION CARD TIMELINE =====
-      const visionTl = gsap.timeline({
-        scrollTrigger: { trigger: visionCard, start: 'top 80%', once: true }
-      });
-      safeAnimate('to', visionCard, { y: 0, opacity: 1, rotateX: 0, scale: 1, duration: duration * 1.4, ease: 'power3.out', delay: 0.15 }, visionTl);
-      safeAnimate('to', visionIcon, { scale: 1, rotation: 0, duration: duration * 0.8, ease: 'back.out(2)' }, visionTl, '-=0.8');
-      safeAnimate('to', visionLabel, { x: 0, opacity: 1, duration: duration * 0.6 }, visionTl, '-=0.6');
-      safeAnimate('to', visionTitle, { y: 0, opacity: 1, duration: duration * 0.8 }, visionTl, '-=0.4');
-      safeAnimate('to', visionText, { y: 0, opacity: 1, duration: duration * 0.8 }, visionTl, '-=0.5');
+      // ===== CARDS REVEAL =====
+      [missionCard, visionCard].forEach((card, i) => {
+        if (!card) return;
+        const icon = card.querySelector('.mission-icon, .vision-icon');
+        const label = card.querySelector('.mission-label, .vision-label');
+        const title = card.querySelector('.mission-title, .vision-title');
+        const text = card.querySelector('.mission-text, .vision-text');
 
-      // ===== CARD HOVER INTERACTIONS =====
-      const cards = container.querySelectorAll<HTMLElement>('.interactive-card');
-      cards.forEach((card) => {
-        const inner = card.querySelector('.card-inner');
-        const icon = card.querySelector('.card-icon-wrap');
-
-        card.addEventListener('mouseenter', () => {
-          gsap.to(card, { scale: 1.02, duration: 0.4, ease: 'power2.out' });
-          gsap.to(inner, { y: -5, duration: 0.4, ease: 'power2.out' });
-          if (icon) gsap.to(icon, { scale: 1.15, rotation: 5, duration: 0.4, ease: 'power2.out' });
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: card,
+            start: isDesktop ? 'top 80%' : 'top 90%',
+            once: true
+          }
         });
 
-        card.addEventListener('mouseleave', () => {
-          gsap.to(card, { scale: 1, duration: 0.4, ease: 'power2.out' });
-          gsap.to(inner, { y: 0, duration: 0.4, ease: 'power2.out' });
-          if (icon) gsap.to(icon, { scale: 1, rotation: 0, duration: 0.4, ease: 'power2.out' });
-        });
+        safeAnimate('to', card, {
+          y: 0,
+          opacity: 1,
+          rotateX: 0,
+          scale: 1,
+          filter: 'blur(0px)',
+          duration: baseDuration * 1.4,
+          ease: 'power3.out',
+        }, tl, isDesktop ? i * 0.15 : 0);
 
-        // 3D tilt effect on mouse move
-        card.addEventListener('mousemove', (e) => {
-          const rect = card.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          const y = e.clientY - rect.top;
-          const centerX = rect.width / 2;
-          const centerY = rect.height / 2;
-          const rotateX = (y - centerY) / 20;
-          const rotateY = (centerX - x) / 20;
-          gsap.to(card, { rotateX: rotateX, rotateY: rotateY, duration: 0.3, ease: 'power2.out' });
-        });
+        safeAnimate('to', icon, {
+          scale: 1,
+          rotation: 0,
+          opacity: 1,
+          duration: baseDuration * 0.8,
+          ease: 'back.out(2)'
+        }, tl, '-=0.6');
+        safeAnimate('to', label, { x: 0, opacity: 1, duration: baseDuration * 0.6 }, tl, '-=0.6');
+        safeAnimate('to', title, { y: 0, opacity: 1, duration: baseDuration * 0.8 }, tl, '-=0.4');
+        safeAnimate('to', text, { y: 0, opacity: 1, duration: baseDuration * 0.8 }, tl, '-=0.5');
 
-        card.addEventListener('mouseleave', () => {
-          gsap.to(card, { rotateX: 0, rotateY: 0, duration: 0.5, ease: 'power2.out' });
-        });
+        // Desktop Only Interactions
+        if (isDesktop && !prefersReducedMotion) {
+          card.addEventListener('mouseenter', () => {
+            gsap.to(card, { scale: 1.02, duration: 0.4, ease: 'power2.out' });
+            gsap.to(card.querySelector('.card-inner'), { y: -5, duration: 0.4, ease: 'power2.out' });
+          });
+
+          card.addEventListener('mouseleave', () => {
+            gsap.to(card, { scale: 1, rotateX: 0, rotateY: 0, duration: 0.5, ease: 'power2.out' });
+            gsap.to(card.querySelector('.card-inner'), { y: 0, duration: 0.4, ease: 'power2.out' });
+          });
+
+          card.addEventListener('mousemove', (e: any) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const rotateX = (y - centerY) / 25;
+            const rotateY = (centerX - x) / 25;
+            gsap.to(card, { rotateX: rotateX, rotateY: rotateY, duration: 0.3, ease: 'power2.out' });
+          });
+        }
       });
 
       // ===== IMAGE REVEAL =====
       gsap.to(imgContainer, {
         clipPath: 'inset(0% 0% 0% 0%)',
         scale: 1,
-        duration: duration * 2,
+        filter: 'blur(0px)',
+        duration: baseDuration * 2,
         ease: 'power4.inOut',
-        scrollTrigger: { trigger: imgContainer, start: 'top 80%', once: true }
+        scrollTrigger: {
+          trigger: imgContainer,
+          start: isDesktop ? 'top 80%' : 'top 95%',
+          once: true
+        }
       });
 
       // ===== PHILOSOPHY SECTION =====
       const philoTl = gsap.timeline({
-        scrollTrigger: { trigger: philosophyHeader, start: 'top 85%', once: true }
+        scrollTrigger: {
+          trigger: philosophyHeader,
+          start: isDesktop ? 'top 85%' : 'top 95%',
+          once: true
+        }
       });
-      safeAnimate('to', philosophyHeader, { y: 0, opacity: 1, duration: duration }, philoTl);
-      safeAnimate('to', philosophyTitle, { y: 0, opacity: 1, duration: duration }, philoTl, '-=0.7');
-      safeAnimate('to', philosophyDesc, { y: 0, opacity: 1, duration: duration }, philoTl, '-=0.6');
+      safeAnimate('to', philosophyHeader, { y: 0, opacity: 1, filter: 'blur(0px)', duration: baseDuration }, philoTl);
+      safeAnimate('to', philosophyTitle, { y: 0, opacity: 1, filter: 'blur(0px)', duration: baseDuration }, philoTl, '-=0.7');
+      safeAnimate('to', philosophyDesc, { y: 0, opacity: 1, filter: 'blur(0px)', duration: baseDuration }, philoTl, '-=0.6');
 
-      // Philosophy cards with staggered entrance
       philosophyCards.forEach((card, i) => {
         const icon = card.querySelector('.philosophy-icon');
         const title = card.querySelector('h4');
         const desc = card.querySelector('p');
 
         const cardTl = gsap.timeline({
-          scrollTrigger: { trigger: card, start: 'top 88%', once: true }
+          scrollTrigger: {
+            trigger: card,
+            start: isDesktop ? 'top 88%' : 'top 95%',
+            once: true
+          }
         });
 
-        safeAnimate('to', card, { y: 0, opacity: 1, scale: 1, duration: duration * 1.1, delay: i * stagger * 1.5, ease: 'power3.out' }, cardTl);
-        safeAnimate('from', icon, { scale: 0, rotation: -30, duration: duration * 0.6, ease: 'back.out(2)' }, cardTl, '-=0.7');
-        safeAnimate('from', title, { y: 20, opacity: 0, duration: duration * 0.5 }, cardTl, '-=0.4');
-        safeAnimate('from', desc, { y: 15, opacity: 0, duration: duration * 0.5 }, cardTl, '-=0.3');
+        safeAnimate('to', card, {
+          y: 0,
+          opacity: 1,
+          scale: 1,
+          filter: 'blur(0px)',
+          duration: baseDuration * 1.1,
+          ease: 'power3.out'
+        }, cardTl, isDesktop ? i * baseStagger * 1.5 : 0);
 
-        // Hover interaction for philosophy cards
-        card.addEventListener('mouseenter', () => {
-          gsap.to(card, { y: -8, scale: 1.03, duration: 0.3, ease: 'power2.out' });
-          if (icon) gsap.to(icon, { scale: 1.2, backgroundColor: 'rgb(59, 130, 246)', color: 'white', duration: 0.3 });
-        });
+        safeAnimate('from', icon, { scale: 0, rotation: -30, duration: baseDuration * 0.6, ease: 'back.out(2)' }, cardTl, '-=0.7');
+        safeAnimate('from', title, { y: 20, opacity: 0, duration: baseDuration * 0.5 }, cardTl, '-=0.4');
+        safeAnimate('from', desc, { y: 15, opacity: 0, duration: baseDuration * 0.5 }, cardTl, '-=0.3');
 
-        card.addEventListener('mouseleave', () => {
-          gsap.to(card, { y: 0, scale: 1, duration: 0.3, ease: 'power2.out' });
-          if (icon) gsap.to(icon, { scale: 1, clearProps: 'backgroundColor,color', duration: 0.3 });
-        });
+        if (isDesktop && !prefersReducedMotion) {
+          card.addEventListener('mouseenter', () => {
+            gsap.to(card, { y: -8, scale: 1.03, duration: 0.3, ease: 'power2.out' });
+            if (icon) gsap.to(icon, { scale: 1.2, backgroundColor: 'rgb(59, 130, 246)', color: 'white', duration: 0.3 });
+          });
+
+          card.addEventListener('mouseleave', () => {
+            gsap.to(card, { y: 0, scale: 1, duration: 0.3, ease: 'power2.out' });
+            if (icon) gsap.to(icon, { scale: 1, clearProps: 'backgroundColor,color', duration: 0.3 });
+          });
+        }
       });
 
       // ===== STATS SECTION =====
       const statsTl = gsap.timeline({
-        scrollTrigger: { trigger: statsHeader, start: 'top 85%', once: true }
+        scrollTrigger: {
+          trigger: statsHeader,
+          start: isDesktop ? 'top 85%' : 'top 95%',
+          once: true
+        }
       });
-      statsTl.to(statsHeader, { y: 0, opacity: 1, duration: duration });
+      statsTl.to(statsHeader, { y: 0, opacity: 1, duration: baseDuration });
 
       statItems.forEach((item, i) => {
-        const number = item.querySelector('.stat-number');
-        const label = item.querySelector('p');
-
         const itemTl = gsap.timeline({
-          scrollTrigger: { trigger: item, start: 'top 90%', once: true }
+          scrollTrigger: {
+            trigger: item,
+            start: isDesktop ? 'top 90%' : 'top 98%',
+            once: true
+          }
         });
 
-        safeAnimate('to', item, { y: 0, opacity: 1, scale: 1, duration: duration, delay: i * stagger * 1.2, ease: 'power3.out' }, itemTl);
-        safeAnimate('from', label, { y: 10, opacity: 0, duration: duration * 0.5 }, itemTl, '-=0.4');
+        safeAnimate('to', item, {
+          y: 0,
+          opacity: 1,
+          scale: 1,
+          duration: baseDuration,
+          ease: 'power3.out'
+        }, itemTl, isDesktop ? i * baseStagger * 1.2 : 0);
 
-        // Hover
-        item.addEventListener('mouseenter', () => {
-          gsap.to(item, { scale: 1.08, duration: 0.3, ease: 'power2.out' });
-        });
-        item.addEventListener('mouseleave', () => {
-          gsap.to(item, { scale: 1, duration: 0.3, ease: 'power2.out' });
-        });
+        if (isDesktop && !prefersReducedMotion) {
+          item.addEventListener('mouseenter', () => gsap.to(item, { scale: 1.08, duration: 0.3, ease: 'power2.out' }));
+          item.addEventListener('mouseleave', () => gsap.to(item, { scale: 1, duration: 0.3, ease: 'power2.out' }));
+        }
       });
 
       // Counter animation
@@ -288,62 +339,77 @@ const About: React.FC = () => {
         const value = parseInt(stat.getAttribute('data-value') || '0', 10);
         safeAnimate('fromTo', stat, {
           innerText: value,
-          duration: prefersReducedMotion ? 0.1 : 2.5,
+          duration: prefersReducedMotion ? 0.1 : 3,
           snap: { innerText: 1 },
-          ease: 'power2.out',
-          scrollTrigger: { trigger: stat, start: 'top 90%', once: true }
+          ease: 'expo.out',
+          scrollTrigger: {
+            trigger: stat,
+            start: isDesktop ? 'top 90%' : 'top 98%',
+            once: true
+          }
         }, undefined, undefined, { innerText: 0 });
       });
 
       // Decorative elements
       decorElements.forEach((el) => {
         safeAnimate('to', el, {
-          scale: 1, opacity: 1, duration: duration * 2, ease: 'power2.out',
+          scale: 1,
+          opacity: 1,
+          filter: 'blur(40px)',
+          duration: baseDuration * 2,
+          ease: 'power2.out',
           scrollTrigger: { trigger: el, start: 'top 95%', once: true }
         });
       });
 
-    }, containerRef.current);
+    });
 
-    return () => ctx.revert();
+    return () => mm.revert();
   }, []);
 
   return (
-    <div ref={containerRef} className="min-h-screen pt-32 md:pt-40 pb-20 md:pb-32 px-6 bg-white dark:bg-brand-dark transition-colors duration-300 overflow-hidden" style={{ perspective: '1500px' }}>
+    <div ref={containerRef} className="min-h-screen pt-24 md:pt-40 pb-20 md:pb-32 px-4 md:px-6 bg-white dark:bg-brand-dark transition-colors duration-300 overflow-hidden" style={{ perspective: '1500px' }}>
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
-        <header className="about-header mb-24 md:mb-40 max-w-5xl">
-          <h2 className="header-label text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.5em] mb-6 md:mb-8">
+        <header className="about-header mb-20 md:mb-40 max-w-5xl">
+          <h2 className="header-label text-[10px] md:text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.3em] md:tracking-[0.5em] mb-4 md:mb-8">
             01 // Who We Are
           </h2>
-          <h1 className="header-title text-5xl md:text-[7rem] lg:text-[9rem] font-heading font-extrabold leading-[0.9] tracking-tighter mb-10 md:mb-14 text-gray-900 dark:text-white">
+          <h1 className="header-title text-4xl sm:text-5xl md:text-[7rem] lg:text-[9rem] font-heading font-extrabold leading-[1] md:leading-[0.9] tracking-tighter mb-8 md:mb-14 text-gray-900 dark:text-white">
             ARCHITECTING <br /> <span className="gradient-text">DIGITAL LIFE.</span>
           </h1>
-          <p className="header-desc text-gray-600 dark:text-gray-400 text-lg md:text-2xl font-light leading-relaxed max-w-3xl">
+          <p className="header-desc text-gray-600 dark:text-gray-400 text-base md:text-2xl font-light leading-relaxed max-w-3xl">
             Kytriq Technologies was founded on a simple premise: <strong className="text-gray-900 dark:text-white">Digital ideas deserve to live.</strong> We are a startup with the heart of a pioneer and the precision of a master engineer.
           </p>
         </header>
 
         {/* Mission & Vision Cards */}
-        <section className="mb-24 md:mb-40">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12" style={{ perspective: '1200px' }}>
+        <section className="mb-20 md:mb-40">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-12" style={{ perspective: '1200px' }}>
 
             {/* Mission Card */}
-            <div className="mission-card interactive-card group relative cursor-pointer" style={{ transformStyle: 'preserve-3d' }}>
-              <div className="card-inner relative overflow-hidden rounded-[2rem] md:rounded-[3rem] bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 p-8 md:p-12 lg:p-16 h-full min-h-[420px] md:min-h-[500px]">
+            <div className="mission-card interactive-card group relative" style={{ transformStyle: 'preserve-3d' }}>
+              <div className="card-inner relative overflow-hidden rounded-[2rem] md:rounded-[3rem] bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 p-6 md:p-12 lg:p-16 h-full min-h-[350px] md:min-h-[500px]">
                 <div className="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full blur-3xl transform translate-x-1/3 -translate-y-1/3"></div>
                 <div className="absolute bottom-0 left-0 w-56 h-56 bg-blue-400/10 rounded-full blur-2xl transform -translate-x-1/3 translate-y-1/3"></div>
 
                 <div className="relative z-10 h-full flex flex-col">
-                  <div className="mb-8">
-
-                    <span className="mission-label text-xs font-bold text-blue-200 uppercase tracking-[0.4em]">Our Mission</span>
+                  <div className="flex items-center justify-between mb-6 md:mb-8">
+                    <span className="mission-label inline-block text-[10px] md:text-xs font-bold text-blue-200 uppercase tracking-[0.4em]">Our Mission</span>
+                    <div className="mission-icon">
+                      <svg className="w-8 h-8 md:w-10 md:h-10 text-white shadow-blue-400/20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
+                        <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+                        <path d="M9 12H4s.55-3.03 2-5c1.62-2.2 5-3 5-3" />
+                        <path d="M12 15v5s3.03-.55 5-2c2.2-1.62 3-5 3-5" />
+                      </svg>
+                    </div>
                   </div>
-                  <h3 className="mission-title text-2xl md:text-3xl lg:text-4xl font-heading font-bold text-white mb-6 leading-tight">
+                  <h3 className="mission-title text-2xl md:text-3xl lg:text-4xl font-heading font-bold text-white mb-4 md:mb-6 leading-tight">
                     Empowering Businesses Through Intelligent Software
                   </h3>
-                  <p className="mission-text text-blue-100/90 text-base md:text-lg leading-relaxed mt-auto">
+                  <p className="mission-text text-blue-100/90 text-sm md:text-lg leading-relaxed mt-auto">
                     We exist to transform bold ideas into powerful digital realities. By combining cutting-edge AI with human-centered design, we build software that doesn't just work—it thinks, adapts, and grows with your business.
                   </p>
                 </div>
@@ -351,20 +417,25 @@ const About: React.FC = () => {
             </div>
 
             {/* Vision Card */}
-            <div className="vision-card interactive-card group relative cursor-pointer" style={{ transformStyle: 'preserve-3d' }}>
-              <div className="card-inner relative overflow-hidden rounded-[2rem] md:rounded-[3rem] bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 p-8 md:p-12 lg:p-16 h-full min-h-[420px] md:min-h-[500px]">
+            <div className="vision-card interactive-card group relative" style={{ transformStyle: 'preserve-3d' }}>
+              <div className="card-inner relative overflow-hidden rounded-[2rem] md:rounded-[3rem] bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 p-6 md:p-12 lg:p-16 h-full min-h-[350px] md:min-h-[500px]">
                 <div className="absolute top-0 right-0 w-72 h-72 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-3xl transform translate-x-1/3 -translate-y-1/3"></div>
                 <div className="absolute bottom-0 left-0 w-56 h-56 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-2xl transform -translate-x-1/3 translate-y-1/3"></div>
 
                 <div className="relative z-10 h-full flex flex-col">
-                  <div className="mb-8">
-
-                    <span className="vision-label text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.4em]">Our Vision</span>
+                  <div className="flex items-center justify-between mb-6 md:mb-8">
+                    <span className="vision-label inline-block text-[10px] md:text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.4em]">Our Vision</span>
+                    <div className="vision-icon">
+                      <svg className="w-8 h-8 md:w-10 md:h-10 text-blue-600 dark:text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    </div>
                   </div>
-                  <h3 className="vision-title text-2xl md:text-3xl lg:text-4xl font-heading font-bold text-gray-900 dark:text-white mb-6 leading-tight">
+                  <h3 className="vision-title text-2xl md:text-3xl lg:text-4xl font-heading font-bold text-gray-900 dark:text-white mb-4 md:mb-6 leading-tight">
                     A World Where Every Business Has Access to Intelligent Technology
                   </h3>
-                  <p className="vision-text text-gray-600 dark:text-gray-400 text-base md:text-lg leading-relaxed mt-auto">
+                  <p className="vision-text text-gray-600 dark:text-gray-400 text-sm md:text-lg leading-relaxed mt-auto">
                     We envision a future where advanced software and seamless digital experiences are not exclusive to tech giants. Every entrepreneur, every small business, and every dreamer deserves tools that amplify their potential.
                   </p>
                 </div>
@@ -374,38 +445,38 @@ const About: React.FC = () => {
         </section>
 
         {/* Philosophy Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24 items-center mb-24 md:mb-40">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-24 items-center mb-20 md:mb-40">
           <div className="img-reveal order-2 lg:order-1 relative">
-            <div className="aspect-[4/5] rounded-[2.5rem] md:rounded-[4rem] overflow-hidden border border-gray-100 dark:border-gray-800 p-2 bg-gray-50 dark:bg-gray-900/20">
+            <div className="aspect-[4/5] rounded-[2rem] md:rounded-[4rem] overflow-hidden border border-gray-100 dark:border-gray-800 p-1 md:p-2 bg-gray-50 dark:bg-gray-900/20">
               <img
                 src="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&q=80&w=1000"
                 alt="Innovation"
                 loading="lazy"
-                className="w-full h-full object-cover rounded-[2.2rem] md:rounded-[3.5rem] grayscale hover:grayscale-0 transition-all duration-1000"
+                className="w-full h-full object-cover rounded-[1.8rem] md:rounded-[3.5rem] grayscale hover:grayscale-0 transition-all duration-1000"
               />
             </div>
             <div className="decor-element absolute -bottom-10 -left-10 w-48 md:w-64 h-48 md:h-64 bg-blue-600/10 rounded-full blur-[60px] md:blur-[80px] -z-10"></div>
             <div className="decor-element absolute -top-6 -right-6 w-32 h-32 bg-indigo-500/10 rounded-full blur-[40px] -z-10"></div>
           </div>
 
-          <div className="order-1 lg:order-2 space-y-10 md:space-y-12">
+          <div className="order-1 lg:order-2 space-y-8 md:space-y-12">
             <div>
-              <h2 className="philosophy-header text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.5em] mb-6">02 // Philosophy</h2>
-              <h3 className="philosophy-title text-3xl md:text-5xl font-heading font-bold mb-8 text-gray-900 dark:text-white leading-tight">
+              <h2 className="philosophy-header text-[10px] md:text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.3em] md:tracking-[0.5em] mb-4 md:mb-6">02 // Philosophy</h2>
+              <h3 className="philosophy-title text-3xl md:text-5xl font-heading font-bold mb-6 md:mb-8 text-gray-900 dark:text-white leading-tight">
                 Software That <span className="gradient-text">Feels Alive</span>
               </h3>
-              <p className="philosophy-desc text-gray-600 dark:text-gray-400 text-base md:text-lg leading-relaxed mb-10">
+              <p className="philosophy-desc text-gray-600 dark:text-gray-400 text-sm md:text-lg leading-relaxed mb-8 md:mb-10">
                 We believe that software is a living entity. It shouldn't just function; it should evolve. At Kytriq, we bridge the gap between human ambition and technological reality by building systems that feel human and act intelligent.
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-8">
                 {philosophyItems.map((item, i) => (
-                  <div key={i} className="philosophy-card cursor-pointer p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/30 border border-gray-100 dark:border-gray-800 transition-shadow duration-300">
-                    <div className="philosophy-icon w-12 h-12 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-500 mb-4 transition-all duration-300">
+                  <div key={i} className="philosophy-card p-5 md:p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/30 border border-gray-100 dark:border-gray-800 transition-shadow duration-300">
+                    <div className="philosophy-icon w-10 h-10 md:w-12 md:h-12 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-500 mb-3 md:mb-4 transition-all duration-300">
                       {item.icon}
                     </div>
-                    <h4 className="font-bold text-gray-900 dark:text-white mb-2 transition-colors">{item.title}</h4>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{item.desc}</p>
+                    <h4 className="font-bold text-gray-900 dark:text-white text-sm md:text-base mb-1 md:mb-2 transition-colors">{item.title}</h4>
+                    <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{item.desc}</p>
                   </div>
                 ))}
               </div>
@@ -414,19 +485,19 @@ const About: React.FC = () => {
         </div>
 
         {/* Stats Section */}
-        <section className="py-16 md:py-28 border-t border-b border-gray-100 dark:border-gray-800/50 mb-16">
-          <div className="stats-header text-center mb-12 md:mb-16">
-            <h2 className="text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.5em] mb-4">03 // By The Numbers</h2>
-            <h3 className="text-3xl md:text-5xl font-heading font-bold text-gray-900 dark:text-white">Our Impact</h3>
+        <section className="py-12 md:py-28 border-y border-gray-100 dark:border-gray-800/50 mb-12 md:mb-16">
+          <div className="stats-header text-center mb-10 md:mb-16">
+            <h2 className="text-[10px] md:text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.3em] md:tracking-[0.5em] mb-3 md:mb-4">03 // By The Numbers</h2>
+            <h3 className="text-2xl md:text-5xl font-heading font-bold text-gray-900 dark:text-white">Our Impact</h3>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-12 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 text-center">
             {stats.map((stat, i) => (
-              <div key={i} className="stat-item cursor-pointer">
-                <div className="flex items-center justify-center text-4xl md:text-7xl font-heading font-extrabold text-gray-900 dark:text-white mb-3 md:mb-4 transition-colors duration-300">
+              <div key={i} className="stat-item">
+                <div className="flex items-center justify-center text-3xl md:text-7xl font-heading font-extrabold text-gray-900 dark:text-white mb-2 md:mb-4 transition-colors duration-300">
                   <span className="stat-number" data-value={stat.value}>0</span>
                   <span>{stat.suffix}</span>
                 </div>
-                <p className="text-[10px] md:text-xs text-blue-600 dark:text-blue-500 font-bold uppercase tracking-[0.3em]">{stat.label}</p>
+                <p className="text-[9px] md:text-xs text-blue-600 dark:text-blue-500 font-bold uppercase tracking-[0.2em] md:tracking-[0.3em]">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -438,6 +509,7 @@ const About: React.FC = () => {
     </div>
   );
 };
+
 
 export default About;
 

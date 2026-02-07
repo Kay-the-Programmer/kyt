@@ -17,6 +17,9 @@ const Services = React.lazy(() => import('./pages/Services'));
 const Contact = React.lazy(() => import('./pages/Contact'));
 const SalePilotDetail = React.lazy(() => import('./pages/SalePilotDetail'));
 
+const PrivacyPolicy = React.lazy(() => import('./pages/PrivacyPolicy'));
+const TermsConditions = React.lazy(() => import('./pages/TermsConditions'));
+
 // Register plugins for global use
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
@@ -246,6 +249,8 @@ const AppContent: React.FC = () => {
                   <Route path="/projects/salepilot" element={<SalePilotDetail />} />
                   <Route path="/services" element={<Services />} />
                   <Route path="/contact" element={<Contact />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                  <Route path="/terms-conditions" element={<TermsConditions />} />
                 </Routes>
               </Suspense>
             </TransitionContext.Provider>

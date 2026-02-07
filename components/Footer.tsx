@@ -395,6 +395,12 @@ const Footer: React.FC = memo(() => {
       {/* BOTTOM BAR */}
       <div className="max-w-7xl mx-auto mt-24 pt-10 border-t border-gray-100 dark:border-gray-900 flex flex-col md:flex-row items-center justify-between text-[11px] text-gray-400 font-bold uppercase tracking-[0.2em] space-y-6 md:space-y-0">
         <p>&copy; 2024 Kytriq Technologies. All Rights Reserved.</p>
+
+        <div className="flex space-x-8">
+          <Link to="/privacy-policy" className="hover:text-blue-600 transition-colors">Privacy Policy</Link>
+          <Link to="/terms-conditions" className="hover:text-blue-600 transition-colors">Terms & Conditions</Link>
+        </div>
+
         <div className="flex space-x-10 text-gray-500/50 dark:text-gray-400/30">
           <span>Tech Hub Central // Palo Alto // CA</span>
         </div>

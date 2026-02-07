@@ -224,7 +224,7 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
                 if (typeof ref === 'function') ref(node);
                 else if (ref) ref.current = node;
             }}
-            className="horizontal-panel w-full lg:w-screen min-h-screen lg:h-screen flex items-center justify-center px-4 py-12 sm:px-6 sm:py-16 md:p-12 lg:p-24 bg-white dark:bg-gray-950 overflow-visible lg:overflow-hidden relative shrink-0 z-[2] touch-pan-y"
+            className="horizontal-panel w-full lg:w-screen min-h-screen lg:h-screen flex items-center justify-center px-4 py-12 sm:px-6 sm:py-16 md:p-12 lg:p-24 bg-transparent overflow-visible lg:overflow-hidden relative shrink-0 z-[2] touch-pan-y"
         >
             {/* Parallax Background Layers */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">

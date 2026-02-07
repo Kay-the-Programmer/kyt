@@ -227,7 +227,7 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea, desktop
     return (
         <div
             ref={containerRef}
-            className="horizontal-panel w-full lg:w-screen min-h-screen lg:h-screen flex items-center justify-center p-6 md:p-24 bg-white dark:bg-gray-950 relative overflow-hidden shrink-0 z-[4] shadow-[-50px_0_100px_rgba(0,0,0,0.1)] dark:shadow-[-50px_0_100px_rgba(0,0,0,0.5)] will-change-transform"
+            className="horizontal-panel w-full lg:w-screen min-h-screen lg:h-screen flex items-center justify-center p-6 md:p-24 bg-transparent relative overflow-hidden shrink-0 z-[4] will-change-transform"
         >
             {/* Animated Background Glows */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">

@@ -4,6 +4,7 @@ import { gsap } from 'gsap';
 import { TransitionContext } from '../TransitionContext';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useSEO } from '../hooks/useSEO';
+import { useLazyRender } from '../hooks/useLazyRender';
 
 // Modular Components
 import InteractiveHeroBackground from '../components/home/InteractiveHeroBackground';
@@ -18,12 +19,38 @@ import { useSharedMousePos, globalMousePos } from '../hooks/useSharedMousePos';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Lightweight skeleton placeholder for lazy-loaded sections
-const SectionPlaceholder = () => (
-  <div className="w-full min-h-[50vh] flex items-center justify-center">
-    <div className="w-12 h-12 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
-  </div>
-);
+// Viewport-based lazy section wrapper
+interface LazySectionProps {
+  children: React.ReactNode;
+  minHeight?: string;
+  rootMargin?: string;
+}
+
+const LazySection: React.FC<LazySectionProps> = ({
+  children,
+  minHeight = 'min-h-screen',
+  rootMargin = '200px'
+}) => {
+  const { ref, shouldRender } = useLazyRender(rootMargin);
+
+  return (
+    <div ref={ref} className={`section-reveal ${!shouldRender ? minHeight : ''}`}>
+      {shouldRender ? (
+        <React.Suspense fallback={
+          <div className={`${minHeight} flex items-center justify-center`}>
+            <div className="w-12 h-12 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+          </div>
+        }>
+          {children}
+        </React.Suspense>
+      ) : (
+        <div className={`${minHeight} flex items-center justify-center`}>
+          <div className="w-12 h-12 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin opacity-30" />
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Home: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -169,29 +196,21 @@ const Home: React.FC = () => {
       {/* Hero Section handles its own entrance */}
       <HeroSection />
 
-      <div className="section-reveal">
-        <React.Suspense fallback={<div className="min-h-screen" />}>
-          <IdentitySection />
-        </React.Suspense>
-      </div>
+      <LazySection minHeight="min-h-screen">
+        <IdentitySection />
+      </LazySection>
 
-      <div className="section-reveal">
-        <React.Suspense fallback={<div className="min-h-screen" />}>
-          <PortfolioScroll />
-        </React.Suspense>
-      </div>
+      <LazySection minHeight="min-h-screen">
+        <PortfolioScroll />
+      </LazySection>
 
-      <div className="section-reveal">
-        <React.Suspense fallback={<div className="min-h-[50vh]" />}>
-          <CTASection />
-        </React.Suspense>
-      </div>
+      <LazySection minHeight="min-h-[50vh]">
+        <CTASection />
+      </LazySection>
 
-      <div className="section-reveal">
-        <React.Suspense fallback={<div className="min-h-[40vh]" />}>
-          <Footer />
-        </React.Suspense>
-      </div>
+      <LazySection minHeight="min-h-[40vh]">
+        <Footer />
+      </LazySection>
     </div>
   );
 };

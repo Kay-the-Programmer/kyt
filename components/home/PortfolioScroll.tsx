@@ -418,7 +418,7 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
           );
 
           // Content Animations inside Panels
-          const chars = q('.split-text-char');
+          const chars = q('.letter-reveal');
           // Title Flip Animation (Split/Flip)
           if (chars.length) {
             gsap.fromTo(chars,

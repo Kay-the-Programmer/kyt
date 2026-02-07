@@ -60,7 +60,7 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
                 });
 
                 // Headline animation for mobile - triggers first
-                const headlineChars = headline.querySelectorAll('.split-text-char');
+                const headlineChars = headline.querySelectorAll('.letter-reveal');
                 if (headlineChars.length > 0) {
                     gsap.set(headlineChars, {
                         opacity: 0,
@@ -132,7 +132,7 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
                 if (!desktopTween) return;
 
                 // Headline Desktop
-                const headlineChars = headline.querySelectorAll('.split-text-char');
+                const headlineChars = headline.querySelectorAll('.letter-reveal');
                 if (headlineChars.length > 0) {
                     gsap.fromTo(headlineChars,
                         {

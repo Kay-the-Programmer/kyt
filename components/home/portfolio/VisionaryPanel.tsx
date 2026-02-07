@@ -57,7 +57,7 @@ const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea, d
                 }
 
                 // Headline character stagger animation
-                const headlineChars = headline.querySelectorAll('.split-text-char');
+                const headlineChars = headline.querySelectorAll('.letter-reveal');
                 if (headlineChars.length > 0) {
                     gsap.set(headlineChars, {
                         opacity: 0,
@@ -113,7 +113,7 @@ const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea, d
                 if (!desktopTween) return;
 
                 // Headline Stagger
-                const headlineChars = headline.querySelectorAll('.split-text-char');
+                const headlineChars = headline.querySelectorAll('.letter-reveal');
                 if (headlineChars.length > 0) {
                     gsap.fromTo(headlineChars,
                         {

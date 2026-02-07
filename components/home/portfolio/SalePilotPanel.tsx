@@ -32,7 +32,7 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
         const ctx = gsap.context(() => {
             const mm = gsap.matchMedia();
             const revealTargets = container.querySelectorAll('.reveal-target');
-            const headlineChars = headline.querySelectorAll('.split-text-char');
+            const headlineChars = headline.querySelectorAll('.letter-reveal');
 
             // Common setup for all animations
             const setupAnimation = () => {

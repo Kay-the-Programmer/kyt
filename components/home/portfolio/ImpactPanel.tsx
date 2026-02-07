@@ -98,7 +98,7 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea, desktop
                 }
 
                 // Headline staggered reveal with dramatic effect
-                const headlineChars = headline.querySelectorAll('.split-text-char');
+                const headlineChars = headline.querySelectorAll('.letter-reveal');
                 if (headlineChars.length > 0) {
                     gsap.set(headlineChars, {
                         opacity: 0,
@@ -171,7 +171,7 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea, desktop
                 if (!desktopTween) return;
 
                 // Headline reveal
-                const headlineChars = headline.querySelectorAll('.split-text-char');
+                const headlineChars = headline.querySelectorAll('.letter-reveal');
                 if (headlineChars.length > 0) {
                     gsap.set(headlineChars, {
                         opacity: 0,

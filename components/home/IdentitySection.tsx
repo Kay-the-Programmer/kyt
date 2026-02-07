@@ -353,94 +353,102 @@ const IdentitySection: React.FC = () => {
     ctxRef.current = gsap.context(() => {
       const mm = gsap.matchMedia();
 
-      // Master timeline for coordinated entrance
-      const masterTl = gsap.timeline({
-        scrollTrigger: {
-          trigger: section,
-          start: 'top 80%', // Optimized for mobile - start earlier
-          end: 'bottom 20%',
-          toggleActions: 'play none none reverse',
-          // Remove scrub for entrance to ensure it plays through smoothly once triggered
-        }
+      mm.add({
+        isMobile: "(max-width: 767px)",
+        isDesktop: "(min-width: 768px)",
+        isReduced: "(prefers-reduced-motion: reduce)"
+      }, (context) => {
+        const { isMobile, isReduced } = context.conditions as { isMobile: boolean, isReduced: boolean };
+        const durationMult = isMobile ? 0.8 : 1;
+
+        // Master timeline for coordinated entrance
+        const masterTl = gsap.timeline({
+          scrollTrigger: {
+            trigger: section,
+            start: isMobile ? 'top 70%' : 'top 80%', // Triggers earlier on mobile
+            end: 'bottom 20%',
+            toggleActions: 'play none none reverse',
+          }
+        });
+
+        // 0. Set Initial states (Hardware Acceleration)
+        gsap.set([q('.feature-item'), q('.image-reveal-wrapper'), badgeRef.current], {
+          willChange: 'transform, opacity'
+        });
+
+        // 1. Initial Badge Pop
+        masterTl.fromTo(q('.identity-intro-badge'),
+          { opacity: 0, y: 20, scale: 0.9 },
+          { opacity: 1, y: 0, scale: 1, duration: 0.6 * durationMult, ease: 'back.out(1.7)' }
+        )
+
+          // 2. Title Stagger (Letters)
+          .fromTo(q('.identity-title .letter-reveal'),
+            { y: '120%', opacity: 0, rotateX: -60 },
+            {
+              y: '0%',
+              opacity: 1,
+              rotateX: 0,
+              stagger: isReduced ? 0 : (isMobile ? 0.015 : 0.03),
+              duration: 0.8 * durationMult,
+              ease: 'power3.out'
+            },
+            '-=0.4' // Overlap with badge
+          )
+
+          // 3. Description Fade Up
+          .fromTo(q('.identity-description'),
+            { opacity: 0, y: 30 },
+            { opacity: 1, y: 0, duration: 0.8 * durationMult, ease: 'power2.out' },
+            '-=0.6'
+          )
+
+          // 4. Features Stagger
+          .fromTo(q('.feature-item'),
+            { opacity: 0, x: -40 },
+            {
+              opacity: 1,
+              x: 0,
+              stagger: isReduced ? 0 : (isMobile ? 0.08 : 0.12),
+              duration: 0.8 * durationMult,
+              ease: 'power2.out',
+              clearProps: 'transform' // Clear transform after animation to avoid conflict with hover effects
+            },
+            '-=0.6'
+          )
+
+          // 5. Image Reveal (Simultaneous with features)
+          .fromTo(q('.image-reveal-wrapper'),
+            {
+              clipPath: 'inset(20% 0 20% 0 round 3rem)', // Vertical reveal feel
+              opacity: 0,
+              scale: 0.95,
+              y: 40
+            },
+            {
+              clipPath: 'inset(0% 0% 0% 0% round 3rem)',
+              opacity: 1,
+              scale: 1,
+              y: 0,
+              duration: 1.2 * durationMult,
+              ease: 'expo.out'
+            },
+            '<+=0.2' // Start slightly after features start
+          )
+
+          // 6. Stats Badge Pop
+          .fromTo(badgeRef.current,
+            { opacity: 0, scale: 0.5, rotation: -10 },
+            {
+              opacity: 1,
+              scale: 1,
+              rotation: 0,
+              duration: 0.8 * durationMult,
+              ease: 'elastic.out(1, 0.6)'
+            },
+            '-=0.8'
+          );
       });
-
-      // 0. Set Initial states (Hardware Acceleration)
-      gsap.set([q('.feature-item'), q('.image-reveal-wrapper'), badgeRef.current], {
-        willChange: 'transform, opacity'
-      });
-
-      // 1. Initial Badge Pop
-      masterTl.fromTo(q('.identity-intro-badge'),
-        { opacity: 0, y: 20, scale: 0.9 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: 'back.out(1.7)' }
-      )
-
-        // 2. Title Stagger (Letters)
-        .fromTo(q('.identity-title .letter-reveal'),
-          { y: '120%', opacity: 0, rotateX: -60 },
-          {
-            y: '0%',
-            opacity: 1,
-            rotateX: 0,
-            stagger: 0.03, // Slightly tighter stagger
-            duration: 0.8,
-            ease: 'power3.out'
-          },
-          '-=0.4' // Overlap with badge
-        )
-
-        // 3. Description Fade Up
-        .fromTo(q('.identity-description'),
-          { opacity: 0, y: 30 },
-          { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' },
-          '-=0.6'
-        )
-
-        // 4. Features Stagger
-        .fromTo(q('.feature-item'),
-          { opacity: 0, x: -40 },
-          {
-            opacity: 1,
-            x: 0,
-            stagger: 0.12, // Distinct stagger
-            duration: 0.8,
-            ease: 'power2.out',
-            clearProps: 'transform' // Clear transform after animation to avoid conflict with hover effects
-          },
-          '-=0.6'
-        )
-
-        // 5. Image Reveal (Simultaneous with features)
-        .fromTo(q('.image-reveal-wrapper'),
-          {
-            clipPath: 'inset(20% 0 20% 0 round 3rem)', // Vertical reveal feel
-            opacity: 0,
-            scale: 0.95,
-            y: 40
-          },
-          {
-            clipPath: 'inset(0% 0% 0% 0% round 3rem)',
-            opacity: 1,
-            scale: 1,
-            y: 0,
-            duration: 1.2,
-            ease: 'expo.out'
-          },
-          '<+=0.2' // Start slightly after features start
-        )
-
-        // 6. Stats Badge Pop
-        .fromTo(badgeRef.current,
-          { opacity: 0, scale: 0.5, rotation: -10 },
-          {
-            opacity: 1,
-            scale: 1,
-            rotation: 0,
-            duration: 0.8,
-            ease: 'elastic.out(1, 0.6)'
-          },
-          '-=0.8'
-        );
 
       // Parallax effects (separate scroll-bound triggers)
       mm.add("(min-width: 768px)", () => {

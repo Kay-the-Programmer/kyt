@@ -261,7 +261,7 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea, desktop
                     <Link
                         ref={primaryButtonRef as React.RefObject<HTMLAnchorElement>}
                         to="/contact"
-                        className="magnetic-area group w-full max-w-xs md:w-auto md:max-w-none px-10 sm:px-16 py-6 sm:py-8 bg-blue-600 text-white rounded-full font-black text-xl sm:text-2xl hover:bg-blue-700 transition-all duration-500 shadow-2xl shadow-blue-600/20 dark:shadow-blue-600/30 active:scale-95 hover:scale-105 hover:shadow-blue-600/40 dark:hover:shadow-blue-600/50 flex justify-center items-center"
+                        className="magnetic-area group w-full max-w-xs md:w-auto md:max-w-none px-10 sm:px-16 py-6 sm:py-8 bg-blue-600 text-white rounded-full font-black text-xl sm:text-2xl lg:hover:bg-blue-700 transition-all duration-500 shadow-2xl shadow-blue-600/20 dark:shadow-blue-600/30 active:scale-95 lg:hover:scale-105 lg:hover:shadow-blue-600/40 dark:lg:hover:shadow-blue-600/50 flex justify-center items-center"
                     >
                         Contact us
                     </Link>

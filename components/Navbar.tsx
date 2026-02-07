@@ -102,7 +102,7 @@ const Navbar: React.FC = () => {
       });
     });
     return () => ctx.revert();
-  }, []);
+  }, [navRef.current]);
 
   useEffect(() => {
     const currentIsDark = document.documentElement.classList.contains('dark');
@@ -206,7 +206,7 @@ const Navbar: React.FC = () => {
       const tl = gsap.timeline({
         defaults: { ease: 'power2.in' },
         onComplete: () => {
-          gsap.set(menu, { display: 'none', visibility: 'hidden' });
+          if (menu) gsap.set(menu, { display: 'none', visibility: 'hidden' });
         }
       });
 

@@ -276,11 +276,11 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
                         <div
                             key={stat.label}
                             ref={(el) => setCardRef(el, i)}
-                            className="reveal-target magnetic-area group relative p-6 sm:p-8 md:p-10 lg:p-14 bg-gray-50/80 dark:bg-white/[0.02] backdrop-blur-sm border border-gray-100 dark:border-white/5 rounded-2xl sm:rounded-3xl lg:rounded-[4rem] transition-all duration-300 ease-out hover:bg-white dark:hover:bg-white/[0.04] hover:shadow-2xl hover:shadow-blue-600/10 z-20 active:scale-[0.98] lg:hover:-translate-y-3 lg:hover:scale-[1.02]"
+                            className="reveal-target magnetic-area group relative p-6 sm:p-8 md:p-10 lg:p-14 bg-gray-50/80 dark:bg-white/[0.02] backdrop-blur-sm border border-gray-100 dark:border-white/5 rounded-2xl sm:rounded-3xl lg:rounded-[4rem] transition-all duration-300 ease-out lg:hover:bg-white dark:lg:hover:bg-white/[0.04] lg:hover:shadow-2xl lg:hover:shadow-blue-600/10 z-20 active:scale-[0.98] lg:hover:-translate-y-3 lg:hover:scale-[1.02]"
                             style={CARD_STYLE}
                         >
                             {/* Icon */}
-                            <div className="stats-icon w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-xl sm:rounded-2xl lg:rounded-[2rem] flex items-center justify-center mb-6 sm:mb-8 lg:mb-10 mx-auto group-hover:rotate-6 lg:group-hover:rotate-12 group-hover:scale-105 lg:group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-blue-600/25">
+                            <div className="stats-icon w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-xl sm:rounded-2xl lg:rounded-[2rem] flex items-center justify-center mb-6 sm:mb-8 lg:mb-10 mx-auto lg:group-hover:rotate-6 lg:group-hover:rotate-12 lg:group-hover:scale-105 lg:group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-blue-600/25">
                                 <i className={`fa-solid ${stat.icon} text-xl sm:text-2xl lg:text-3xl`} />
                             </div>
 

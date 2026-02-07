@@ -1,9 +1,10 @@
 
-import React, { useLayoutEffect, useRef } from 'react';
+import React, { useLayoutEffect, useRef, Suspense } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import Footer from '../components/Footer';
 import { useSEO } from '../hooks/useSEO';
+
+const Footer = React.lazy(() => import('../components/Footer'));
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -85,7 +86,8 @@ const About: React.FC = () => {
     const stagger = prefersReducedMotion ? 0 : 0.1;
 
     const ctx = gsap.context(() => {
-      const container = containerRef.current!;
+      const container = containerRef.current;
+      if (!container) return;
 
       // Cache all DOM elements
       const headerLabel = container.querySelector('.header-label');
@@ -111,19 +113,37 @@ const About: React.FC = () => {
       const statNumbers = container.querySelectorAll<HTMLElement>('.stat-number');
       const decorElements = container.querySelectorAll<HTMLElement>('.decor-element');
 
+      // Helper to execute GSAP only if targets exist
+      const safeAnimate = (method: 'set' | 'to' | 'from' | 'fromTo', targets: any, vars: gsap.TweenVars, timeline?: gsap.core.Timeline, position?: string | number, fromVars?: gsap.TweenVars) => {
+        const validTargets = Array.isArray(targets) ? targets.filter(t => t !== null && t !== undefined) : (targets ? [targets] : []);
+        if (validTargets.length === 0) return;
+
+        if (timeline) {
+          if (method === 'to') timeline.to(validTargets, vars, position);
+          else if (method === 'from') timeline.from(validTargets, vars, position);
+          else if (method === 'set') timeline.set(validTargets, vars, position);
+          else if (method === 'fromTo') timeline.fromTo(validTargets, fromVars || {}, vars, position);
+        } else {
+          if (method === 'set') gsap.set(validTargets, vars);
+          else if (method === 'to') gsap.to(validTargets, vars);
+          else if (method === 'from') gsap.from(validTargets, vars);
+          else if (method === 'fromTo') gsap.fromTo(validTargets, fromVars || {}, vars);
+        }
+      };
+
       // ===== SET INITIAL STATES =====
-      gsap.set([headerLabel, headerTitle, headerDesc], { y: 80, opacity: 0 });
-      gsap.set([missionCard, visionCard], { y: 100, opacity: 0, rotateX: 15, scale: 0.95 });
-      gsap.set([missionIcon, visionIcon], { scale: 0, rotation: -45 });
-      gsap.set([missionLabel, visionLabel], { x: -30, opacity: 0 });
-      gsap.set([missionTitle, visionTitle], { y: 40, opacity: 0 });
-      gsap.set([missionText, visionText], { y: 30, opacity: 0 });
-      gsap.set(imgContainer, { clipPath: 'inset(100% 0% 0% 0%)', scale: 1.1 });
-      gsap.set([philosophyHeader, philosophyTitle, philosophyDesc], { y: 50, opacity: 0 });
-      gsap.set(philosophyCards, { y: 60, opacity: 0, scale: 0.9 });
-      gsap.set([statsHeader], { y: 40, opacity: 0 });
-      gsap.set(statItems, { y: 50, opacity: 0, scale: 0.85 });
-      gsap.set(decorElements, { scale: 0, opacity: 0 });
+      safeAnimate('set', [headerLabel, headerTitle, headerDesc], { y: 80, opacity: 0 });
+      safeAnimate('set', [missionCard, visionCard], { y: 100, opacity: 0, rotateX: 15, scale: 0.95 });
+      safeAnimate('set', [missionIcon, visionIcon], { scale: 0, rotation: -45 });
+      safeAnimate('set', [missionLabel, visionLabel], { x: -30, opacity: 0 });
+      safeAnimate('set', [missionTitle, visionTitle], { y: 40, opacity: 0 });
+      safeAnimate('set', [missionText, visionText], { y: 30, opacity: 0 });
+      safeAnimate('set', imgContainer, { clipPath: 'inset(100% 0% 0% 0%)', scale: 1.1 });
+      safeAnimate('set', [philosophyHeader, philosophyTitle, philosophyDesc], { y: 50, opacity: 0 });
+      safeAnimate('set', Array.from(philosophyCards), { y: 60, opacity: 0, scale: 0.9 });
+      safeAnimate('set', statsHeader, { y: 40, opacity: 0 });
+      safeAnimate('set', Array.from(statItems), { y: 50, opacity: 0, scale: 0.85 });
+      safeAnimate('set', Array.from(decorElements), { scale: 0, opacity: 0 });
 
       // ===== HERO ENTRANCE TIMELINE =====
       const heroTl = gsap.timeline({
@@ -134,32 +154,29 @@ const About: React.FC = () => {
         },
         defaults: { ease: 'power4.out', force3D: true }
       });
-      heroTl
-        .to(headerLabel, { y: 0, opacity: 1, duration: duration * 1.2 })
-        .to(headerTitle, { y: 0, opacity: 1, duration: duration * 1.4 }, '-=0.9')
-        .to(headerDesc, { y: 0, opacity: 1, duration: duration * 1.2 }, '-=0.8');
+      safeAnimate('to', headerLabel, { y: 0, opacity: 1, duration: duration * 1.2 }, heroTl);
+      safeAnimate('to', headerTitle, { y: 0, opacity: 1, duration: duration * 1.4 }, heroTl, '-=0.9');
+      safeAnimate('to', headerDesc, { y: 0, opacity: 1, duration: duration * 1.2 }, heroTl, '-=0.8');
 
       // ===== MISSION CARD TIMELINE =====
       const missionTl = gsap.timeline({
         scrollTrigger: { trigger: missionCard, start: 'top 80%', once: true }
       });
-      missionTl
-        .to(missionCard, { y: 0, opacity: 1, rotateX: 0, scale: 1, duration: duration * 1.4, ease: 'power3.out' })
-        .to(missionIcon, { scale: 1, rotation: 0, duration: duration * 0.8, ease: 'back.out(2)' }, '-=0.8')
-        .to(missionLabel, { x: 0, opacity: 1, duration: duration * 0.6 }, '-=0.6')
-        .to(missionTitle, { y: 0, opacity: 1, duration: duration * 0.8 }, '-=0.4')
-        .to(missionText, { y: 0, opacity: 1, duration: duration * 0.8 }, '-=0.5');
+      safeAnimate('to', missionCard, { y: 0, opacity: 1, rotateX: 0, scale: 1, duration: duration * 1.4, ease: 'power3.out' }, missionTl);
+      safeAnimate('to', missionIcon, { scale: 1, rotation: 0, duration: duration * 0.8, ease: 'back.out(2)' }, missionTl, '-=0.8');
+      safeAnimate('to', missionLabel, { x: 0, opacity: 1, duration: duration * 0.6 }, missionTl, '-=0.6');
+      safeAnimate('to', missionTitle, { y: 0, opacity: 1, duration: duration * 0.8 }, missionTl, '-=0.4');
+      safeAnimate('to', missionText, { y: 0, opacity: 1, duration: duration * 0.8 }, missionTl, '-=0.5');
 
       // ===== VISION CARD TIMELINE =====
       const visionTl = gsap.timeline({
         scrollTrigger: { trigger: visionCard, start: 'top 80%', once: true }
       });
-      visionTl
-        .to(visionCard, { y: 0, opacity: 1, rotateX: 0, scale: 1, duration: duration * 1.4, ease: 'power3.out', delay: 0.15 })
-        .to(visionIcon, { scale: 1, rotation: 0, duration: duration * 0.8, ease: 'back.out(2)' }, '-=0.8')
-        .to(visionLabel, { x: 0, opacity: 1, duration: duration * 0.6 }, '-=0.6')
-        .to(visionTitle, { y: 0, opacity: 1, duration: duration * 0.8 }, '-=0.4')
-        .to(visionText, { y: 0, opacity: 1, duration: duration * 0.8 }, '-=0.5');
+      safeAnimate('to', visionCard, { y: 0, opacity: 1, rotateX: 0, scale: 1, duration: duration * 1.4, ease: 'power3.out', delay: 0.15 }, visionTl);
+      safeAnimate('to', visionIcon, { scale: 1, rotation: 0, duration: duration * 0.8, ease: 'back.out(2)' }, visionTl, '-=0.8');
+      safeAnimate('to', visionLabel, { x: 0, opacity: 1, duration: duration * 0.6 }, visionTl, '-=0.6');
+      safeAnimate('to', visionTitle, { y: 0, opacity: 1, duration: duration * 0.8 }, visionTl, '-=0.4');
+      safeAnimate('to', visionText, { y: 0, opacity: 1, duration: duration * 0.8 }, visionTl, '-=0.5');
 
       // ===== CARD HOVER INTERACTIONS =====
       const cards = container.querySelectorAll<HTMLElement>('.interactive-card');
@@ -209,10 +226,9 @@ const About: React.FC = () => {
       const philoTl = gsap.timeline({
         scrollTrigger: { trigger: philosophyHeader, start: 'top 85%', once: true }
       });
-      philoTl
-        .to(philosophyHeader, { y: 0, opacity: 1, duration: duration })
-        .to(philosophyTitle, { y: 0, opacity: 1, duration: duration }, '-=0.7')
-        .to(philosophyDesc, { y: 0, opacity: 1, duration: duration }, '-=0.6');
+      safeAnimate('to', philosophyHeader, { y: 0, opacity: 1, duration: duration }, philoTl);
+      safeAnimate('to', philosophyTitle, { y: 0, opacity: 1, duration: duration }, philoTl, '-=0.7');
+      safeAnimate('to', philosophyDesc, { y: 0, opacity: 1, duration: duration }, philoTl, '-=0.6');
 
       // Philosophy cards with staggered entrance
       philosophyCards.forEach((card, i) => {
@@ -224,11 +240,10 @@ const About: React.FC = () => {
           scrollTrigger: { trigger: card, start: 'top 88%', once: true }
         });
 
-        cardTl
-          .to(card, { y: 0, opacity: 1, scale: 1, duration: duration * 1.1, delay: i * stagger * 1.5, ease: 'power3.out' })
-          .from(icon, { scale: 0, rotation: -30, duration: duration * 0.6, ease: 'back.out(2)' }, '-=0.7')
-          .from(title, { y: 20, opacity: 0, duration: duration * 0.5 }, '-=0.4')
-          .from(desc, { y: 15, opacity: 0, duration: duration * 0.5 }, '-=0.3');
+        safeAnimate('to', card, { y: 0, opacity: 1, scale: 1, duration: duration * 1.1, delay: i * stagger * 1.5, ease: 'power3.out' }, cardTl);
+        safeAnimate('from', icon, { scale: 0, rotation: -30, duration: duration * 0.6, ease: 'back.out(2)' }, cardTl, '-=0.7');
+        safeAnimate('from', title, { y: 20, opacity: 0, duration: duration * 0.5 }, cardTl, '-=0.4');
+        safeAnimate('from', desc, { y: 15, opacity: 0, duration: duration * 0.5 }, cardTl, '-=0.3');
 
         // Hover interaction for philosophy cards
         card.addEventListener('mouseenter', () => {
@@ -256,9 +271,8 @@ const About: React.FC = () => {
           scrollTrigger: { trigger: item, start: 'top 90%', once: true }
         });
 
-        itemTl
-          .to(item, { y: 0, opacity: 1, scale: 1, duration: duration, delay: i * stagger * 1.2, ease: 'power3.out' })
-          .from(label, { y: 10, opacity: 0, duration: duration * 0.5 }, '-=0.4');
+        safeAnimate('to', item, { y: 0, opacity: 1, scale: 1, duration: duration, delay: i * stagger * 1.2, ease: 'power3.out' }, itemTl);
+        safeAnimate('from', label, { y: 10, opacity: 0, duration: duration * 0.5 }, itemTl, '-=0.4');
 
         // Hover
         item.addEventListener('mouseenter', () => {
@@ -272,24 +286,24 @@ const About: React.FC = () => {
       // Counter animation
       statNumbers.forEach((stat) => {
         const value = parseInt(stat.getAttribute('data-value') || '0', 10);
-        gsap.fromTo(stat, { innerText: 0 }, {
+        safeAnimate('fromTo', stat, {
           innerText: value,
           duration: prefersReducedMotion ? 0.1 : 2.5,
           snap: { innerText: 1 },
           ease: 'power2.out',
           scrollTrigger: { trigger: stat, start: 'top 90%', once: true }
-        });
+        }, undefined, undefined, { innerText: 0 });
       });
 
       // Decorative elements
       decorElements.forEach((el) => {
-        gsap.to(el, {
+        safeAnimate('to', el, {
           scale: 1, opacity: 1, duration: duration * 2, ease: 'power2.out',
           scrollTrigger: { trigger: el, start: 'top 95%', once: true }
         });
       });
 
-    }, containerRef);
+    }, containerRef.current);
 
     return () => ctx.revert();
   }, []);
@@ -323,11 +337,7 @@ const About: React.FC = () => {
 
                 <div className="relative z-10 h-full flex flex-col">
                   <div className="mb-8">
-                    <div className="mission-icon card-icon-wrap inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white/10 backdrop-blur-sm mb-6">
-                      <svg className="w-8 h-8 md:w-10 md:h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                    </div>
+
                     <span className="mission-label text-xs font-bold text-blue-200 uppercase tracking-[0.4em]">Our Mission</span>
                   </div>
                   <h3 className="mission-title text-2xl md:text-3xl lg:text-4xl font-heading font-bold text-white mb-6 leading-tight">
@@ -348,19 +358,14 @@ const About: React.FC = () => {
 
                 <div className="relative z-10 h-full flex flex-col">
                   <div className="mb-8">
-                    <div className="vision-icon card-icon-wrap inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 mb-6">
-                      <svg className="w-8 h-8 md:w-10 md:h-10 text-blue-600 dark:text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                    </div>
+
                     <span className="vision-label text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.4em]">Our Vision</span>
                   </div>
                   <h3 className="vision-title text-2xl md:text-3xl lg:text-4xl font-heading font-bold text-gray-900 dark:text-white mb-6 leading-tight">
                     A World Where Every Business Has Access to Intelligent Technology
                   </h3>
                   <p className="vision-text text-gray-600 dark:text-gray-400 text-base md:text-lg leading-relaxed mt-auto">
-                    We envision a future where advanced AI and seamless digital experiences are not exclusive to tech giants. Every entrepreneur, every small business, and every dreamer deserves tools that amplify their potential.
+                    We envision a future where advanced software and seamless digital experiences are not exclusive to tech giants. Every entrepreneur, every small business, and every dreamer deserves tools that amplify their potential.
                   </p>
                 </div>
               </div>
@@ -427,7 +432,9 @@ const About: React.FC = () => {
           </div>
         </section>
       </div>
-      <Footer />
+      <React.Suspense fallback={<div className="h-20" />}>
+        <Footer />
+      </React.Suspense>
     </div>
   );
 };

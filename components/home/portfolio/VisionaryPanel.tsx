@@ -225,7 +225,7 @@ const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea, d
                     ref={imageContainerRef}
                     className="relative hidden lg:block reveal-target"
                 >
-                    <div className="w-[550px] h-[550px] bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-[5rem] rotate-6 relative overflow-hidden group shadow-2xl hover:rotate-3 hover:scale-105 transition-all duration-700 shadow-blue-600/20">
+                    <div className="w-[550px] h-[550px] bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-[5rem] rotate-6 relative overflow-hidden group shadow-2xl lg:hover:rotate-3 lg:hover:scale-105 transition-all duration-700 shadow-blue-600/20">
                         <img
                             src="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&q=80&w=1000"
                             className="w-full h-full object-cover grayscale opacity-50 group-hover:scale-110 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-1000 -rotate-6"

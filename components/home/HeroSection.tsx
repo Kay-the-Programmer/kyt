@@ -188,21 +188,21 @@ const HeroSection = () => {
         defaults: { ease: 'expo.out', force3D: true }
       });
 
-      tl.to(heroBadge, { opacity: 1, y: 0, duration: 1.2 * durationMult })
+      tl.to(heroBadge, { opacity: 1, y: 0, duration: 1.0 * durationMult })
         .to(part1Chars, {
           opacity: 1, y: 0, rotateX: 0,
-          duration: 1.6 * durationMult,
-          stagger: { amount: isMobile ? 0.3 : 0.6, from: 'start' }
-        }, "-=0.8")
+          duration: 1.2 * durationMult,
+          stagger: { amount: isMobile ? 0.2 : 0.6, from: 'start' }
+        }, "-=0.6")
         .to(part2Chars, {
           opacity: 1, y: 0, rotateX: 0,
-          duration: 1.6 * durationMult,
-          stagger: { amount: isMobile ? 0.3 : 0.6, from: 'center' }
-        }, "-=1.2")
-        .to(heroDesc, { opacity: 1, y: 0, duration: 1.2 * durationMult }, "-=1.0")
+          duration: 1.2 * durationMult,
+          stagger: { amount: isMobile ? 0.2 : 0.6, from: 'center' }
+        }, "-=0.9")
+        .to(heroDesc, { opacity: 1, y: 0, duration: 1.0 * durationMult }, "-=0.8")
         .to(heroBtns, {
-          opacity: 1, y: 0, duration: 1.2 * durationMult, ease: 'back.out(1.7)'
-        }, "-=0.8");
+          opacity: 1, y: 0, duration: 1.0 * durationMult, ease: 'back.out(1.7)'
+        }, "-=0.6");
 
     }, sectionRef); // Scope to section
 

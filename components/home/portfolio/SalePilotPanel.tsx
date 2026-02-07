@@ -221,9 +221,9 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
                     </div>
                     <div
                         ref={floatingCardRef}
-                        className="floating-card absolute -bottom-6 sm:-bottom-10 right-2 sm:right-0 lg:-bottom-16 lg:-right-16 w-32 h-32 sm:w-40 sm:h-40 md:w-52 md:h-52 lg:w-72 lg:h-72 bg-gray-900 dark:bg-white rounded-[2rem] sm:rounded-[3rem] md:rounded-[4rem] lg:rounded-[6rem] flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 lg:p-12 shadow-3xl z-20 group hover:-rotate-3 hover:scale-102 transition-all duration-500"
+                        className="floating-card absolute -bottom-6 sm:-bottom-10 right-2 sm:right-0 lg:-bottom-16 lg:-right-16 w-32 h-32 sm:w-40 sm:h-40 md:w-52 md:h-52 lg:w-72 lg:h-72 bg-gray-900 dark:bg-white rounded-[2rem] sm:rounded-[3rem] md:rounded-[4rem] lg:rounded-[6rem] flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 lg:p-12 shadow-3xl z-20 group lg:hover:-rotate-3 lg:hover:scale-102 transition-all duration-500"
                     >
-                        <i className="fa-solid fa-brain text-blue-500 text-2xl sm:text-3xl lg:text-5xl mb-3 sm:mb-4 lg:mb-6 group-hover:scale-105 transition-transform" />
+                        <i className="fa-solid fa-brain text-blue-500 text-2xl sm:text-3xl lg:text-5xl mb-3 sm:mb-4 lg:mb-6 lg:group-hover:scale-105 transition-transform" />
                         <span className="text-[7px] sm:text-[8px] lg:text-xs font-black uppercase tracking-[0.3em] sm:tracking-[0.4em] text-center text-white dark:text-gray-900 leading-relaxed">
                             Intelligent <br /> POS
                         </span>

@@ -75,7 +75,7 @@ const Footer: React.FC = memo(() => {
       let currentId = 0;
       const width = arena.clientWidth || window.innerWidth;
       const height = arena.clientHeight || 300;
-      const count = isMobile ? 8 : 16;
+      const count = isMobile ? 6 : 16; // Reduced count for mobile
 
       const initialShapes: Shape[] = Array.from({ length: count }).map((_, i) => {
         const radius = isMobile ? 20 + Math.random() * 20 : 30 + Math.random() * 30;
@@ -168,6 +168,9 @@ const Footer: React.FC = memo(() => {
         // Spawn particles if moving fast or dragged
         const speed = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
         if (speed > 2 || draggedShapeId.current === s.id) {
+          // Reduce spawn probability on mobile
+          if (isMobile && Math.random() > 0.1) continue;
+
           const spawnCount = draggedShapeId.current === s.id ? 2 : Math.min(3, Math.floor(speed / 4));
           // Limit spawn rate slightly
           if (Math.random() < 0.3) {

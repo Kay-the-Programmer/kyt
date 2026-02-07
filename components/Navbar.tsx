@@ -165,7 +165,7 @@ const Navbar: React.FC = () => {
         visibility: 'visible',
         opacity: 0,
         top: 0,
-        height: '100vh',
+        height: '100dvh',
         zIndex: 999
       });
       gsap.set([menuItems, contactSection], { willChange: 'transform, opacity' });
@@ -374,7 +374,7 @@ const Navbar: React.FC = () => {
       {/* Mobile Menu - Full Screen Opaque Overlay */}
       <div
         ref={mobileMenuRef}
-        className="md:hidden fixed inset-x-0 top-0 h-screen flex flex-col z-[999] bg-white dark:bg-gray-950 overflow-hidden"
+        className="md:hidden fixed inset-x-0 top-0 h-[100dvh] flex flex-col z-[999] bg-white dark:bg-gray-950 overflow-hidden"
         style={{ display: 'none', visibility: 'hidden' }}
       >
         {/* Solid Background decorations - Fully Opaque Mesh */}
@@ -410,63 +410,81 @@ const Navbar: React.FC = () => {
           </button>
         </div>
 
-        {/* Menu Content Area */}
-        <div className="flex-1 flex flex-col justify-center px-8 relative z-10 overflow-y-auto">
-          <div className="space-y-3">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.path}
-                onClick={handleLinkClick}
-                className={`mobile-nav-link flex items-center gap-4 py-5 px-6 rounded-2xl backdrop-blur-sm transition-colors ${isActive(link.path)
-                  ? 'bg-blue-500/15 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 shadow-lg shadow-blue-500/10'
-                  : 'text-gray-800 dark:text-gray-100 bg-white/50 dark:bg-gray-900/50 hover:bg-white/80 dark:hover:bg-gray-800/80'
-                  }`}
-              >
-                <span className="flex items-center justify-center p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 group-hover:bg-blue-500 group-hover:text-white transition-colors" aria-hidden="true">{link.icon}</span>
-                <span className="text-xl font-heading font-bold tracking-tight">{link.name}</span>
-                {isActive(link.path) && (
-                  <span className="ml-auto w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </span>
-                )}
-              </Link>
-            ))}
+        {/* Main Scrollable Content */}
+        <div className="flex-1 flex flex-col overflow-y-auto relative z-10 pt-4 pb-10">
+          {/* Menu Links */}
+          <div className="flex-1 flex flex-col justify-center px-8 mb-8">
+            <div className="space-y-3">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  to={link.path}
+                  onClick={handleLinkClick}
+                  className={`mobile-nav-link flex items-center gap-4 py-5 px-6 rounded-2xl backdrop-blur-sm transition-colors ${isActive(link.path)
+                    ? 'bg-blue-500/15 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 shadow-lg shadow-blue-500/10'
+                    : 'text-gray-800 dark:text-gray-100 bg-white/50 dark:bg-gray-900/50 hover:bg-white/80 dark:hover:bg-gray-800/80'
+                    }`}
+                >
+                  <span className="flex items-center justify-center p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 group-hover:bg-blue-500 group-hover:text-white transition-colors" aria-hidden="true">{link.icon}</span>
+                  <span className="text-xl font-heading font-bold tracking-tight">{link.name}</span>
+                  {isActive(link.path) && (
+                    <span className="ml-auto w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </span>
+                  )}
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Contact Section */}
-        <div className="mobile-contact-section px-8 pb-10 relative z-10">
-          {/* Divider */}
-          <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-400/30 dark:via-gray-600/30 to-transparent mb-6"></div>
+          {/* Contact Section */}
+          <div className="mobile-contact-section px-8">
 
-          {/* Contact Icons */}
-          <div className="flex items-center justify-center gap-4 mb-6">
-            <a
-              href="https://wa.me/+260570135415"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white shadow-lg shadow-green-500/30 active:scale-95 transition-transform"
-              aria-label="Contact via WhatsApp"
+            {/* Divider */}
+            <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-400/30 dark:via-gray-600/30 to-transparent mb-6"></div>
+
+            {/* Contact Icons */}
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <a
+                href="https://wa.me/+260570135415"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white shadow-lg shadow-green-500/30 active:scale-95 transition-transform"
+                aria-label="Contact via WhatsApp"
+              >
+                <i className="fa-brands fa-whatsapp text-2xl"></i>
+              </a>
+              <a
+                href="tel:+260570135415"
+                className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/30 active:scale-95 transition-transform"
+                aria-label="Call Us"
+              >
+                <i className="fa-solid fa-phone text-xl"></i>
+              </a>
+              <a
+                href="mailto:hello@kytriq.com"
+                className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-purple-500/30 active:scale-95 transition-transform"
+                aria-label="Email Us"
+              >
+                <i className="fa-solid fa-envelope text-xl"></i>
+              </a>
+            </div>
+
+            {/* CTA Button */}
+            <Link
+              to="/contact"
+              onClick={handleLinkClick}
+              className="mobile-cta-button block w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white text-center py-4 rounded-2xl font-bold text-lg shadow-xl shadow-blue-500/25 active:scale-[0.98] transition-transform"
             >
-              <i className="fa-brands fa-whatsapp text-2xl"></i>
-            </a>
-            <a
-              href="tel:+260570135415"
-              className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/30 active:scale-95 transition-transform"
-              aria-label="Call Us"
-            >
-              <i className="fa-solid fa-phone text-xl"></i>
-            </a>
-            <a
-              href="mailto:hello@kytriq.com"
-              className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-purple-500/30 active:scale-95 transition-transform"
-              aria-label="Email Us"
-            >
-              <i className="fa-solid fa-envelope text-xl"></i>
-            </a>
+              <span className="flex items-center justify-center gap-2">
+                Get Started
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </span>
+            </Link>
           </div>
         </div>
       </div>

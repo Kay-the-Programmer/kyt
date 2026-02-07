@@ -33,6 +33,38 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea, desktop
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (prefersReducedMotion) return;
 
+        // Get elements that need animation
+        const headlineChars = headline.querySelectorAll('.letter-reveal');
+        const buttons = ctaContainer?.querySelectorAll('a');
+
+        // SET INITIAL HIDDEN STATE IMMEDIATELY ON MOUNT
+        // This prevents flash of visible content before animations
+        if (headlineChars.length > 0) {
+            gsap.set(headlineChars, {
+                opacity: 0,
+                y: 40,
+                scale: 0.9,
+                rotationX: -20,
+                transformPerspective: 1000,
+                willChange: 'transform, opacity'
+            });
+        }
+        if (buttons && buttons.length > 0) {
+            gsap.set(buttons, {
+                opacity: 0,
+                y: 30,
+                scale: 0.95,
+                willChange: 'transform, opacity'
+            });
+        }
+        if (blueGlow && purpleGlow) {
+            gsap.set([blueGlow, purpleGlow], {
+                scale: 0.6,
+                opacity: 0,
+                willChange: 'transform, opacity'
+            });
+        }
+
         const ctx = gsap.context(() => {
             const mm = gsap.matchMedia();
 
@@ -40,25 +72,17 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea, desktop
             mm.add('(max-width: 1023px)', () => {
                 // Background glow pulse animation on scroll
                 if (blueGlow && purpleGlow) {
-                    gsap.set([blueGlow, purpleGlow], {
-                        scale: 0.6,
-                        opacity: 0,
-                        willChange: 'transform, opacity'
-                    });
-
-                    // Blue glow expands first
                     gsap.to(blueGlow, {
                         scale: 1,
-                        opacity: 0.15, // Slightly brighter for impact
+                        opacity: 0.15,
                         duration: 1.5,
                         ease: 'power2.out',
                         scrollTrigger: {
                             trigger: container,
-                            start: 'top 40%', // Delayed trigger for visibility
+                            start: 'top 40%',
                             once: true
                         },
                         onComplete: () => {
-                            // Continuous breathing animation
                             gsap.to(blueGlow, {
                                 scale: 1.1,
                                 opacity: 0.1,
@@ -70,7 +94,6 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea, desktop
                         }
                     });
 
-                    // Purple glow follows with delay
                     gsap.to(purpleGlow, {
                         scale: 1,
                         opacity: 0.15,
@@ -83,12 +106,11 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea, desktop
                             once: true
                         },
                         onComplete: () => {
-                            // Continuous breathing animation
                             gsap.to(purpleGlow, {
                                 scale: 1.1,
                                 opacity: 0.1,
                                 duration: 4,
-                                delay: 1, // Offset phase
+                                delay: 1,
                                 yoyo: true,
                                 repeat: -1,
                                 ease: 'sine.inOut'
@@ -97,18 +119,8 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea, desktop
                     });
                 }
 
-                // Headline staggered reveal with dramatic effect
-                const headlineChars = headline.querySelectorAll('.letter-reveal');
+                // Headline staggered reveal
                 if (headlineChars.length > 0) {
-                    gsap.set(headlineChars, {
-                        opacity: 0,
-                        y: 40, // Reduced from 60 for tighter feel
-                        scale: 0.9,
-                        rotationX: -20, // Reduced rotation
-                        transformPerspective: 1000,
-                        willChange: 'transform, opacity'
-                    });
-
                     gsap.to(headlineChars, {
                         opacity: 1,
                         y: 0,
@@ -118,8 +130,8 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea, desktop
                             each: 0.02,
                             from: 'center'
                         },
-                        duration: 1, // Slower duration
-                        ease: 'power3.out', // Smoother ease
+                        duration: 1,
+                        ease: 'power3.out',
                         scrollTrigger: {
                             trigger: headline,
                             start: 'top 85%',
@@ -129,16 +141,7 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea, desktop
                 }
 
                 // CTA buttons bounce entrance
-                if (ctaContainer) {
-                    const buttons = ctaContainer.querySelectorAll('a');
-
-                    gsap.set(buttons, {
-                        opacity: 0,
-                        y: 30,
-                        scale: 0.95,
-                        willChange: 'transform, opacity'
-                    });
-
+                if (buttons && buttons.length > 0) {
                     gsap.to(buttons, {
                         opacity: 1,
                         y: 0,
@@ -153,7 +156,6 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea, desktop
                             once: true
                         },
                         onComplete: () => {
-                            // Subtle float for interactivity feel
                             gsap.to(ctaContainer, {
                                 y: -5,
                                 duration: 2.5,
@@ -171,16 +173,7 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea, desktop
                 if (!desktopTween) return;
 
                 // Headline reveal
-                const headlineChars = headline.querySelectorAll('.letter-reveal');
                 if (headlineChars.length > 0) {
-                    gsap.set(headlineChars, {
-                        opacity: 0,
-                        rotateX: -90,
-                        y: 50,
-                        transformOrigin: "50% 50% -50px",
-                        scaleY: 0.5
-                    });
-
                     gsap.to(headlineChars, {
                         opacity: 1,
                         rotateX: 0,
@@ -191,7 +184,7 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea, desktop
                         scrollTrigger: {
                             trigger: headlineRef.current,
                             containerAnimation: desktopTween,
-                            start: "left 60%", // Triggers when headline enters 60% of viewport width
+                            start: "left 60%",
                             end: "left 20%",
                             scrub: 1,
                             invalidateOnRefresh: true
@@ -199,23 +192,21 @@ const ImpactPanel: React.FC<ImpactPanelProps> = ({ registerMagneticArea, desktop
                     });
                 }
 
-                // CTA Entrance
-                if (ctaContainerRef.current) {
-                    gsap.fromTo(ctaContainerRef.current,
-                        { opacity: 0, y: 30 },
-                        {
-                            opacity: 1, y: 0,
-                            ease: 'power2.out',
-                            scrollTrigger: {
-                                trigger: ctaContainerRef.current,
-                                containerAnimation: desktopTween,
-                                start: "left 65%",
-                                end: "left 30%",
-                                scrub: 1,
-                                invalidateOnRefresh: true
-                            }
+                // CTA Entrance - animate buttons directly since they have hidden state
+                if (buttons && buttons.length > 0) {
+                    gsap.to(buttons, {
+                        opacity: 1, y: 0, scale: 1,
+                        stagger: 0.1,
+                        ease: 'power2.out',
+                        scrollTrigger: {
+                            trigger: ctaContainerRef.current,
+                            containerAnimation: desktopTween,
+                            start: "left 65%",
+                            end: "left 30%",
+                            scrub: 1,
+                            invalidateOnRefresh: true
                         }
-                    );
+                    });
                 }
             });
 

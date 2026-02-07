@@ -46,27 +46,39 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (prefersReducedMotion) return;
 
+        // Get elements that need animation
+        const headlineChars = headline.querySelectorAll('.letter-reveal');
+
+        // SET INITIAL HIDDEN STATE IMMEDIATELY ON MOUNT
+        // This prevents flash of visible content before animations
+        if (headlineChars.length > 0) {
+            gsap.set(headlineChars, {
+                opacity: 0,
+                y: 30,
+                willChange: 'transform, opacity'
+            });
+        }
+        gsap.set(cards, {
+            opacity: 0,
+            y: 50,
+            scale: 0.95,
+            willChange: 'transform, opacity'
+        });
+        // Set icons hidden too
+        cards.forEach(card => {
+            const icon = card.querySelector('.stats-icon');
+            if (icon) {
+                gsap.set(icon, { scale: 0, opacity: 0 });
+            }
+        });
+
         const ctx = gsap.context(() => {
             const mm = gsap.matchMedia();
 
             // Mobile animations (vertical scroll)
             mm.add('(max-width: 1023px)', () => {
-                // Simpler mobile animations for performance
-                gsap.set(cards, {
-                    opacity: 0,
-                    y: 50,
-                    scale: 0.95,
-                    willChange: 'transform, opacity'
-                });
-
-                // Headline animation for mobile - triggers first
-                const headlineChars = headline.querySelectorAll('.letter-reveal');
+                // Headline animation for mobile
                 if (headlineChars.length > 0) {
-                    gsap.set(headlineChars, {
-                        opacity: 0,
-                        y: 30
-                    });
-
                     gsap.to(headlineChars, {
                         opacity: 1,
                         y: 0,
@@ -81,27 +93,17 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
                     });
                 }
 
-                // Staggered card entrance on mobile - use container trigger with delays
+                // Staggered card entrance on mobile
                 cards.forEach((card, index) => {
-                    // Icon initial state
                     const icon = card.querySelector('.stats-icon');
-                    if (icon) {
-                        gsap.set(icon, {
-                            scale: 0,
-                            rotation: -180
-                        });
-                    }
 
                     gsap.to(card, {
                         opacity: 1,
                         y: 0,
                         scale: 1,
-                        duration: 0.8,
-                        delay: 0.3 + (index * 0.15),
-                        ease: 'power3.out',
-                        onComplete: () => {
-                            gsap.set(card, { willChange: 'auto' });
-                        },
+                        duration: 0.6,
+                        delay: index * 0.15,
+                        ease: 'power2.out',
                         scrollTrigger: {
                             trigger: card,
                             start: 'top 85%',
@@ -109,14 +111,13 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
                         }
                     });
 
-                    // Icon bounce effect - coordinated with card animation
                     if (icon) {
                         gsap.to(icon, {
                             scale: 1,
-                            rotation: 0,
-                            duration: 0.6,
-                            delay: 0.5 + (index * 0.15),
-                            ease: 'back.out(1.7)',
+                            opacity: 1,
+                            duration: 0.4,
+                            delay: index * 0.15 + 0.3,
+                            ease: 'back.out(2)',
                             scrollTrigger: {
                                 trigger: card,
                                 start: 'top 85%',
@@ -132,52 +133,39 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
                 if (!desktopTween) return;
 
                 // Headline Desktop
-                const headlineChars = headline.querySelectorAll('.letter-reveal');
                 if (headlineChars.length > 0) {
-                    gsap.fromTo(headlineChars,
-                        {
-                            opacity: 0,
-                            rotateX: -90,
-                            y: 50,
-                            transformOrigin: "50% 50% -50px",
-                            scaleY: 0.5
-                        },
-                        {
-                            opacity: 1,
-                            rotateX: 0,
-                            y: 0,
-                            scaleY: 1,
-                            stagger: 0.04,
-                            ease: 'back.out(1.5)',
-                            scrollTrigger: {
-                                trigger: headline,
-                                containerAnimation: desktopTween,
-                                start: "left 60%", // Triggers when headline enters 60% of viewport width
-                                end: "left 20%",
-                                scrub: 1,
-                                invalidateOnRefresh: true
-                            }
+                    gsap.to(headlineChars, {
+                        opacity: 1,
+                        rotateX: 0,
+                        y: 0,
+                        scaleY: 1,
+                        stagger: 0.04,
+                        ease: 'back.out(1.5)',
+                        scrollTrigger: {
+                            trigger: headline,
+                            containerAnimation: desktopTween,
+                            start: "left 60%",
+                            end: "left 20%",
+                            scrub: 1,
+                            invalidateOnRefresh: true
                         }
-                    );
+                    });
                 }
 
-                // Stats Cards Desktop - Individual Triggers
-                cards.forEach((card, index) => {
-                    gsap.fromTo(card,
-                        { opacity: 0, scale: 0.8, y: 50, filter: 'blur(5px)' },
-                        {
-                            opacity: 1, scale: 1, y: 0, filter: 'blur(0px)',
-                            ease: 'power2.out',
-                            scrollTrigger: {
-                                trigger: card,
-                                containerAnimation: desktopTween,
-                                start: "left 70%", // Triggers when the card itself enters
-                                end: "left 30%",
-                                scrub: 1,
-                                invalidateOnRefresh: true
-                            }
+                // Stats Cards Desktop
+                cards.forEach((card) => {
+                    gsap.to(card, {
+                        opacity: 1, scale: 1, y: 0, filter: 'blur(0px)',
+                        ease: 'power2.out',
+                        scrollTrigger: {
+                            trigger: card,
+                            containerAnimation: desktopTween,
+                            start: "left 70%",
+                            end: "left 30%",
+                            scrub: 1,
+                            invalidateOnRefresh: true
                         }
-                    );
+                    });
                 });
             });
 
@@ -185,6 +173,7 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
 
         return () => ctx.revert();
     }, [desktopTween]);
+
 
     // Register magnetic areas for desktop hover effects
     const setCardRef = useCallback((el: HTMLDivElement | null, index: number) => {

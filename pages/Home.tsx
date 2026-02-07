@@ -159,7 +159,7 @@ const Home: React.FC = () => {
 
 
   return (
-    <div ref={containerRef} className="relative bg-white dark:bg-brand-dark text-gray-900 dark:text-white transition-colors duration-500 overflow-x-hidden">
+    <div ref={containerRef} className="relative bg-white dark:bg-brand-dark text-gray-900 dark:text-white transition-colors duration-500">
       <InteractiveHeroBackground />
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="hero-bg-glow absolute -top-[20%] -right-[10%] w-[100vw] h-[100vw] bg-blue-600/5 dark:bg-blue-500/10 rounded-full blur-[120px] opacity-0"></div>

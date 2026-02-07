@@ -246,7 +246,7 @@ const Navbar: React.FC = () => {
               href="https://wa.me/+260570135415"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-12 h-12 rounded-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400 transition-all"
+              className="w-12 h-12 rounded-full px-6 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400 transition-all"
             >
               <i className="fa-brands fa-whatsapp text-xl"></i>
             </a>

@@ -77,7 +77,6 @@ const stats = [
 const About: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLElement>(null);
-  const motionPathCtxRef = useRef<gsap.Context | null>(null);
 
   useSEO({
     title: 'About Us | Kytriq Technologies',
@@ -114,12 +113,14 @@ const About: React.FC = () => {
 
         // ===== HERO SECTION - SplitText Animation =====
         const heroSection = container.querySelector('.hero-section');
-        const heroLabel = heroSection?.querySelector('.hero-label');
-        const heroTitleChars = heroSection?.querySelectorAll('.hero-title .letter-reveal');
-        const heroDesc = heroSection?.querySelector('.hero-desc');
+        if (!heroSection) return; // Exit early if hero section doesn't exist
+
+        const heroLabel = heroSection.querySelector('.hero-label');
+        const heroTitleChars = heroSection.querySelectorAll('.hero-title .letter-reveal');
+        const heroDesc = heroSection.querySelector('.hero-desc');
         const parallaxBg = container.querySelector('.parallax-bg');
 
-        // Set initial states
+        // Set initial states only if elements exist
         if (heroLabel) gsap.set(heroLabel, { y: 40, opacity: 0 });
         if (heroTitleChars && heroTitleChars.length > 0) {
           gsap.set(heroTitleChars, {
@@ -131,31 +132,40 @@ const About: React.FC = () => {
         }
         if (heroDesc) gsap.set(heroDesc, { y: 60, opacity: 0, filter: isDesktop ? 'blur(10px)' : 'none' });
 
-        // Hero entrance timeline
-        const heroTl = gsap.timeline({
-          scrollTrigger: {
-            trigger: heroSection,
-            start: 'top 80%',
-            once: true
-          }
-        });
+        // Hero entrance timeline - only create if we have elements to animate
+        if (heroLabel || (heroTitleChars && heroTitleChars.length > 0) || heroDesc) {
+          const heroTl = gsap.timeline({
+            scrollTrigger: {
+              trigger: heroSection,
+              start: 'top 80%',
+              once: true
+            }
+          });
 
-        heroTl
-          .to(heroLabel, { y: 0, opacity: 1, duration: baseDuration * 0.8, ease: 'power3.out' })
-          .to(heroTitleChars, {
-            y: 0,
-            opacity: 1,
-            rotateX: 0,
-            duration: baseDuration * 1.4,
-            stagger: { amount: prefersReducedMotion ? 0 : 0.8, from: 'start' },
-            ease: 'expo.out'
-          }, '-=0.4')
-          .to(heroDesc, {
-            y: 0,
-            opacity: 1,
-            filter: 'blur(0px)',
-            duration: baseDuration * 1.2
-          }, '-=0.6');
+          if (heroLabel) {
+            heroTl.to(heroLabel, { y: 0, opacity: 1, duration: baseDuration * 0.8, ease: 'power3.out' });
+          }
+
+          if (heroTitleChars && heroTitleChars.length > 0) {
+            heroTl.to(heroTitleChars, {
+              y: 0,
+              opacity: 1,
+              rotateX: 0,
+              duration: baseDuration * 1.4,
+              stagger: { amount: prefersReducedMotion ? 0 : 0.8, from: 'start' },
+              ease: 'expo.out'
+            }, heroLabel ? '-=0.4' : 0);
+          }
+
+          if (heroDesc) {
+            heroTl.to(heroDesc, {
+              y: 0,
+              opacity: 1,
+              filter: 'blur(0px)',
+              duration: baseDuration * 1.2
+            }, (heroLabel || (heroTitleChars && heroTitleChars.length > 0)) ? '-=0.6' : 0);
+          }
+        }
 
         // Parallax background on scroll
         if (parallaxBg && isDesktop && !prefersReducedMotion) {
@@ -252,146 +262,160 @@ const About: React.FC = () => {
 
         // ===== PHILOSOPHY SECTION =====
         const philoSection = container.querySelector('.philosophy-section');
-        const philoHeader = philoSection?.querySelector('.section-header');
-        const philoTitleChars = philoSection?.querySelectorAll('.section-title .letter-reveal');
-        const philoCards = container.querySelectorAll<HTMLElement>('.philosophy-card');
+        if (philoSection) {
+          const philoHeader = philoSection.querySelector('.section-header');
+          const philoTitleChars = philoSection.querySelectorAll('.section-title .letter-reveal');
+          const philoCards = container.querySelectorAll<HTMLElement>('.philosophy-card');
 
-        if (philoHeader) gsap.set(philoHeader, { y: 50, opacity: 0 });
-        if (philoTitleChars && philoTitleChars.length > 0) {
-          gsap.set(philoTitleChars, { y: 60, opacity: 0, rotateX: -60 });
-        }
-
-        const philoTl = gsap.timeline({
-          scrollTrigger: {
-            trigger: philoSection,
-            start: 'top 75%',
-            once: true
+          if (philoHeader) gsap.set(philoHeader, { y: 50, opacity: 0 });
+          if (philoTitleChars && philoTitleChars.length > 0) {
+            gsap.set(philoTitleChars, { y: 60, opacity: 0, rotateX: -60 });
           }
-        });
 
-        philoTl
-          .to(philoHeader, { y: 0, opacity: 1, duration: baseDuration * 0.8 })
-          .to(philoTitleChars, {
-            y: 0,
-            opacity: 1,
-            rotateX: 0,
-            duration: baseDuration * 1.2,
-            stagger: prefersReducedMotion ? 0 : 0.04,
-            ease: 'expo.out'
-          }, '-=0.5');
-
-        philoCards.forEach((card, i) => {
-          const icon = card.querySelector('.philosophy-icon');
-          gsap.set(card, { y: 60, opacity: 0, scale: 0.9 });
-
-          gsap.to(card, {
-            y: 0,
-            opacity: 1,
-            scale: 1,
-            duration: baseDuration * 1.1,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: card,
-              start: isDesktop ? 'top 85%' : 'top 92%',
-              once: true
-            },
-            delay: isDesktop ? i * 0.1 : 0
-          });
-
-          if (isDesktop && !prefersReducedMotion) {
-            const handleEnter = () => {
-              gsap.to(card, { y: -8, scale: 1.03, duration: 0.3 });
-              if (icon) gsap.to(icon, { scale: 1.15, rotation: 5, duration: 0.3 });
-            };
-            const handleLeave = () => {
-              gsap.to(card, { y: 0, scale: 1, duration: 0.3 });
-              if (icon) gsap.to(icon, { scale: 1, rotation: 0, duration: 0.3 });
-            };
-            card.addEventListener('mouseenter', handleEnter);
-            card.addEventListener('mouseleave', handleLeave);
-            cleanupFns.push(() => {
-              card.removeEventListener('mouseenter', handleEnter);
-              card.removeEventListener('mouseleave', handleLeave);
+          if (philoHeader || (philoTitleChars && philoTitleChars.length > 0)) {
+            const philoTl = gsap.timeline({
+              scrollTrigger: {
+                trigger: philoSection,
+                start: 'top 75%',
+                once: true
+              }
             });
+
+            if (philoHeader) {
+              philoTl.to(philoHeader, { y: 0, opacity: 1, duration: baseDuration * 0.8 });
+            }
+            if (philoTitleChars && philoTitleChars.length > 0) {
+              philoTl.to(philoTitleChars, {
+                y: 0,
+                opacity: 1,
+                rotateX: 0,
+                duration: baseDuration * 1.2,
+                stagger: prefersReducedMotion ? 0 : 0.04,
+                ease: 'expo.out'
+              }, philoHeader ? '-=0.5' : 0);
+            }
           }
-        });
+
+          philoCards.forEach((card, i) => {
+            const icon = card.querySelector('.philosophy-icon');
+            gsap.set(card, { y: 60, opacity: 0, scale: 0.9 });
+
+            gsap.to(card, {
+              y: 0,
+              opacity: 1,
+              scale: 1,
+              duration: baseDuration * 1.1,
+              ease: 'power3.out',
+              scrollTrigger: {
+                trigger: card,
+                start: isDesktop ? 'top 85%' : 'top 92%',
+                once: true
+              },
+              delay: isDesktop ? i * 0.1 : 0
+            });
+
+            if (isDesktop && !prefersReducedMotion) {
+              const handleEnter = () => {
+                gsap.to(card, { y: -8, scale: 1.03, duration: 0.3 });
+                if (icon) gsap.to(icon, { scale: 1.15, rotation: 5, duration: 0.3 });
+              };
+              const handleLeave = () => {
+                gsap.to(card, { y: 0, scale: 1, duration: 0.3 });
+                if (icon) gsap.to(icon, { scale: 1, rotation: 0, duration: 0.3 });
+              };
+              card.addEventListener('mouseenter', handleEnter);
+              card.addEventListener('mouseleave', handleLeave);
+              cleanupFns.push(() => {
+                card.removeEventListener('mouseenter', handleEnter);
+                card.removeEventListener('mouseleave', handleLeave);
+              });
+            }
+          });
+        }
 
         // ===== STATS SECTION =====
         const statsSection = container.querySelector('.stats-section');
-        const statsHeader = statsSection?.querySelector('.section-header');
-        const statsTitleChars = statsSection?.querySelectorAll('.section-title .letter-reveal');
-        const statItems = container.querySelectorAll<HTMLElement>('.stat-item');
-        const statNumbers = container.querySelectorAll<HTMLElement>('.stat-number');
+        if (statsSection) {
+          const statsHeader = statsSection.querySelector('.section-header');
+          const statsTitleChars = statsSection.querySelectorAll('.section-title .letter-reveal');
+          const statItems = container.querySelectorAll<HTMLElement>('.stat-item');
+          const statNumbers = container.querySelectorAll<HTMLElement>('.stat-number');
 
-        if (statsHeader) gsap.set(statsHeader, { y: 40, opacity: 0 });
-        if (statsTitleChars && statsTitleChars.length > 0) {
-          gsap.set(statsTitleChars, { y: 50, opacity: 0 });
-        }
-        statItems.forEach(item => gsap.set(item, { y: 50, opacity: 0, scale: 0.85 }));
-
-        const statsTl = gsap.timeline({
-          scrollTrigger: {
-            trigger: statsSection,
-            start: 'top 75%',
-            once: true
+          if (statsHeader) gsap.set(statsHeader, { y: 40, opacity: 0 });
+          if (statsTitleChars && statsTitleChars.length > 0) {
+            gsap.set(statsTitleChars, { y: 50, opacity: 0 });
           }
-        });
+          statItems.forEach(item => gsap.set(item, { y: 50, opacity: 0, scale: 0.85 }));
 
-        statsTl
-          .to(statsHeader, { y: 0, opacity: 1, duration: baseDuration * 0.8 })
-          .to(statsTitleChars, {
-            y: 0,
-            opacity: 1,
-            duration: baseDuration,
-            stagger: prefersReducedMotion ? 0 : 0.05,
-            ease: 'power2.out'
-          }, '-=0.5');
-
-        statItems.forEach((item, i) => {
-          gsap.to(item, {
-            y: 0,
-            opacity: 1,
-            scale: 1,
-            duration: baseDuration,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: item,
-              start: 'top 88%',
-              once: true
-            },
-            delay: isDesktop ? i * 0.1 : 0
-          });
-
-          if (isDesktop && !prefersReducedMotion) {
-            const handleEnter = () => gsap.to(item, { scale: 1.1, duration: 0.3 });
-            const handleLeave = () => gsap.to(item, { scale: 1, duration: 0.3 });
-            item.addEventListener('mouseenter', handleEnter);
-            item.addEventListener('mouseleave', handleLeave);
-            cleanupFns.push(() => {
-              item.removeEventListener('mouseenter', handleEnter);
-              item.removeEventListener('mouseleave', handleLeave);
-            });
-          }
-        });
-
-        // Counter animation
-        statNumbers.forEach((stat) => {
-          const value = parseInt(stat.getAttribute('data-value') || '0', 10);
-          gsap.fromTo(stat,
-            { innerText: 0 },
-            {
-              innerText: value,
-              duration: prefersReducedMotion ? 0.1 : 2.5,
-              snap: { innerText: 1 },
-              ease: 'power2.out',
+          if (statsHeader || (statsTitleChars && statsTitleChars.length > 0)) {
+            const statsTl = gsap.timeline({
               scrollTrigger: {
-                trigger: stat,
-                start: 'top 90%',
+                trigger: statsSection,
+                start: 'top 75%',
                 once: true
               }
+            });
+
+            if (statsHeader) {
+              statsTl.to(statsHeader, { y: 0, opacity: 1, duration: baseDuration * 0.8 });
             }
-          );
-        });
+            if (statsTitleChars && statsTitleChars.length > 0) {
+              statsTl.to(statsTitleChars, {
+                y: 0,
+                opacity: 1,
+                duration: baseDuration,
+                stagger: prefersReducedMotion ? 0 : 0.05,
+                ease: 'power2.out'
+              }, statsHeader ? '-=0.5' : 0);
+            }
+          }
+
+          statItems.forEach((item, i) => {
+            gsap.to(item, {
+              y: 0,
+              opacity: 1,
+              scale: 1,
+              duration: baseDuration,
+              ease: 'power3.out',
+              scrollTrigger: {
+                trigger: item,
+                start: 'top 88%',
+                once: true
+              },
+              delay: isDesktop ? i * 0.1 : 0
+            });
+
+            if (isDesktop && !prefersReducedMotion) {
+              const handleEnter = () => gsap.to(item, { scale: 1.1, duration: 0.3 });
+              const handleLeave = () => gsap.to(item, { scale: 1, duration: 0.3 });
+              item.addEventListener('mouseenter', handleEnter);
+              item.addEventListener('mouseleave', handleLeave);
+              cleanupFns.push(() => {
+                item.removeEventListener('mouseenter', handleEnter);
+                item.removeEventListener('mouseleave', handleLeave);
+              });
+            }
+          });
+
+          // Counter animation
+          statNumbers.forEach((stat) => {
+            const value = parseInt(stat.getAttribute('data-value') || '0', 10);
+            gsap.fromTo(stat,
+              { innerText: 0 },
+              {
+                innerText: value,
+                duration: prefersReducedMotion ? 0.1 : 2.5,
+                snap: { innerText: 1 },
+                ease: 'power2.out',
+                scrollTrigger: {
+                  trigger: stat,
+                  start: 'top 90%',
+                  once: true
+                }
+              }
+            );
+          });
+        }
 
         // ===== IMAGE SECTION - MASK REVEAL =====
         const imgReveal = container.querySelector('.img-reveal');

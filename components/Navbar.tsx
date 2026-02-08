@@ -11,7 +11,6 @@ const Navbar: React.FC = () => {
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(0);
   const location = useLocation();
-  const navRef = useRef<HTMLElement>(null);
   const themeBtnRef = useRef<HTMLButtonElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const menuTimelineRef = useRef<gsap.core.Timeline | null>(null);
@@ -27,11 +26,16 @@ const Navbar: React.FC = () => {
       name: 'Home',
       path: '/',
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-full h-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-        </svg>
+        <img
+          src={logo}
+          alt="Home"
+          className="w-full h-full object-contain"
+          width="40"
+          height="40"
+        />
       ),
-      gradient: 'from-blue-400 to-indigo-600'
+      gradient: 'from-gray-50 to-white dark:from-gray-800 dark:to-gray-900',
+      isLogo: true
     },
     {
       name: 'About',
@@ -65,7 +69,7 @@ const Navbar: React.FC = () => {
     },
   ], []);
 
-  // Dock action items (contact, theme toggle)
+  // Dock action items
   const dockActions = useMemo(() => [
     {
       name: 'WhatsApp',
@@ -86,12 +90,12 @@ const Navbar: React.FC = () => {
   // macOS Dock animation constants
   const DOCK_CONFIG = useMemo(() => ({
     minSize: 48,
-    maxSize: 80,
+    maxSize: 84,
     bound: 48 * Math.PI,
-    duration: 0.25
+    duration: 0.2
   }), []);
 
-  // Dock magnification effect
+  // Dock magnification effect with smooth easing
   const updateDockIcons = useCallback((pointer: number) => {
     const items = dockItemsRef.current;
     const { minSize, maxSize, bound, duration } = DOCK_CONFIG;
@@ -115,7 +119,8 @@ const Navbar: React.FC = () => {
         duration,
         x,
         scale,
-        ease: 'power2.out'
+        ease: 'power3.out',
+        overwrite: 'auto'
       });
     });
   }, [DOCK_CONFIG]);
@@ -124,10 +129,11 @@ const Navbar: React.FC = () => {
     dockItemsRef.current.forEach((item) => {
       if (!item) return;
       gsap.to(item, {
-        duration: 0.3,
+        duration: 0.4,
         scale: 1,
         x: 0,
-        ease: 'power2.out'
+        ease: 'elastic.out(1, 0.75)',
+        overwrite: 'auto'
       });
     });
   }, []);
@@ -135,14 +141,18 @@ const Navbar: React.FC = () => {
   // Set up dock event listeners
   useEffect(() => {
     const dock = dockRef.current;
-    if (!dock || window.innerWidth < 768) return;
+    if (!dock) return;
+
+    // Magnification only on desktop
+    if (window.innerWidth < 768) return;
 
     const firstItem = dockItemsRef.current[0];
     if (!firstItem) return;
 
     const handleMouseMove = (event: MouseEvent) => {
-      const offset = dock.getBoundingClientRect().left + firstItem.offsetLeft;
-      updateDockIcons(event.clientX - offset);
+      const rect = dock.getBoundingClientRect();
+      const pointer = event.clientX - rect.left - (firstItem.offsetLeft || 0);
+      updateDockIcons(pointer);
     };
 
     const handleMouseLeave = () => {
@@ -152,7 +162,7 @@ const Navbar: React.FC = () => {
     dock.addEventListener('mousemove', handleMouseMove);
     dock.addEventListener('mouseleave', handleMouseLeave);
 
-    // Initial setup for dock items
+    // Initial setup with refined transform origin
     gsap.set(dockItemsRef.current.filter(Boolean), {
       transformOrigin: '50% 100%',
       height: DOCK_CONFIG.minSize
@@ -164,16 +174,15 @@ const Navbar: React.FC = () => {
     };
   }, [updateDockIcons, resetDockIcons, DOCK_CONFIG.minSize]);
 
-  // Optimized scroll handler with requestAnimationFrame
+  // Hide dock on scroll (optional for cleaner experience)
   useEffect(() => {
     let ticking = false;
     const handleScroll = () => {
       if (!ticking) {
         requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
-          if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
+          if (currentScrollY > lastScrollY.current && currentScrollY > 200) {
             setIsVisible(false);
-            if (isOpen) setIsOpen(false);
           } else {
             setIsVisible(true);
           }
@@ -186,30 +195,20 @@ const Navbar: React.FC = () => {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isOpen]);
+  }, []);
 
+  // Animate dock visibility
   useEffect(() => {
-    gsap.to(navRef.current, {
-      y: isVisible ? 0 : -100,
-      opacity: isVisible ? 1 : 0,
-      duration: 0.4,
-      ease: 'power3.out'
-    });
-  }, [isVisible]);
-
-  useLayoutEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.from('.nav-item', {
-        y: -20,
-        opacity: 0,
-        duration: 0.8,
-        stagger: 0.08,
-        ease: 'power4.out',
-        delay: 1.5
+    const container = dockRef.current?.parentElement;
+    if (container) {
+      gsap.to(container, {
+        y: isVisible ? 0 : 120,
+        opacity: isVisible ? 1 : 0,
+        duration: 0.5,
+        ease: 'power4.out'
       });
-    });
-    return () => ctx.revert();
-  }, [navRef.current]);
+    }
+  }, [isVisible]);
 
   useEffect(() => {
     const currentIsDark = document.documentElement.classList.contains('dark');
@@ -357,65 +356,16 @@ const Navbar: React.FC = () => {
 
   return (
     <>
-      {/* Top Navigation Bar with Logo */}
-      <nav ref={navRef} className="fixed top-0 left-0 right-0 z-50 glass-nav transition-colors duration-500">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <Link to="/" className="flex items-center group magnetic-area nav-item relative z-[60]">
-            <img
-              src={logo}
-              alt="Kytriq Logo"
-              width="112"
-              height="48"
-              className="h-10 md:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
-            />
-          </Link>
-
-          {/* Mobile Toggle */}
-          <div className="flex items-center space-x-3 md:hidden relative z-[60]">
-            <button
-              onClick={toggleTheme}
-              className="text-gray-600 dark:text-gray-300 w-11 h-11 flex items-center justify-center rounded-full bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm"
-              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              {isDark ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
-              )}
-            </button>
-            <button
-              ref={hamburgerRef}
-              className="w-11 h-11 flex flex-col items-center justify-center gap-1.5 rounded-full bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm"
-              onClick={handleMenuToggle}
-              aria-label={isOpen ? 'Close menu' : 'Open menu'}
-              aria-expanded={isOpen}
-            >
-              <span className="hamburger-line block w-5 h-0.5 bg-gray-600 dark:bg-gray-300 origin-center"></span>
-              <span className="hamburger-line block w-5 h-0.5 bg-gray-600 dark:bg-gray-300 origin-center"></span>
-              <span className="hamburger-line block w-5 h-0.5 bg-gray-600 dark:bg-gray-300 origin-center"></span>
-            </button>
-          </div>
-
-          {/* Empty space for desktop - dock is at bottom */}
-          <div className="hidden md:block"></div>
-        </div>
-      </nav>
-
-      {/* Desktop Dock - macOS Style Bottom Navigation */}
-      <div className="hidden md:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-50 justify-center">
+      {/* Unified Floating Dock - Desktop & Tablet */}
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] transition-all flex items-end justify-center pointer-events-none w-auto">
         <ul
           ref={dockRef}
-          className="dock-container inline-flex items-end gap-2 px-4 py-3 rounded-2xl bg-white/20 dark:bg-gray-900/30 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 shadow-2xl shadow-black/10 dark:shadow-black/30"
+          className="dock-container flex items-end gap-3 px-4 py-3 rounded-[2.5rem] bg-white/30 dark:bg-gray-900/40 backdrop-blur-2xl border border-white/40 dark:border-gray-700/50 shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] pointer-events-auto transition-colors duration-500"
           style={{
-            height: '70px',
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 100%)',
+            height: '74px',
           }}
         >
-          {/* Navigation Links */}
+          {/* Navigation Links including Logo */}
           {navLinks.map((link, index) => (
             <li
               key={link.name}
@@ -425,34 +375,34 @@ const Navbar: React.FC = () => {
             >
               <Link
                 to={link.path}
-                className={`dock-link group relative flex items-center justify-center w-full h-full rounded-xl transition-all duration-200 ${isActive(link.path)
-                    ? `bg-gradient-to-br ${link.gradient} shadow-lg`
-                    : 'bg-white/60 dark:bg-gray-800/60 hover:bg-white/80 dark:hover:bg-gray-700/80'
-                  }`}
+                className={`dock-link group relative flex items-center justify-center w-full h-full rounded-2xl transition-all duration-300 ${isActive(link.path)
+                    ? `bg-gradient-to-br ${link.gradient} shadow-lg ring-2 ring-white/20`
+                    : 'bg-white/60 dark:bg-gray-800/60 hover:bg-white/90 dark:hover:bg-gray-700/80'
+                  } ${link.isLogo ? 'overflow-hidden p-1.5' : ''}`}
                 aria-label={link.name}
               >
-                <span className={`w-6 h-6 ${isActive(link.path) ? 'text-white' : 'text-gray-700 dark:text-gray-200'}`}>
+                <span className={`w-6 h-6 flex items-center justify-center transition-transform duration-300 group-active:scale-90 ${isActive(link.path) && !link.isLogo ? 'text-white' : 'text-gray-700 dark:text-gray-200'}`}>
                   {link.icon}
                 </span>
 
                 {/* Tooltip */}
-                <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-lg bg-gray-900 dark:bg-gray-700 text-white text-xs font-medium whitespace-nowrap opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 pointer-events-none shadow-lg">
+                <span className="absolute -top-14 left-1/2 -translate-x-1/2 px-4 py-2 rounded-xl bg-gray-900/90 dark:bg-gray-800/95 backdrop-blur-md text-white text-[0.8rem] font-semibold whitespace-nowrap opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 pointer-events-none shadow-xl border border-white/10">
                   {link.name}
-                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45"></span>
+                  <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-gray-900/90 dark:border-t-gray-800/95"></span>
                 </span>
-              </Link>
 
-              {/* Active indicator dot */}
-              {isActive(link.path) && (
-                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-gray-600 dark:bg-gray-300"></span>
-              )}
+                {/* Active Indicator dot inside dock */}
+                {isActive(link.path) && (
+                  <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]"></span>
+                )}
+              </Link>
             </li>
           ))}
 
-          {/* Separator */}
-          <li className="w-px h-8 bg-gray-300/50 dark:bg-gray-600/50 mx-1 self-center"></li>
+          {/* Separator - Sophisticated Vertical Line */}
+          <li className="w-[1.5px] h-10 bg-gradient-to-b from-transparent via-gray-400/40 dark:via-gray-600/40 to-transparent mx-1 self-center rounded-full shrink-0"></li>
 
-          {/* Action Items (Contact) */}
+          {/* Action Items */}
           {dockActions.map((action, index) => (
             <li
               key={action.name}
@@ -464,15 +414,15 @@ const Navbar: React.FC = () => {
                 href={action.href}
                 target={action.external ? '_blank' : undefined}
                 rel={action.external ? 'noopener noreferrer' : undefined}
-                className={`dock-link group relative flex items-center justify-center w-full h-full rounded-xl bg-gradient-to-br ${action.gradient} text-white shadow-md hover:shadow-lg transition-all duration-200`}
+                className={`dock-link group relative flex items-center justify-center w-full h-full rounded-2xl bg-gradient-to-br ${action.gradient} text-white shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group-active:scale-95`}
                 aria-label={action.name}
               >
                 {action.icon}
 
                 {/* Tooltip */}
-                <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-lg bg-gray-900 dark:bg-gray-700 text-white text-xs font-medium whitespace-nowrap opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 pointer-events-none shadow-lg">
+                <span className="absolute -top-14 left-1/2 -translate-x-1/2 px-4 py-2 rounded-xl bg-gray-900/90 dark:bg-gray-800/95 backdrop-blur-md text-white text-[0.8rem] font-semibold whitespace-nowrap opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 pointer-events-none shadow-xl border border-white/10">
                   {action.name}
-                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45"></span>
+                  <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-gray-900/90 dark:border-t-gray-800/95"></span>
                 </span>
               </a>
             </li>
@@ -487,19 +437,75 @@ const Navbar: React.FC = () => {
             <button
               ref={themeBtnRef}
               onClick={toggleTheme}
-              className="dock-link group relative flex items-center justify-center w-full h-full rounded-xl bg-white/60 dark:bg-gray-800/60 hover:bg-white/80 dark:hover:bg-gray-700/80 text-gray-700 dark:text-gray-200 transition-all duration-200"
+              className="dock-link group relative flex items-center justify-center w-full h-full rounded-2xl bg-white/60 dark:bg-gray-800/60 hover:bg-white/95 dark:hover:bg-gray-700/80 text-gray-700 dark:text-gray-200 transition-all duration-300"
               aria-label="Toggle Theme"
             >
-              <i className={`fa-solid ${isDark ? 'fa-sun' : 'fa-moon'} text-lg`}></i>
+              <i className={`fa-solid ${isDark ? 'fa-sun' : 'fa-moon'} text-lg transition-transform duration-500 group-hover:rotate-12`}></i>
 
               {/* Tooltip */}
-              <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-lg bg-gray-900 dark:bg-gray-700 text-white text-xs font-medium whitespace-nowrap opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 pointer-events-none shadow-lg">
+              <span className="absolute -top-14 left-1/2 -translate-x-1/2 px-4 py-2 rounded-xl bg-gray-900/90 dark:bg-gray-800/95 backdrop-blur-md text-white text-[0.8rem] font-semibold whitespace-nowrap opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 pointer-events-none shadow-xl border border-white/10">
                 {isDark ? 'Light Mode' : 'Dark Mode'}
-                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45"></span>
+                <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-gray-900/90 dark:border-t-gray-800/95"></span>
               </span>
             </button>
           </li>
         </ul>
+      </div>
+
+      {/* Mobile-only subtle Logo indicator at top left? No, let's keep it purely in dock for minimalism */}
+
+      {/* Visual background cleanup for dock positioning */}
+      <style>{`
+        .dock-container {
+          transition: background-color 0.5s ease;
+        }
+        @media (max-width: 767px) {
+          .dock-container {
+            width: calc(100vw - 32px);
+            justify-content: space-between;
+            overflow-x: auto;
+            scrollbar-width: none;
+            border-radius: 2rem;
+          }
+          .dock-container::-webkit-scrollbar {
+            display: none;
+          }
+          .dock-item {
+            flex-shrink: 0;
+          }
+        }
+      `}</style>
+
+      {/* Mobile Toggle (remains at top right for mobile menu) */}
+      <div className="fixed top-0 right-0 p-4 z-[60] md:hidden">
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={toggleTheme}
+            className="text-gray-600 dark:text-gray-300 w-11 h-11 flex items-center justify-center rounded-full bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm"
+            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {isDark ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            )}
+          </button>
+          <button
+            ref={hamburgerRef}
+            className="w-11 h-11 flex flex-col items-center justify-center gap-1.5 rounded-full bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm"
+            onClick={handleMenuToggle}
+            aria-label={isOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={isOpen}
+          >
+            <span className="hamburger-line block w-5 h-0.5 bg-gray-600 dark:bg-gray-300 origin-center"></span>
+            <span className="hamburger-line block w-5 h-0.5 bg-gray-600 dark:bg-gray-300 origin-center"></span>
+            <span className="hamburger-line block w-5 h-0.5 bg-gray-600 dark:bg-gray-300 origin-center"></span>
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu - Full Screen Opaque Overlay */}
@@ -611,5 +617,3 @@ const Navbar: React.FC = () => {
 };
 
 export default Navbar;
-
-

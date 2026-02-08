@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import SplitText from '../../SplitText';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import profileImg from '@/assets/profile.jpg';
+import EngineeringGrid from './EngineeringGrid';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -57,14 +57,6 @@ const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea, d
                 opacity: 0,
                 scale: 0.8,
                 willChange: 'transform, opacity'
-            });
-        }
-        if (imageContainer) {
-            gsap.set(imageContainer, {
-                opacity: 0,
-                scale: 0.85,
-                rotate: 12,
-                filter: 'blur(8px)'
             });
         }
 
@@ -165,22 +157,7 @@ const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea, d
                     });
                 }
 
-                // Image Entrance
-                if (imageContainer) {
-                    gsap.to(imageContainer, {
-                        opacity: 1, scale: 1, rotate: 6, filter: 'blur(0px)',
-                        duration: 1.5,
-                        ease: 'power3.out',
-                        scrollTrigger: {
-                            trigger: imageContainer,
-                            containerAnimation: desktopTween,
-                            start: "left 60%",
-                            end: "left 20%",
-                            scrub: 1,
-                            invalidateOnRefresh: true
-                        }
-                    });
-                }
+                // Image Entrance - Handled by EngineeringGrid
             });
 
         }, container);
@@ -222,20 +199,12 @@ const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea, d
                     </p>
                 </div>
 
-                {/* Desktop Image */}
+                {/* Engineering Grid Interactive Element */}
                 <div
                     ref={imageContainerRef}
-                    className="relative hidden lg:block reveal-target"
+                    className="relative hidden lg:block w-full h-full max-w-[600px] flex items-center justify-center"
                 >
-                    <div className="w-[550px] h-[550px] bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-[5rem] rotate-6 relative overflow-hidden group shadow-2xl lg:hover:rotate-3 lg:hover:scale-105 transition-all duration-700 shadow-blue-600/20">
-                        <img
-                            src={profileImg}
-                            className="w-full h-full object-cover grayscale opacity-50 group-hover:scale-110 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-1000 -rotate-6"
-                            alt="The Workshop"
-                            decoding="async"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-blue-600/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    </div>
+                    <EngineeringGrid desktopTween={desktopTween} />
                 </div>
             </div>
         </div>

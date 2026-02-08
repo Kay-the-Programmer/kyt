@@ -187,25 +187,6 @@ const Contact: React.FC = () => {
             colorClass="text-indigo-600"
           />
         </div>
-
-        <div className="text-center">
-          <h3 className="text-sm font-black uppercase tracking-[0.4em] text-gray-400 dark:text-gray-500 mb-10">Follow the Journey</h3>
-          <div ref={socialRef} className="flex justify-center space-x-10 md:space-x-16">
-            {[
-              { icon: 'fa-linkedin', href: '#', color: 'hover:text-blue-600' },
-              { icon: 'fa-x-twitter', href: '#', color: 'hover:text-gray-900 dark:hover:text-white' },
-              { icon: 'fa-github', href: '#', color: 'hover:text-purple-600' }
-            ].map((social, i) => (
-              <a
-                key={i}
-                href={social.href}
-                className={`social-link text-3xl md:text-4xl text-gray-400/60 transition-all duration-300 ${social.color} hover:scale-125`}
-              >
-                <i className={`fa-brands ${social.icon}`}></i>
-              </a>
-            ))}
-          </div>
-        </div>
       </div>
       <Footer />
     </div>

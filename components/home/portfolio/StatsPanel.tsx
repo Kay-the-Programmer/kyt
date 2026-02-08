@@ -234,8 +234,7 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
                     <div className="w-10 sm:w-14 h-px bg-blue-600 mb-6 sm:mb-8" />
                     <h2 className="text-3xl sm:text-5xl md:text-7xl lg:text-[8.5rem] font-heading font-black text-gray-900 dark:text-white tracking-tighter leading-[0.9]">
                         <SplitText text="Architecting" className="inline-block" />
-                        <br className="hidden sm:block" />
-                        <span className="sm:hidden"> </span>
+                        <br/>
                         <span className="text-blue-600 inline-block">
                             <SplitText text="Absolute Trust." />
                         </span>

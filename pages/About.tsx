@@ -5,6 +5,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 import { useSEO } from '../hooks/useSEO';
 import SplitText from '../components/SplitText';
+import NexusCore from '../components/about/NexusCore';
 
 const Footer = React.lazy(() => import('../components/Footer'));
 
@@ -67,9 +68,7 @@ const philosophyItems = [
 
 // Stats data
 const stats = [
-  { label: 'Active Systems', value: 12, suffix: '+' },
   { label: 'Success Rate', value: 99, suffix: '%' },
-  { label: 'Lines of Code', value: 250, suffix: 'k+' },
   { label: 'Uptime Core', value: 99, suffix: '.9%' }
 ];
 
@@ -417,25 +416,8 @@ const About: React.FC = () => {
           });
         }
 
-        // ===== IMAGE SECTION - MASK REVEAL =====
-        const imgReveal = container.querySelector('.img-reveal');
-        if (imgReveal) {
-          gsap.set(imgReveal, {
-            clipPath: 'polygon(0 100%, 100% 100%, 100% 100%, 0 100%)',
-            scale: 1.15
-          });
-          gsap.to(imgReveal, {
-            clipPath: 'polygon(0 0%, 100% 0%, 100% 100%, 0 100%)',
-            scale: 1,
-            duration: baseDuration * 1.8,
-            ease: 'power3.inOut',
-            scrollTrigger: {
-              trigger: imgReveal,
-              start: isDesktop ? 'top 70%' : 'top 85%',
-              once: true
-            }
-          });
-        }
+        // ===== NEXUS CORE INTEGRATION =====
+        // (Animations are handled inside NexusCore.tsx)
 
         // ===== DECORATIVE ELEMENTS =====
         const decorElements = container.querySelectorAll<HTMLElement>('.decor-element');
@@ -556,7 +538,7 @@ const About: React.FC = () => {
                   </div>
 
                   <h3 className="card-title text-2xl md:text-4xl lg:text-5xl font-heading font-bold text-gray-900 dark:text-white mb-6 leading-tight">
-                    <SplitText text="Technology For" className="block" />
+                    <SplitText text="Technology For" className="block" /> <br/>
                     <span className="gradient-text"><SplitText text="Everyone" isGradient={true} /></span>
                   </h3>
 
@@ -575,19 +557,9 @@ const About: React.FC = () => {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24 items-center">
 
-            {/* Image */}
-            <div className="img-reveal order-2 lg:order-1 relative overflow-hidden rounded-[2rem] md:rounded-[4rem]">
-              <div className="aspect-[4/5] bg-gray-100 dark:bg-gray-900/30 p-1.5 md:p-2.5 rounded-[2rem] md:rounded-[4rem] border border-gray-200/50 dark:border-gray-800">
-                <img
-                  src="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&q=80&w=1000"
-                  srcSet="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&q=80&w=600 600w, https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&q=80&w=1000 1000w"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  alt="Team collaboration and innovation"
-                  loading="lazy"
-                  className="w-full h-full object-cover rounded-[1.6rem] md:rounded-[3.3rem] grayscale-[0.3] hover:grayscale-0 transition-all duration-1000"
-                />
-              </div>
-              <div className="decor-element absolute -bottom-12 -left-12 w-56 md:w-72 h-56 md:h-72 bg-blue-600/15 rounded-full blur-[80px] -z-10" aria-hidden="true" />
+            {/* Nexus Core Interactive Element */}
+            <div className="order-2 lg:order-1 relative min-h-[400px] md:min-h-[500px]">
+              <NexusCore />
             </div>
 
             {/* Content */}

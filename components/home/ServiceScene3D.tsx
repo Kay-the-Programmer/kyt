@@ -10,20 +10,13 @@ interface ServiceScene3DProps {
     activeIndex: number;
 }
 
-// Optimized loading fallback
+// Simple loading fallback
 const LoadingFallback = memo(() => {
     const meshRef = useRef<THREE.Mesh>(null);
-    let frameCount = 0;
 
     useFrame(({ clock }) => {
-        // Frame skip
-        frameCount++;
-        if (frameCount % 2 !== 0) return;
-
         if (meshRef.current) {
-            const scale = 1 + Math.sin(clock.getElapsedTime() * 3) * 0.2;
-            meshRef.current.scale.setScalar(scale);
-            meshRef.current.rotation.y = clock.getElapsedTime();
+            meshRef.current.rotation.y = clock.getElapsedTime() * 0.5;
         }
     });
 
@@ -38,7 +31,7 @@ const LoadingFallback = memo(() => {
 
 LoadingFallback.displayName = 'LoadingFallback';
 
-// Optimized transition wrapper
+// Smooth transition wrapper - no bounce, just linear fade
 interface TransitionWrapperProps {
     isActive: boolean;
     children: React.ReactNode;
@@ -48,32 +41,25 @@ const TransitionWrapper = memo<TransitionWrapperProps>(({ isActive, children }) 
     const groupRef = useRef<THREE.Group>(null);
     const [mounted, setMounted] = useState(false);
     const targetScale = useRef(0);
-    let frameCount = 0;
 
     useEffect(() => {
         if (isActive) {
             setMounted(true);
-            // Delay to allow mounting
-            requestAnimationFrame(() => {
-                targetScale.current = 1;
-            });
+            targetScale.current = 1;
         } else {
             targetScale.current = 0;
-            const timer = setTimeout(() => setMounted(false), 400);
+            const timer = setTimeout(() => setMounted(false), 500);
             return () => clearTimeout(timer);
         }
     }, [isActive]);
 
     useFrame((_, delta) => {
-        // Frame skip for performance
-        frameCount++;
-        if (frameCount % 2 !== 0) return;
+        if (!groupRef.current) return;
 
-        if (groupRef.current) {
-            const currentScale = groupRef.current.scale.x;
-            const newScale = THREE.MathUtils.lerp(currentScale, targetScale.current, delta * 6);
-            groupRef.current.scale.setScalar(Math.max(0.001, newScale)); // Prevent zero scale
-        }
+        // Simple smooth lerp - no bounce
+        const currentScale = groupRef.current.scale.x;
+        const newScale = THREE.MathUtils.lerp(currentScale, targetScale.current, delta * 4);
+        groupRef.current.scale.setScalar(Math.max(0.001, newScale));
     });
 
     if (!mounted && !isActive) return null;
@@ -87,16 +73,16 @@ const TransitionWrapper = memo<TransitionWrapperProps>(({ isActive, children }) 
 
 TransitionWrapper.displayName = 'TransitionWrapper';
 
-// Optimized scene content
+// Scene content
 const SceneContent = memo<{ activeIndex: number }>(({ activeIndex }) => {
     return (
         <>
-            {/* Optimized lighting - fewer lights */}
-            <ambientLight intensity={0.35} />
-            <directionalLight position={[5, 5, 5]} intensity={0.6} />
-            <directionalLight position={[-3, -3, 3]} intensity={0.25} color="#60a5fa" />
+            {/* Lighting */}
+            <ambientLight intensity={0.4} />
+            <directionalLight position={[5, 5, 5]} intensity={0.7} />
+            <directionalLight position={[-3, -3, 3]} intensity={0.3} color="#60a5fa" />
 
-            {/* Scene transitions */}
+            {/* Scenes */}
             <TransitionWrapper isActive={activeIndex === 0}>
                 <WebAppScene />
             </TransitionWrapper>
@@ -112,27 +98,23 @@ const SceneContent = memo<{ activeIndex: number }>(({ activeIndex }) => {
 
 SceneContent.displayName = 'SceneContent';
 
-// Optimized camera with frame skipping
+// Smooth camera - no bounce
 const AnimatedCamera = memo<{ activeIndex: number }>(({ activeIndex }) => {
     const cameraRef = useRef<THREE.PerspectiveCamera>(null);
     const targetPosition = useRef(new THREE.Vector3(0, 0, 4));
-    let frameCount = 0;
 
     useEffect(() => {
         const positions = [
             new THREE.Vector3(0.1, 0.05, 4),
-            new THREE.Vector3(-0.05, 0.1, 3.9),
+            new THREE.Vector3(-0.05, 0.08, 3.9),
             new THREE.Vector3(0.05, -0.05, 4.1),
         ];
         targetPosition.current = positions[activeIndex] || positions[0];
     }, [activeIndex]);
 
     useFrame((_, delta) => {
-        // Skip frames
-        frameCount++;
-        if (frameCount % 3 !== 0) return;
-
         if (cameraRef.current) {
+            // Simple smooth lerp
             cameraRef.current.position.lerp(targetPosition.current, delta * 3);
         }
     });
@@ -142,12 +124,11 @@ const AnimatedCamera = memo<{ activeIndex: number }>(({ activeIndex }) => {
 
 AnimatedCamera.displayName = 'AnimatedCamera';
 
-// Performance monitor - disable in production
-const PerformanceOptimizer: React.FC = () => {
+// Renderer optimizer
+const RendererOptimizer: React.FC = () => {
     const { gl } = useThree();
 
     useEffect(() => {
-        // Optimize renderer settings
         gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     }, [gl]);
 
@@ -158,19 +139,16 @@ const ServiceScene3D: React.FC<ServiceScene3DProps> = ({ activeIndex }) => {
     return (
         <div className="w-full h-full" style={{ minHeight: '400px' }}>
             <Canvas
-                dpr={[1, 1.5]} // Reduced max DPR for performance
+                dpr={[1, 2]}
                 gl={{
                     antialias: true,
                     alpha: true,
                     powerPreference: 'high-performance',
-                    stencil: false, // Disable if not needed
-                    depth: true,
                 }}
                 style={{ background: 'transparent' }}
-                frameloop="demand" // Only render when needed
-                performance={{ min: 0.5 }} // Allow frame rate to drop
+                frameloop="always"
             >
-                <PerformanceOptimizer />
+                <RendererOptimizer />
                 <AnimatedCamera activeIndex={activeIndex} />
 
                 <Suspense fallback={<LoadingFallback />}>
@@ -183,9 +161,9 @@ const ServiceScene3D: React.FC<ServiceScene3DProps> = ({ activeIndex }) => {
                     maxPolarAngle={Math.PI / 1.7}
                     minPolarAngle={Math.PI / 2.6}
                     autoRotate
-                    autoRotateSpeed={0.25}
+                    autoRotateSpeed={0.4}
                     enableDamping
-                    dampingFactor={0.03}
+                    dampingFactor={0.05}
                 />
             </Canvas>
         </div>

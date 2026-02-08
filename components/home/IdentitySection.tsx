@@ -145,7 +145,7 @@ const IdentitySection: React.FC = () => {
   const features = useMemo(() => [
     {
       title: 'Web/Desktop Applications',
-      text: 'Crafting responsive, performant web and desktop experiences that scale with your business needs.',
+      text: 'Crafting performant web and desktop experiences that scale with your business needs.',
       icon: 'fa-globe'
     },
     {

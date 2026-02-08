@@ -1,6 +1,6 @@
-import React, { useRef, useMemo, memo } from 'react';
+import React, { useRef, useMemo, memo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Float, Sphere } from '@react-three/drei';
+import { Float, Sphere, Instance, Instances } from '@react-three/drei';
 import * as THREE from 'three';
 
 // Shared geometries
@@ -31,76 +31,113 @@ const particleMaterial = new THREE.MeshStandardMaterial({
     emissiveIntensity: 1
 });
 
-// Smooth pulsing node
-const NeuralNode = memo<{ position: [number, number, number]; isOuter?: boolean; pulseDelay: number }>(({
-    position,
+// Optimized Instanced Nodes
+const InstancedNodes = memo<{ positions: [number, number, number][]; isOuter?: boolean; baseDelay: number }>(({
+    positions,
     isOuter = false,
-    pulseDelay
+    baseDelay
 }) => {
-    const ref = useRef<THREE.Mesh>(null);
+    const meshRef = useRef<THREE.InstancedMesh>(null);
+    const tempObj = useMemo(() => new THREE.Object3D(), []);
 
     useFrame(({ clock }) => {
-        if (ref.current) {
-            const t = clock.getElapsedTime() + pulseDelay;
-            const scale = 1 + Math.sin(t * 2) * 0.2;
-            ref.current.scale.setScalar(scale);
+        if (!meshRef.current) return;
+        const t = clock.getElapsedTime();
+
+        for (let i = 0; i < positions.length; i++) {
+            const delay = i * (isOuter ? 0.4 : 0.3) + baseDelay;
+            const scale = 1 + Math.sin(t * 2 + delay) * 0.2;
+
+            tempObj.position.set(positions[i][0], positions[i][1], positions[i][2]);
+            tempObj.scale.setScalar(scale);
+            tempObj.updateMatrix();
+            meshRef.current.setMatrixAt(i, tempObj.matrix);
         }
+        meshRef.current.instanceMatrix.needsUpdate = true;
     });
 
     return (
-        <mesh
-            ref={ref}
-            position={position}
-            geometry={isOuter ? nodeGeometrySmall : nodeGeometryMedium}
-            material={isOuter ? outerNodeMaterial : innerNodeMaterial}
+        <instancedMesh
+            ref={meshRef}
+            args={[isOuter ? nodeGeometrySmall : nodeGeometryMedium, isOuter ? outerNodeMaterial : innerNodeMaterial, positions.length]}
         />
     );
 });
 
-NeuralNode.displayName = 'NeuralNode';
+InstancedNodes.displayName = 'InstancedNodes';
 
-// Animated connection with pulsing opacity
-const ConnectionLine = memo<{ start: [number, number, number]; end: [number, number, number]; delay: number }>(({ start, end, delay }) => {
-    const ref = useRef<THREE.Line>(null);
+// Optimized Connections
+const Connections = memo<{ connections: { start: [number, number, number]; end: [number, number, number] }[] }>(({ connections }) => {
+    const linesRef = useRef<THREE.Group>(null);
 
-    const geometry = useMemo(() => {
-        const points = [new THREE.Vector3(...start), new THREE.Vector3(...end)];
-        return new THREE.BufferGeometry().setFromPoints(points);
-    }, [start, end]);
+    const lines = useMemo(() => {
+        return connections.map((conn, i) => {
+            const points = [new THREE.Vector3(...conn.start), new THREE.Vector3(...conn.end)];
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            const material = new THREE.LineBasicMaterial({
+                color: '#60a5fa',
+                transparent: true,
+                opacity: 0.5
+            });
+            const line = new THREE.Line(geometry, material);
+            return <primitive key={i} object={line} />;
+        });
+    }, [connections]);
 
     useFrame(({ clock }) => {
-        if (ref.current && ref.current.material) {
-            const t = clock.getElapsedTime() + delay;
-            (ref.current.material as THREE.LineBasicMaterial).opacity = 0.3 + Math.sin(t * 2) * 0.25;
+        const t = clock.getElapsedTime();
+        if (linesRef.current) {
+            linesRef.current.children.forEach((child, i) => {
+                const line = child as THREE.Line;
+                const material = line.material as THREE.LineBasicMaterial;
+                if (material) {
+                    const delay = i * 0.15;
+                    material.opacity = 0.3 + Math.sin(t * 2 + delay) * 0.25;
+                }
+            });
         }
+    });
+
+    return <group ref={linesRef}>{lines}</group>;
+});
+
+Connections.displayName = 'Connections';
+
+// Optimized Particles
+const Particles = memo<{ connections: { start: [number, number, number]; end: [number, number, number] }[] }>(({ connections }) => {
+    const meshRef = useRef<THREE.InstancedMesh>(null);
+    const tempObj = useMemo(() => new THREE.Object3D(), []);
+    // Pre-calculate vectors to avoid creation in loop
+    const vectors = useMemo(() => connections.map(c => ({
+        start: new THREE.Vector3(...c.start),
+        dir: new THREE.Vector3(...c.end).sub(new THREE.Vector3(...c.start))
+    })), [connections]);
+
+    useFrame(({ clock }) => {
+        if (!meshRef.current) return;
+        const t = clock.getElapsedTime();
+
+        for (let i = 0; i < vectors.length; i++) {
+            const delay = i * 0.5;
+            const progress = ((t + delay) * 0.3) % 1;
+
+            // LERP manually
+            tempObj.position.copy(vectors[i].start).addScaledVector(vectors[i].dir, progress);
+            tempObj.updateMatrix();
+            meshRef.current.setMatrixAt(i, tempObj.matrix);
+        }
+        meshRef.current.instanceMatrix.needsUpdate = true;
     });
 
     return (
-        <line ref={ref} geometry={geometry}>
-            <lineBasicMaterial color="#60a5fa" transparent opacity={0.5} />
-        </line>
+        <instancedMesh
+            ref={meshRef}
+            args={[particleGeometry, particleMaterial, connections.length]}
+        />
     );
 });
 
-ConnectionLine.displayName = 'ConnectionLine';
-
-// Smooth flowing particle
-const DataParticle = memo<{ start: [number, number, number]; end: [number, number, number]; speed: number; delay: number }>(({ start, end, speed, delay }) => {
-    const ref = useRef<THREE.Mesh>(null);
-    const startVec = useMemo(() => new THREE.Vector3(...start), [start]);
-    const direction = useMemo(() => new THREE.Vector3(...end).sub(startVec), [end, startVec]);
-
-    useFrame(({ clock }) => {
-        if (ref.current) {
-            const t = ((clock.getElapsedTime() + delay) * speed) % 1;
-            ref.current.position.copy(startVec).addScaledVector(direction, t);
-        }
-    });
-
-    return <mesh ref={ref} geometry={particleGeometry} material={particleMaterial} />;
-});
-
-DataParticle.displayName = 'DataParticle';
+Particles.displayName = 'Particles';
 
 // Smooth rotating core
 const AICore = memo(() => {
@@ -108,12 +145,13 @@ const AICore = memo(() => {
     const innerRef = useRef<THREE.Mesh>(null);
 
     useFrame(({ clock }) => {
+        const t = clock.getElapsedTime();
         if (coreRef.current) {
-            coreRef.current.rotation.y = clock.getElapsedTime() * 0.3;
-            coreRef.current.rotation.x = Math.sin(clock.getElapsedTime() * 0.2) * 0.1;
+            coreRef.current.rotation.y = t * 0.3;
+            coreRef.current.rotation.x = Math.sin(t * 0.2) * 0.1;
         }
         if (innerRef.current) {
-            const scale = 1 + Math.sin(clock.getElapsedTime() * 2) * 0.1;
+            const scale = 1 + Math.sin(t * 2) * 0.1;
             innerRef.current.scale.setScalar(scale);
         }
     });
@@ -183,21 +221,12 @@ const AIScene: React.FC = () => {
             <group scale={1.3}>
                 <AICore />
 
-                {innerNodes.map((pos, i) => (
-                    <NeuralNode key={`inner-${i}`} position={pos} pulseDelay={i * 0.3} />
-                ))}
+                <InstancedNodes positions={innerNodes} baseDelay={0} />
+                <InstancedNodes positions={outerNodes} isOuter baseDelay={1} />
 
-                {outerNodes.map((pos, i) => (
-                    <NeuralNode key={`outer-${i}`} position={pos} isOuter pulseDelay={i * 0.4 + 1} />
-                ))}
+                <Connections connections={connections} />
 
-                {connections.map((conn, i) => (
-                    <ConnectionLine key={i} start={conn.start} end={conn.end} delay={i * 0.15} />
-                ))}
-
-                {connections.slice(0, 6).map((conn, i) => (
-                    <DataParticle key={i} start={conn.start} end={conn.end} speed={0.3} delay={i * 0.5} />
-                ))}
+                <Particles connections={connections.slice(0, 6)} />
 
                 <pointLight position={[0, 0, 2]} intensity={0.5} color="#3b82f6" />
             </group>

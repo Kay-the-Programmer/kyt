@@ -9,45 +9,8 @@ const smallIconGeometry = new THREE.BoxGeometry(0.15, 0.15, 0.01);
 
 const appColors = ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16', '#6366f1'];
 
-// Smooth floating icon
-const AppIcon = memo<{ position: [number, number, number]; color: string; delay: number }>(({ position, color, delay }) => {
-    const ref = useRef<THREE.Mesh>(null);
-    const basePos = useRef({ x: position[0], y: position[1] });
-
-    useFrame(({ clock }) => {
-        if (ref.current) {
-            const t = clock.getElapsedTime() + delay;
-            ref.current.position.y = basePos.current.y + Math.sin(t * 0.6) * 0.15;
-            ref.current.position.x = basePos.current.x + Math.cos(t * 0.4) * 0.1;
-            ref.current.rotation.y = t * 0.3;
-        }
-    });
-
-    const material = useMemo(() => new THREE.MeshStandardMaterial({
-        color,
-        emissive: color,
-        emissiveIntensity: 0.3
-    }), [color]);
-
-    return (
-        <mesh ref={ref} position={position} geometry={iconGeometry} material={material} />
-    );
-});
-
-AppIcon.displayName = 'AppIcon';
-
-// Smooth phone animation
-const PhoneDevice = memo(() => {
-    const phoneRef = useRef<THREE.Group>(null);
-
-    useFrame(({ clock }) => {
-        if (phoneRef.current) {
-            const t = clock.getElapsedTime();
-            phoneRef.current.rotation.y = Math.sin(t * 0.4) * 0.15;
-            phoneRef.current.rotation.z = Math.cos(t * 0.3) * 0.05;
-        }
-    });
-
+// Smooth phone animation - Forward Ref
+const PhoneDevice = memo(React.forwardRef<THREE.Group>((_, ref) => {
     const appGrid = useMemo(() => [
         [-0.25, 0.6], [0, 0.6], [0.25, 0.6],
         [-0.25, 0.3], [0, 0.3], [0.25, 0.3],
@@ -58,7 +21,7 @@ const PhoneDevice = memo(() => {
     })), []);
 
     return (
-        <group ref={phoneRef}>
+        <group ref={ref}>
             <RoundedBox args={[1.0, 2.0, 0.1]} radius={0.1} smoothness={3}>
                 <meshStandardMaterial color="#1e293b" metalness={0.5} roughness={0.3} />
             </RoundedBox>
@@ -89,7 +52,7 @@ const PhoneDevice = memo(() => {
             </mesh>
         </group>
     );
-});
+}));
 
 PhoneDevice.displayName = 'PhoneDevice';
 
@@ -101,15 +64,77 @@ const floatingIcons: { position: [number, number, number]; color: string }[] = [
     { position: [-0.7, 0.2, 0.5], color: '#ec4899' },
 ];
 
+// Instanced icons with colors
+const InstancedIcons = memo<{ icons: { position: [number, number, number]; color: string }[] }>(({ icons }) => {
+    const meshRef = useRef<THREE.InstancedMesh>(null);
+    const tempObj = useMemo(() => new THREE.Object3D(), []);
+    const colorObj = useMemo(() => new THREE.Color(), []);
+
+    // Set instance colors once
+    React.useLayoutEffect(() => {
+        if (meshRef.current) {
+            icons.forEach((icon, i) => {
+                colorObj.set(icon.color);
+                meshRef.current?.setColorAt(i, colorObj);
+            });
+            meshRef.current.instanceColor!.needsUpdate = true;
+        }
+    }, [icons, colorObj]);
+
+    useFrame(({ clock }) => {
+        if (!meshRef.current) return;
+        const t = clock.getElapsedTime();
+
+        for (let i = 0; i < icons.length; i++) {
+            const delay = i * 0.7;
+            const basePos = icons[i].position;
+
+            // Calculate animated position
+            tempObj.position.x = basePos[0] + Math.cos(t * 0.4 + delay) * 0.1;
+            tempObj.position.y = basePos[1] + Math.sin(t * 0.6 + delay) * 0.15;
+            tempObj.position.z = basePos[2];
+            tempObj.rotation.y = (t + delay) * 0.3;
+
+            tempObj.updateMatrix();
+            meshRef.current.setMatrixAt(i, tempObj.matrix);
+        }
+        meshRef.current.instanceMatrix.needsUpdate = true;
+    });
+
+    const material = useMemo(() => new THREE.MeshStandardMaterial({
+        color: '#ffffff', // Base color, instance color will multiply
+        emissive: '#ffffff',
+        emissiveIntensity: 0.3,
+    }), []);
+
+    return (
+        <instancedMesh
+            ref={meshRef}
+            args={[iconGeometry, material, icons.length]}
+        />
+    );
+});
+
+InstancedIcons.displayName = 'InstancedIcons';
+
 const MobileAppScene: React.FC = () => {
+    const phoneRef = useRef<THREE.Group>(null);
+
+    useFrame(({ clock }) => {
+        if (phoneRef.current) {
+            const t = clock.getElapsedTime();
+            phoneRef.current.rotation.y = Math.sin(t * 0.4) * 0.15;
+            phoneRef.current.rotation.z = Math.cos(t * 0.3) * 0.05;
+        }
+    });
+
     return (
         <Float speed={1.4} rotationIntensity={0.12} floatIntensity={0.35}>
             <group scale={1.2}>
-                <PhoneDevice />
+                {/* @ts-ignore */}
+                <PhoneDevice ref={phoneRef} />
 
-                {floatingIcons.map((icon, i) => (
-                    <AppIcon key={i} position={icon.position} color={icon.color} delay={i * 0.7} />
-                ))}
+                <InstancedIcons icons={floatingIcons} />
 
                 <pointLight position={[0, 0, 1.5]} intensity={0.35} color="#8b5cf6" />
             </group>

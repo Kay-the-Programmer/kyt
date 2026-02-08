@@ -42,18 +42,8 @@ const codeLineColors = [
 
 const lineWidths = [1.2, 0.9, 1.1, 0.8, 1.0];
 
-// Smooth browser animation
-const BrowserWindow = memo(() => {
-    const groupRef = useRef<THREE.Group>(null);
-
-    useFrame(({ clock }) => {
-        if (groupRef.current) {
-            const t = clock.getElapsedTime();
-            groupRef.current.rotation.y = Math.sin(t * 0.3) * 0.1;
-            groupRef.current.rotation.x = Math.cos(t * 0.2) * 0.05;
-        }
-    });
-
+// Smooth browser animation - Forward ref for external animation
+const BrowserWindow = memo(React.forwardRef<THREE.Group>((_, ref) => {
     const buttons = useMemo(() => [
         { pos: [-0.95, 0.65, 0.06] as [number, number, number], color: '#ef4444' },
         { pos: [-0.85, 0.65, 0.06] as [number, number, number], color: '#eab308' },
@@ -67,9 +57,10 @@ const BrowserWindow = memo(() => {
     })), []);
 
     const buttonGeometry = useMemo(() => new THREE.SphereGeometry(0.025, 12, 12), []);
+    const boxGeometry = useMemo(() => new THREE.BoxGeometry(1, 1, 1), []); // Generic box for clean reuse if needed
 
     return (
-        <group ref={groupRef}>
+        <group ref={ref}>
             <RoundedBox args={[2.4, 1.6, 0.08]} radius={0.06} smoothness={3}>
                 <meshStandardMaterial color="#1e293b" metalness={0.3} roughness={0.7} />
             </RoundedBox>
@@ -101,7 +92,7 @@ const BrowserWindow = memo(() => {
             ))}
         </group>
     );
-});
+}));
 
 BrowserWindow.displayName = 'BrowserWindow';
 
@@ -114,15 +105,59 @@ const particlePositions: [number, number, number][] = [
     [0.9, -0.8, 0.4],
 ];
 
+// Instanced particles component
+const InstancedParticles = memo<{ positions: [number, number, number][] }>(({ positions }) => {
+    const meshRef = useRef<THREE.InstancedMesh>(null);
+    const tempObj = useMemo(() => new THREE.Object3D(), []);
+
+    useFrame(({ clock }) => {
+        if (!meshRef.current) return;
+        const t = clock.getElapsedTime();
+
+        for (let i = 0; i < positions.length; i++) {
+            const delay = i * 0.5;
+            tempObj.position.set(positions[i][0], positions[i][1], positions[i][2]);
+
+            // Apply animations
+            tempObj.position.y += Math.sin(t * 0.8 + delay) * 0.3;
+            tempObj.position.x += Math.cos(t * 0.5 + delay) * 0.1;
+            tempObj.rotation.z = Math.sin(t * 0.3 + delay) * 0.2;
+
+            tempObj.updateMatrix();
+            meshRef.current.setMatrixAt(i, tempObj.matrix);
+        }
+        meshRef.current.instanceMatrix.needsUpdate = true;
+    });
+
+    return (
+        <instancedMesh
+            ref={meshRef}
+            args={[particleGeometry, particleMaterial, positions.length]}
+        />
+    );
+});
+
+InstancedParticles.displayName = 'InstancedParticles';
+
 const WebAppScene: React.FC = () => {
+    const browserRef = useRef<THREE.Group>(null);
+
+    useFrame(({ clock }) => {
+        // Animate the single browser instance here
+        if (browserRef.current) {
+            const t = clock.getElapsedTime();
+            browserRef.current.rotation.y = Math.sin(t * 0.3) * 0.1;
+            browserRef.current.rotation.x = Math.cos(t * 0.2) * 0.05;
+        }
+    });
+
     return (
         <Float speed={1.8} rotationIntensity={0.15} floatIntensity={0.4}>
             <group scale={1.1}>
-                <BrowserWindow />
+                {/* @ts-ignore - ref type mismatch with forwardRef depending on R3F version, safe to ignore */}
+                <BrowserWindow ref={browserRef} />
 
-                {particlePositions.map((pos, i) => (
-                    <CodeParticle key={i} position={pos} delay={i * 0.5} />
-                ))}
+                <InstancedParticles positions={particlePositions} />
 
                 <pointLight position={[0, 0, 2]} intensity={0.4} color="#3b82f6" />
             </group>

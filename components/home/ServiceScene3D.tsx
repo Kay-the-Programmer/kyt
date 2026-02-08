@@ -144,9 +144,15 @@ const ServiceScene3D: React.FC<ServiceScene3DProps> = ({ activeIndex }) => {
                     antialias: true,
                     alpha: true,
                     powerPreference: 'high-performance',
+                    preserveDrawingBuffer: false,
                 }}
                 style={{ background: 'transparent' }}
                 frameloop="always"
+                performance={{ min: 0.5 }}
+                events={(store: any) => ({
+                    ...store.events,
+                    passive: true,
+                })}
             >
                 <RendererOptimizer />
                 <AnimatedCamera activeIndex={activeIndex} />
@@ -156,6 +162,7 @@ const ServiceScene3D: React.FC<ServiceScene3DProps> = ({ activeIndex }) => {
                 </Suspense>
 
                 <OrbitControls
+                    makeDefault
                     enableZoom={false}
                     enablePan={false}
                     maxPolarAngle={Math.PI / 1.7}
@@ -164,6 +171,7 @@ const ServiceScene3D: React.FC<ServiceScene3DProps> = ({ activeIndex }) => {
                     autoRotateSpeed={0.4}
                     enableDamping
                     dampingFactor={0.05}
+                    rotateSpeed={0.5}
                 />
             </Canvas>
         </div>

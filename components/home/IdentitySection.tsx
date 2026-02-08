@@ -634,34 +634,6 @@ const IdentitySection: React.FC = () => {
             </div>
           </div>
 
-          {/* Stats badge */}
-          <div
-            ref={badgeRef}
-            className="absolute -bottom-6 -right-2 md:-right-8 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-4 md:p-8 rounded-2xl md:rounded-3xl shadow-xl dark:shadow-2xl shadow-gray-900/10 dark:shadow-black/40 backdrop-blur-xl z-20 scale-75 md:scale-100 origin-bottom-right"
-          >
-            <div className="flex flex-col items-center gap-2">
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl md:text-5xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent font-heading tracking-tight">99.9</span>
-                <span className="text-lg md:text-xl font-bold text-blue-600">%</span>
-              </div>
-              <div className="text-[8px] md:text-[10px] font-bold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
-                Uptime
-              </div>
-              <div className="flex gap-1.5 mt-2 md:mt-3">
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    className="w-1 md:w-1.5 h-1 md:h-1.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"
-                    style={{
-                      opacity: 0.4 + (i * 0.15),
-                      animationDelay: `${i * 0.1}s`
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-
           {/* Decorative rings */}
           <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] aspect-square">
             <div className="absolute inset-0 border border-blue-200/20 dark:border-blue-500/10 rounded-full animate-pulse" style={{ animationDuration: '4s' }} />

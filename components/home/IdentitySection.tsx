@@ -2,10 +2,7 @@ import React, { useLayoutEffect, useRef, useState, useCallback, useMemo, memo } 
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import SplitText from '../SplitText';
-
-import webAppImg from '../../assets/web-app-dev.jpg';
-import mobileAppImg from '../../assets/mobile-app-dev.jpg';
-import aiIntegrationImg from '../../assets/ai-integration.jpg';
+import ServiceScene3D from './ServiceScene3D';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -13,7 +10,7 @@ const AUTO_ROTATE_INTERVAL = 5000;
 
 // Memoized Feature Item with enhanced design
 interface FeatureItemProps {
-  item: { title: string; text: string; icon: string; image: string };
+  item: { title: string; text: string; icon: string };
   index: number;
   isActive: boolean;
   onHover: (index: number) => void;
@@ -130,8 +127,7 @@ const IdentitySection: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const badgeRef = useRef<HTMLDivElement>(null);
   const featureRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const imageRefs = useRef<(HTMLImageElement | null)[]>([]);
-  const imageContainerRef = useRef<HTMLDivElement>(null);
+  const sceneContainerRef = useRef<HTMLDivElement>(null);
   const progressTweenRef = useRef<gsap.core.Tween | null>(null);
   const delayedCallRef = useRef<gsap.core.Tween | null>(null);
   const ctxRef = useRef<gsap.Context | null>(null);
@@ -150,37 +146,32 @@ const IdentitySection: React.FC = () => {
     {
       title: 'Web Applications',
       text: 'Crafting responsive, performant web experiences that scale with your business needs.',
-      icon: 'fa-globe',
-      image: webAppImg
+      icon: 'fa-globe'
     },
     {
       title: 'Mobile Applications',
       text: 'Building native and cross-platform mobile apps that users love to engage with.',
-      icon: 'fa-mobile-screen',
-      image: mobileAppImg
+      icon: 'fa-mobile-screen'
     },
     {
       title: 'AI Integration',
       text: 'Embedding intelligent AI capabilities to automate workflows and enhance user experience.',
-      icon: 'fa-microchip',
-      image: aiIntegrationImg
+      icon: 'fa-microchip'
     }
   ], []);
 
   // Feature labels for accessibility
   const featureLabels = useMemo(() => features.map(f => f.title), [features]);
 
-  // Optimized transition animation with morphing clip-path
+  // Enhanced transition animation with dynamic effects
   const animateTransition = useCallback((fromIndex: number, toIndex: number) => {
     const now = performance.now();
     if (now - lastTransitionRef.current < TRANSITION_DEBOUNCE) return;
     lastTransitionRef.current = now;
 
-    const fromImage = imageRefs.current[fromIndex];
-    const toImage = imageRefs.current[toIndex];
-    const container = imageContainerRef.current;
-
-    if (!container) return;
+    const container = sceneContainerRef.current;
+    const fromFeature = featureRefs.current[fromIndex];
+    const toFeature = featureRefs.current[toIndex];
 
     // Use context if available to track these tweens
     const addTween = <T extends gsap.core.Tween | gsap.core.Timeline>(tween: T): T => {
@@ -190,70 +181,73 @@ const IdentitySection: React.FC = () => {
       return tween;
     };
 
-    // Single consolidated timeline
     const tl = addTween(gsap.timeline({
-      defaults: { overwrite: 'auto', ease: 'power3.inOut' },
-      onComplete: () => {
-        // Cleanup simple properties if needed
-      }
+      defaults: { overwrite: 'auto' }
     }));
 
-    // Image morphing transition
-    if (fromImage && toImage) {
-      // Ensure we set initial state for stability
-      gsap.set(toImage, {
-        zIndex: 2,
-        willChange: 'transform, opacity'
-      });
-      gsap.set(fromImage, {
-        zIndex: 1,
-        willChange: 'transform, opacity'
-      });
-
-      // Prepare next image
-      gsap.set(toImage, {
-        opacity: 0,
-        scale: 1.15,
-        filter: 'blur(6px) brightness(1.1)'
-      });
-
-      // Animate out current image
-      tl.to(fromImage, {
-        opacity: 0,
-        scale: 1.02,
-        filter: 'blur(3px) brightness(0.9)',
-        duration: 0.5,
-        clearProps: 'zIndex,willChange' // Cleanup
-      }, 0);
-
-      // Animate in new image with slight delay
-      tl.to(toImage, {
-        opacity: 1,
-        scale: 1.08,
-        filter: 'blur(0px) brightness(1)',
-        duration: 0.7,
-        clearProps: 'zIndex,willChange' // Cleanup
-      }, 0.1);
-
-      // Container morph effect
-      tl.fromTo(container,
-        {
-          clipPath: 'inset(0% 0% 0% 0% round 2.5rem)',
-          boxShadow: '0 25px 50px -12px rgba(59, 130, 246, 0.15)'
-        },
-        {
-          clipPath: 'inset(2% 2% 2% 2% round 2.5rem)',
-          boxShadow: '0 25px 50px -12px rgba(59, 130, 246, 0.25)',
+    // Container glow pulse and scale effect
+    if (container) {
+      tl.to(container, {
+        scale: 0.95,
+        filter: 'brightness(1.3) blur(2px)',
+        duration: 0.15,
+        ease: 'power2.in'
+      })
+        .to(container, {
+          scale: 1.02,
+          filter: 'brightness(1.1) blur(0px)',
+          duration: 0.25,
+          ease: 'elastic.out(1, 0.5)'
+        })
+        .to(container, {
+          scale: 1,
+          filter: 'brightness(1) blur(0px)',
           duration: 0.3,
-          ease: 'power2.in'
-        },
-        0
-      ).to(container, {
-        clipPath: 'inset(0% 0% 0% 0% round 2.5rem)',
-        boxShadow: '0 25px 50px -12px rgba(59, 130, 246, 0.15)',
-        duration: 0.4,
-        ease: 'power2.out'
-      }, 0.3);
+          ease: 'power2.out'
+        });
+    }
+
+    // Animate feature cards with stagger effect
+    if (fromFeature) {
+      tl.to(fromFeature, {
+        x: -10,
+        opacity: 0.7,
+        scale: 0.98,
+        duration: 0.2,
+        ease: 'power2.in'
+      }, 0)
+        .to(fromFeature, {
+          x: 0,
+          opacity: 1,
+          scale: 1,
+          duration: 0.3,
+          ease: 'power2.out',
+          clearProps: 'transform,opacity'
+        }, 0.2);
+    }
+
+    if (toFeature) {
+      const icon = toFeature.querySelector('.feature-icon');
+      tl.fromTo(toFeature,
+        { x: 20, opacity: 0.5 },
+        { x: 0, opacity: 1, duration: 0.4, ease: 'power3.out' },
+        0.1
+      );
+
+      // Icon pop effect
+      if (icon) {
+        tl.fromTo(icon,
+          { scale: 0.8, rotation: -15 },
+          { scale: 1.1, rotation: 0, duration: 0.3, ease: 'back.out(2)' },
+          0.15
+        )
+          .to(icon, {
+            scale: 1,
+            duration: 0.2,
+            ease: 'power2.out',
+            clearProps: 'transform'
+          }, 0.45);
+      }
     }
 
     setActiveImage(toIndex);
@@ -554,37 +548,19 @@ const IdentitySection: React.FC = () => {
           </div>
         </div>
 
-        {/* Right image section */}
+        {/* Right 3D scene section */}
         <div className="relative" style={{ perspective: '1200px' }}>
           <div
-            className="image-reveal-wrapper relative aspect-[4/5] rounded-[3rem] overflow-hidden border border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-gray-800 p-2 shadow-2xl shadow-gray-900/10 dark:shadow-black/30"
+            className="image-reveal-wrapper relative aspect-[4/5] rounded-[3rem] overflow-hidden  bg-transparent"
           >
             <div
-              ref={imageContainerRef}
-              className="w-full h-full overflow-hidden rounded-[2.5rem] relative shadow-inner"
+              ref={sceneContainerRef}
+              className="w-full h-full overflow-hidden rounded-[2.5rem] relative"
             >
-              {features.map((item, i) => (
-                <img
-                  key={i}
-                  ref={(el) => { imageRefs.current[i] = el; }}
-                  src={item.image}
-                  alt={item.title}
-                  width="600"
-                  height="750"
-                  loading={i === 0 ? 'eager' : 'lazy'}
-                  fetchPriority={i === 0 ? 'high' : 'auto'}
-                  decoding="async"
-                  className={`inner-image absolute inset-0 w-full h-full object-cover ${activeImage === i ? '' : 'pointer-events-none'
-                    }`}
-                  style={{
-                    opacity: activeImage === i ? 1 : 0,
-                    transform: 'scale(1.08)'
-                  }}
-                />
-              ))}
+              <ServiceScene3D activeIndex={activeImage} />
             </div>
             {/* Floating label */}
-            <div className="absolute top-6 left-6 px-4 py-2 rounded-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 shadow-lg">
+            <div className="absolute top-6 hidden left-6 px-4 py-2 rounded-full bg-transparent shadow-lg z-10">
               <span className="text-sm font-semibold text-gray-900 dark:text-white">
                 {features[activeImage].title}
               </span>

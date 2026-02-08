@@ -1,168 +1,237 @@
-
-import React, { useEffect, useRef } from 'react';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import React, { useEffect, useMemo, useRef } from "react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
 interface EngineeringGridProps {
-    desktopTween?: gsap.core.Tween | null;
+  desktopTween?: gsap.core.Tween | null;
 }
 
 const EngineeringGrid: React.FC<EngineeringGridProps> = ({ desktopTween }) => {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const gridRef = useRef<HTMLDivElement>(null);
-    const elementsRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        const container = containerRef.current;
-        if (!container) return;
+  // Refs for animation targets (more reliable than class selectors)
+  const gridLayerRef = useRef<HTMLDivElement>(null);
+  const elementsWrapRef = useRef<HTMLDivElement>(null);
+  const elementRefs = useRef<HTMLDivElement[]>([]);
+  const parallaxRefs = useRef<HTMLDivElement[]>([]);
 
-        const ctx = gsap.context(() => {
-            // 1. Initial State
-            gsap.set(".blueprint-element", { opacity: 0, scale: 0.8, rotateX: 45 });
-            gsap.set(".grid-line", { opacity: 0 });
+  elementRefs.current = [];
+  parallaxRefs.current = [];
 
-            // 2. Grid Entrance Logic (linked to desktopTween if available)
-            if (desktopTween) {
-                gsap.to(".grid-line", {
-                    opacity: 0.1,
-                    stagger: 0.05,
-                    scrollTrigger: {
-                        trigger: container,
-                        containerAnimation: desktopTween,
-                        start: "left 80%",
-                        end: "left 20%",
-                        scrub: 1
-                    }
-                });
+  const addElementRef = (el: HTMLDivElement | null) => {
+    if (el && !elementRefs.current.includes(el)) elementRefs.current.push(el);
+  };
 
-                gsap.to(".blueprint-element", {
-                    opacity: 1,
-                    scale: 1,
-                    rotateX: 0,
-                    stagger: 0.1,
-                    scrollTrigger: {
-                        trigger: container,
-                        containerAnimation: desktopTween,
-                        start: "left 70%",
-                        end: "left 10%",
-                        scrub: 1
-                    }
-                });
-            } else {
-                // Fallback for mobile or direct trigger
-                gsap.to(".grid-line", {
-                    opacity: 0.1,
-                    stagger: 0.05,
-                    scrollTrigger: {
-                        trigger: container,
-                        start: "top 80%",
-                        once: true
-                    }
-                });
-                gsap.to(".blueprint-element", {
-                    opacity: 1,
-                    scale: 1,
-                    rotateX: 0,
-                    stagger: 0.1,
-                    scrollTrigger: {
-                        trigger: container,
-                        start: "top 70%",
-                        once: true
-                    }
-                });
-            }
+  const addParallaxRef = (el: HTMLDivElement | null) => {
+    if (el && !parallaxRefs.current.includes(el)) parallaxRefs.current.push(el);
+  };
 
-            // 3. Mouse Tilt Interaction
-            const handleMouseMove = (e: MouseEvent) => {
-                const { clientX, clientY } = e;
-                const { left, top, width, height } = container.getBoundingClientRect();
-                const x = (clientX - left - width / 2) / 30;
-                const y = (clientY - top - height / 2) / 30;
+  const prefersReducedMotion = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+  }, []);
 
-                gsap.to(elementsRef.current, {
-                    rotateY: x,
-                    rotateX: -y,
-                    duration: 0.8,
-                    ease: "power2.out"
-                });
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
 
-                gsap.to(".blueprint-parallax", {
-                    x: x * 2,
-                    y: y * 2,
-                    duration: 1,
-                    ease: "power2.out",
-                    stagger: 0.02
-                });
-            };
+    const isTouch =
+      typeof window !== "undefined" &&
+      ("ontouchstart" in window || navigator.maxTouchPoints > 0);
 
-            container.addEventListener('mousemove', handleMouseMove);
-            return () => container.removeEventListener('mousemove', handleMouseMove);
+    const ctx = gsap.context(() => {
+      const grid = gridLayerRef.current;
+      const wrap = elementsWrapRef.current;
 
-        }, containerRef);
+      if (!grid || !wrap) return;
 
-        return () => ctx.revert();
-    }, [desktopTween]);
+      // Initial state (minimal: no heavy rotations)
+      gsap.set(grid, { opacity: 0 });
+      gsap.set(elementRefs.current, { opacity: 0, y: 10, scale: 0.98 });
 
-    return (
+      // Scroll entrance
+      const gridTo = gsap.to(grid, { opacity: 0.18, ease: "none", paused: true });
+      const elementsTo = gsap.to(elementRefs.current, {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        stagger: 0.08,
+        ease: "power2.out",
+        paused: true,
+      });
+
+      const triggerBase: ScrollTrigger.Vars = desktopTween
+        ? {
+            trigger: container,
+            containerAnimation: desktopTween,
+            start: "left 80%",
+            end: "left 25%",
+            scrub: 1,
+          }
+        : {
+            trigger: container,
+            start: "top 80%",
+            end: "top 35%",
+            scrub: true,
+          };
+
+      ScrollTrigger.create({
+        ...triggerBase,
+        onUpdate: (self) => {
+          const p = self.progress;
+          gridTo.progress(p);
+          elementsTo.progress(p);
+        },
+      });
+
+      // Parallax / tilt (skip on touch + reduced motion)
+      if (!prefersReducedMotion && !isTouch) {
+        gsap.set(wrap, { transformStyle: "preserve-3d" });
+
+        const toRotX = gsap.quickTo(wrap, "rotateX", { duration: 0.8, ease: "power2.out" });
+        const toRotY = gsap.quickTo(wrap, "rotateY", { duration: 0.8, ease: "power2.out" });
+
+        // Batch parallax quickTo
+        const px = parallaxRefs.current.map((el) =>
+          gsap.quickTo(el, "x", { duration: 0.9, ease: "power2.out" })
+        );
+        const py = parallaxRefs.current.map((el) =>
+          gsap.quickTo(el, "y", { duration: 0.9, ease: "power2.out" })
+        );
+
+        const onMove = (e: MouseEvent) => {
+          const r = container.getBoundingClientRect();
+          const nx = (e.clientX - r.left) / r.width - 0.5; // -0.5..0.5
+          const ny = (e.clientY - r.top) / r.height - 0.5;
+
+          // Smaller tilt for minimal feel
+          toRotY(nx * 6);
+          toRotX(-ny * 6);
+
+          // Subtle parallax
+          const dx = nx * 14;
+          const dy = ny * 14;
+
+          for (let i = 0; i < parallaxRefs.current.length; i++) {
+            px[i](dx * (0.35 + i * 0.08));
+            py[i](dy * (0.35 + i * 0.08));
+          }
+        };
+
+        const onLeave = () => {
+          toRotX(0);
+          toRotY(0);
+          for (let i = 0; i < parallaxRefs.current.length; i++) {
+            px;
+            py;
+          }
+        };
+
+        container.addEventListener("mousemove", onMove);
+        container.addEventListener("mouseleave", onLeave);
+
+        return () => {
+          container.removeEventListener("mousemove", onMove);
+          container.removeEventListener("mouseleave", onLeave);
+        };
+      }
+
+      return;
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, [desktopTween, prefersReducedMotion]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative w-full aspect-square max-w-[560px] overflow-hidden rounded-3xl border border-slate-200/60 dark:border-white/10 bg-white/60 dark:bg-slate-900/40 backdrop-blur-md"
+      style={{ perspective: "1200px" }}
+    >
+      {/* Grid layer (minimal, softer + fewer lines by using larger size) */}
+      <div
+        ref={gridLayerRef}
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(37,99,235,0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(37,99,235,0.18) 1px, transparent 1px)",
+          backgroundSize: "56px 56px",
+          transform: "rotateX(55deg) translateZ(-120px) scale(1.8)",
+          maskImage: "radial-gradient(circle at 50% 45%, black 45%, transparent 72%)",
+          WebkitMaskImage: "radial-gradient(circle at 50% 45%, black 45%, transparent 72%)",
+        }}
+      />
+
+      {/* Ambient wash (very subtle) */}
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-blue-600/6 via-transparent to-blue-600/4" />
+
+      {/* Content */}
+      <div
+        ref={elementsWrapRef}
+        className="relative h-full w-full flex items-center justify-center transform-gpu"
+      >
+        {/* Central hub (simplified) */}
         <div
-            ref={containerRef}
-            className="engineering-grid-wrapper relative w-full aspect-square max-w-[600px] flex items-center justify-center p-8 overflow-hidden"
-            style={{ perspective: '1200px' }}
+          ref={addElementRef}
+          className="relative flex items-center justify-center rounded-3xl border border-blue-500/20 bg-blue-500/5 backdrop-blur-sm shadow-[0_1px_0_rgba(255,255,255,0.25)]"
+          style={{ width: 190, height: 190, transform: "translateZ(30px)" }}
         >
-            {/* 3D Grid Layer */}
-            <div
-                ref={gridRef}
-                className="absolute inset-0 opacity-20 pointer-events-none"
-                style={{
-                    backgroundImage: 'linear-gradient(rgba(37, 99, 235, 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(37, 99, 235, 0.2) 1px, transparent 1px)',
-                    backgroundSize: '40px 40px',
-                    transform: 'rotateX(60deg) translateZ(-100px) scale(2)'
-                }}
-            />
+          <div className="absolute inset-0 rounded-3xl ring-1 ring-inset ring-white/30 dark:ring-white/5" />
 
-            {/* Floating Blueprint Elements */}
-            <div ref={elementsRef} className="relative w-full h-full flex items-center justify-center transform-gpu preserve-3d">
+          {/* Inner geometry (minimal) */}
+          <div className="relative w-24 h-24 rounded-2xl border border-blue-500/25 bg-blue-600/10 rotate-45" />
+          <div className="absolute w-28 h-28 rounded-full border border-blue-500/20" />
 
-                {/* Central Component Hub */}
-                <div className="blueprint-element blueprint-parallax w-48 h-48 border-2 border-blue-500/40 rounded-3xl relative flex items-center justify-center bg-blue-500/5 backdrop-blur-sm">
-                    <div className="w-32 h-32 border border-blue-400/30 rounded-full animate-pulse flex items-center justify-center">
-                        <div className="w-16 h-16 bg-blue-600/20 rounded-lg rotate-45 border border-blue-500/50" />
-                    </div>
-
-                    {/* Connecting Lines */}
-                    <div className="absolute -top-12 left-1/2 w-px h-12 bg-gradient-to-t from-blue-500/50 to-transparent" />
-                    <div className="absolute -bottom-12 left-1/2 w-px h-12 bg-gradient-to-b from-blue-500/50 to-transparent" />
-                    <div className="absolute top-1/2 -left-12 h-px w-12 bg-gradient-to-l from-blue-500/50 to-transparent" />
-                    <div className="absolute top-1/2 -right-12 h-px w-12 bg-gradient-to-r from-blue-500/50 to-transparent" />
-                </div>
-
-                {/* Orbiting UI Fragments */}
-                <div className="blueprint-element blueprint-parallax absolute top-0 left-0 p-3 border border-blue-400/20 bg-white/5 rounded-lg -translate-x-1/2 -translate-y-1/2">
-                    <div className="text-[8px] text-blue-500 font-mono">MODULE_01</div>
-                    <div className="w-12 h-1 bg-blue-500/20 mt-1" />
-                </div>
-
-                <div className="blueprint-element blueprint-parallax absolute bottom-1/4 right-0 p-3 border border-indigo-400/20 bg-white/5 rounded-lg translate-x-1/2">
-                    <div className="text-[8px] text-indigo-500 font-mono">SYS_COORD</div>
-                    <div className="flex gap-1 mt-1">
-                        <div className="w-2 h-2 rounded-full bg-blue-500/40" />
-                        <div className="w-2 h-2 rounded-full bg-blue-500/20" />
-                    </div>
-                </div>
-
-                {/* Diagonal Crossbeams */}
-                <div className="blueprint-element absolute inset-0 pointer-events-none">
-                    <div className="absolute top-1/2 left-1/2 w-[140%] h-px bg-blue-500/10 -translate-x-1/2 -translate-y-1/2 rotate-45" />
-                    <div className="absolute top-1/2 left-1/2 w-[140%] h-px bg-blue-500/10 -translate-x-1/2 -translate-y-1/2 -rotate-45" />
-                </div>
-            </div>
-
-            {/* Background Ambience */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-transparent to-indigo-600/10 pointer-events-none" />
+          {/* Connectors (thin, clean) */}
+          <span className="absolute top-[-40px] left-1/2 h-10 w-px -translate-x-1/2 bg-gradient-to-t from-blue-500/30 to-transparent" />
+          <span className="absolute bottom-[-40px] left-1/2 h-10 w-px -translate-x-1/2 bg-gradient-to-b from-blue-500/30 to-transparent" />
+          <span className="absolute left-[-40px] top-1/2 w-10 h-px -translate-y-1/2 bg-gradient-to-l from-blue-500/30 to-transparent" />
+          <span className="absolute right-[-40px] top-1/2 w-10 h-px -translate-y-1/2 bg-gradient-to-r from-blue-500/30 to-transparent" />
         </div>
-    );
+
+        {/* Callout 1 */}
+        <div
+          ref={(el) => {
+            addElementRef(el);
+            addParallaxRef(el);
+          }}
+          className="absolute left-[10%] top-[14%] rounded-xl border border-slate-200/60 dark:border-white/10 bg-white/50 dark:bg-slate-900/30 backdrop-blur px-3 py-2"
+          style={{ transform: "translateZ(55px)" }}
+        >
+          <div className="text-[10px] tracking-widest text-slate-500 dark:text-slate-400 font-mono">
+            MODULE
+          </div>
+          <div className="mt-1 h-px w-14 bg-blue-600/25" />
+        </div>
+
+        {/* Callout 2 */}
+        <div
+          ref={(el) => {
+            addElementRef(el);
+            addParallaxRef(el);
+          }}
+          className="absolute right-[10%] bottom-[18%] rounded-xl border border-slate-200/60 dark:border-white/10 bg-white/50 dark:bg-slate-900/30 backdrop-blur px-3 py-2"
+          style={{ transform: "translateZ(60px)" }}
+        >
+          <div className="text-[10px] tracking-widest text-slate-500 dark:text-slate-400 font-mono">
+            COORD
+          </div>
+          <div className="mt-2 flex gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-blue-600/35" />
+            <span className="h-2 w-2 rounded-full bg-blue-600/18" />
+          </div>
+        </div>
+
+        {/* Cross lines (reduced) */}
+        <div ref={addElementRef} className="absolute inset-0 pointer-events-none">
+          <div className="absolute left-1/2 top-1/2 h-px w-[140%] -translate-x-1/2 -translate-y-1/2 rotate-45 bg-blue-600/8" />
+          <div className="absolute left-1/2 top-1/2 h-px w-[140%] -translate-x-1/2 -translate-y-1/2 -rotate-45 bg-blue-600/8" />
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default EngineeringGrid;

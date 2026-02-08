@@ -190,7 +190,6 @@ const Home: React.FC = () => {
       return () => {
         gsap.ticker.remove(updateGlow);
         window.removeEventListener('resize', handleResize);
-        ScrollTrigger.getAll().forEach(t => t.kill());
       };
     }, containerRef);
 

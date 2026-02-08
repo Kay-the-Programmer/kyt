@@ -67,7 +67,6 @@ const Projects: React.FC = () => {
 
       // Avoid heavy motion if user prefers reduced
       if (prefersReducedMotion) {
-        ScrollTrigger.getAll().forEach((t) => t.kill());
         return;
       }
 

@@ -123,6 +123,23 @@ const IndicatorDots = memo<IndicatorDotsProps>(({ count, activeIndex, onSelect, 
 
 IndicatorDots.displayName = 'IndicatorDots';
 
+const TypewriterText = ({ text }: { text: string }) => {
+  const [displayedText, setDisplayedText] = useState('');
+
+  useLayoutEffect(() => {
+    setDisplayedText('');
+    let i = 0;
+    const timer = setInterval(() => {
+      setDisplayedText(text.substring(0, i + 1));
+      i++;
+      if (i === text.length) clearInterval(timer);
+    }, 30); // Speed of typing
+    return () => clearInterval(timer);
+  }, [text]);
+
+  return <span>{displayedText}</span>;
+};
+
 const IdentitySection: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const badgeRef = useRef<HTMLDivElement>(null);
@@ -501,7 +518,7 @@ const IdentitySection: React.FC = () => {
     <section
       id="who-we-are"
       ref={sectionRef}
-      className="relative z-10 py-24 md:py-40 lg:py-56 px-6 border-t border-gray-100 dark:border-gray-900/30 overflow-hidden bg-transparent"
+      className="relative z-10 py-12 md:py-40 lg:py-56 px-6 border-t border-gray-100 dark:border-gray-900/30 overflow-hidden bg-transparent"
     >
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -514,9 +531,38 @@ const IdentitySection: React.FC = () => {
         <div className="absolute bottom-1/4 left-0 w-64 h-64 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-3xl" />
       </div>
 
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24 items-center relative z-10">
-        {/* Left content */}
-        <div>
+      <div className="max-w-7xl mx-auto flex flex-col lg:grid lg:grid-cols-2 gap-8 lg:gap-24 items-center relative z-10">
+
+        {/* MOBILE HEADER - Only visible on mobile */}
+        <div className="lg:hidden w-full text-center mb-6 order-1">
+          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-900/50">
+            <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">What We Do</span>
+          </div>
+          <h3 className="text-4xl font-heading font-bold text-gray-900 dark:text-white leading-tight">
+            Architecting <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Solutions</span>
+          </h3>
+        </div>
+
+        {/* MOBILE TABS - Only visible on mobile */}
+        <div className="lg:hidden w-full order-2 mb-6">
+          <div className="flex p-1 bg-gray-100/50 dark:bg-gray-800/50 rounded-xl overflow-x-auto no-scrollbar gap-2">
+            {features.map((item, i) => (
+              <button
+                key={i}
+                onClick={() => handleFeatureHover(i)}
+                className={`flex-1 min-w-[100px] py-2.5 px-3 rounded-lg text-sm font-bold transition-all duration-300 whitespace-nowrap ${activeImage === i
+                  ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
+              >
+                {item.title.split(' ')[0]} {/* Show first word only for compactness (Web, Mobile, AI) */}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* LEFT CONTENT - Desktop Only */}
+        <div className="hidden lg:block">
           <div className="identity-intro-badge inline-flex items-center gap-3 mb-8 px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-900/50">
             <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">What We Do</span>
           </div>
@@ -548,10 +594,10 @@ const IdentitySection: React.FC = () => {
           </div>
         </div>
 
-        {/* Right 3D scene section */}
-        <div className="relative" style={{ perspective: '1200px' }}>
+        {/* RIGHT 3D SCENE - Shared but reordered on mobile */}
+        <div className="relative w-full order-3 lg:order-none" style={{ perspective: '1200px' }}>
           <div
-            className="image-reveal-wrapper relative aspect-[4/5] rounded-[3rem] overflow-hidden  bg-transparent"
+            className="image-reveal-wrapper relative aspect-[4/5] md:aspect-square lg:aspect-[4/5] rounded-[2.5rem] overflow-hidden bg-transparent"
           >
             <div
               ref={sceneContainerRef}
@@ -559,32 +605,53 @@ const IdentitySection: React.FC = () => {
             >
               <ServiceScene3D activeIndex={activeImage} />
             </div>
-            {/* Floating label */}
-            <div className="absolute top-6 hidden left-6 px-4 py-2 rounded-full bg-transparent shadow-lg z-10">
+
+            {/* Floating label - Desktop only */}
+            <div className="absolute top-6 hidden lg:block left-6 px-4 py-2 rounded-full bg-transparent shadow-lg z-10">
               <span className="text-sm font-semibold text-gray-900 dark:text-white">
                 {features[activeImage].title}
               </span>
+            </div>
+
+            {/* Mobile Description Overlay */}
+            <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-white via-white/95 to-transparent dark:from-gray-950 dark:via-gray-900/95 pt-20 lg:hidden flex flex-col items-center text-center z-10">
+              <h4 key={`title-${activeImage}`} className="text-xl font-bold mb-2 text-gray-900 dark:text-white"
+                ref={(el) => {
+                  if (el) {
+                    gsap.fromTo(el,
+                      { y: 20, opacity: 0 },
+                      { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" }
+                    );
+                  }
+                }}
+              >
+                <SplitText text={features[activeImage].title} />
+              </h4>
+              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed max-w-xs mx-auto min-h-[3rem]">
+                <TypewriterText text={features[activeImage].text} />
+              </p>
+              <div className="mt-3 w-12 h-1 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 opacity-50"></div>
             </div>
           </div>
 
           {/* Stats badge */}
           <div
             ref={badgeRef}
-            className="absolute -bottom-8 -right-4 md:-right-8 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-6 md:p-8 rounded-3xl shadow-xl dark:shadow-2xl shadow-gray-900/10 dark:shadow-black/40 backdrop-blur-xl z-20"
+            className="absolute -bottom-6 -right-2 md:-right-8 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-4 md:p-8 rounded-2xl md:rounded-3xl shadow-xl dark:shadow-2xl shadow-gray-900/10 dark:shadow-black/40 backdrop-blur-xl z-20 scale-75 md:scale-100 origin-bottom-right"
           >
             <div className="flex flex-col items-center gap-2">
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl md:text-5xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent font-heading tracking-tight">99.9</span>
-                <span className="text-xl font-bold text-blue-600">%</span>
+                <span className="text-3xl md:text-5xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent font-heading tracking-tight">99.9</span>
+                <span className="text-lg md:text-xl font-bold text-blue-600">%</span>
               </div>
-              <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
+              <div className="text-[8px] md:text-[10px] font-bold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
                 Uptime
               </div>
-              <div className="flex gap-1.5 mt-3">
+              <div className="flex gap-1.5 mt-2 md:mt-3">
                 {[0, 1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
-                    className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"
+                    className="w-1 md:w-1.5 h-1 md:h-1.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"
                     style={{
                       opacity: 0.4 + (i * 0.15),
                       animationDelay: `${i * 0.1}s`
@@ -601,6 +668,7 @@ const IdentitySection: React.FC = () => {
             <div className="absolute inset-8 border border-indigo-200/15 dark:border-indigo-500/10 rounded-full animate-pulse" style={{ animationDuration: '3s', animationDelay: '0.5s' }} />
           </div>
         </div>
+
       </div>
     </section>
   );

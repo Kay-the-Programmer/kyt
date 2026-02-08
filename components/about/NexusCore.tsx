@@ -47,7 +47,7 @@ const NexusCore: React.FC = () => {
                 }
             });
 
-            tl.to(".nexus-container", {
+            tl.to(container, {
                 scale: 1.2,
                 duration: 1,
                 ease: "power2.inOut"

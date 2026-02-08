@@ -4,8 +4,8 @@ import { Float, RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
 
 // Shared geometries
-const iconGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.04);
-const smallIconGeometry = new THREE.BoxGeometry(0.15, 0.15, 0.01);
+// const iconGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.04);
+// const smallIconGeometry = new THREE.BoxGeometry(0.15, 0.15, 0.01);
 
 const appColors = ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16', '#6366f1'];
 
@@ -20,14 +20,25 @@ const PhoneDevice = memo(React.forwardRef<THREE.Group>((_, ref) => {
         color: appColors[i]
     })), []);
 
+    // Memoize geometries
+    const smallIconGeometry = useMemo(() => new THREE.BoxGeometry(0.15, 0.15, 0.01), []);
+    const bodyGeo = useMemo(() => new THREE.BoxGeometry(1.0, 2.0, 0.1), []); // Using BoxGeometry for RoundedBox args mapping if needed, or keep RoundedBox
+
+    // Memoize materials
+    const bodyMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#1e293b", metalness: 0.5, roughness: 0.3 }), []);
+    const screenMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#0f172a", emissive: "#1e40af", emissiveIntensity: 0.15 }), []);
+    const speakerMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#0f172a" }), []);
+    const buttonMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#475569" }), []);
+    const sideBtnMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#334155", metalness: 0.6, roughness: 0.4 }), []);
+
     return (
         <group ref={ref}>
             <RoundedBox args={[1.0, 2.0, 0.1]} radius={0.1} smoothness={3}>
-                <meshStandardMaterial color="#1e293b" metalness={0.5} roughness={0.3} />
+                <primitive object={bodyMat} attach="material" />
             </RoundedBox>
 
             <RoundedBox args={[0.88, 1.8, 0.02]} radius={0.06} smoothness={3} position={[0, 0, 0.06]}>
-                <meshStandardMaterial color="#0f172a" emissive="#1e40af" emissiveIntensity={0.15} />
+                <primitive object={screenMat} attach="material" />
             </RoundedBox>
 
             {appGrid.map((app, i) => (
@@ -38,17 +49,17 @@ const PhoneDevice = memo(React.forwardRef<THREE.Group>((_, ref) => {
 
             <mesh position={[0, 0.85, 0.07]}>
                 <boxGeometry args={[0.3, 0.05, 0.01]} />
-                <meshStandardMaterial color="#0f172a" />
+                <primitive object={speakerMat} attach="material" />
             </mesh>
 
             <mesh position={[0, -0.8, 0.07]}>
                 <boxGeometry args={[0.25, 0.02, 0.01]} />
-                <meshStandardMaterial color="#475569" />
+                <primitive object={buttonMat} attach="material" />
             </mesh>
 
             <mesh position={[0.52, 0.4, 0]}>
                 <boxGeometry args={[0.02, 0.2, 0.06]} />
-                <meshStandardMaterial color="#334155" metalness={0.6} roughness={0.4} />
+                <primitive object={sideBtnMat} attach="material" />
             </mesh>
         </group>
     );
@@ -69,6 +80,13 @@ const InstancedIcons = memo<{ icons: { position: [number, number, number]; color
     const meshRef = useRef<THREE.InstancedMesh>(null);
     const tempObj = useMemo(() => new THREE.Object3D(), []);
     const colorObj = useMemo(() => new THREE.Color(), []);
+
+    const iconGeometry = useMemo(() => new THREE.BoxGeometry(0.2, 0.2, 0.04), []);
+    const material = useMemo(() => new THREE.MeshStandardMaterial({
+        color: '#ffffff', // Base color, instance color will multiply
+        emissive: '#ffffff',
+        emissiveIntensity: 0.3,
+    }), []);
 
     // Set instance colors once
     React.useLayoutEffect(() => {
@@ -100,12 +118,6 @@ const InstancedIcons = memo<{ icons: { position: [number, number, number]; color
         }
         meshRef.current.instanceMatrix.needsUpdate = true;
     });
-
-    const material = useMemo(() => new THREE.MeshStandardMaterial({
-        color: '#ffffff', // Base color, instance color will multiply
-        emissive: '#ffffff',
-        emissiveIntensity: 0.3,
-    }), []);
 
     return (
         <instancedMesh

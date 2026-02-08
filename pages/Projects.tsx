@@ -29,10 +29,10 @@ const PROJECTS_DATA: Project[] = [
   {
     id: '01',
     title: 'SalePilot POS',
-    category: 'FLAGSHIP // CORE RETAIL MANAGEMENT',
+    category: 'FLAGSHIP',
     description: 'SalePilot synchronizes inventory states and sales data with precision.',
     image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=2000',
-    tags: ['RETAIL MANAGEMENT'],
+    tags: ['RETAIL MANAGEMENT '],
     specs: [
       { label: 'STATUS', value: 'ACTIVE', isBadge: true },
       { label: 'WEB', value: 'https://salepilot.space' },
@@ -413,12 +413,6 @@ const Projects: React.FC = () => {
 
                   <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-10 md:gap-14">
                     <div className="max-w-3xl">
-                      <div className="reveal-item mb-5 md:mb-7">
-                        <span className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-black tracking-[0.28em] uppercase text-emerald-300/90">
-                          <span className="w-2 h-2 rounded-full bg-emerald-400/80" />
-                          {project.category}
-                        </span>
-                      </div>
 
                       <h3 className="reveal-item font-heading font-black leading-[0.92] tracking-tighter
                                      text-[2.3rem] sm:text-[3rem] md:text-[5.5rem] lg:text-[7rem]

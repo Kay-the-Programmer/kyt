@@ -9,6 +9,7 @@ import AIScene from './3d/AIScene';
 interface ServiceScene3DProps {
     activeIndex: number;
     isMobile?: boolean;
+    isVisible?: boolean;
 }
 
 // Simple loading fallback
@@ -152,7 +153,7 @@ const MobileAutoRotate = memo(() => {
 
 MobileAutoRotate.displayName = 'MobileAutoRotate';
 
-const ServiceScene3D: React.FC<ServiceScene3DProps> = ({ activeIndex, isMobile = false }) => {
+const ServiceScene3D: React.FC<ServiceScene3DProps> = ({ activeIndex, isMobile = false, isVisible = true }) => {
     return (
         <div className="w-full h-full" style={{ minHeight: isMobile ? '300px' : '400px' }}>
             <Canvas
@@ -164,7 +165,7 @@ const ServiceScene3D: React.FC<ServiceScene3DProps> = ({ activeIndex, isMobile =
                     preserveDrawingBuffer: false,
                 }}
                 style={{ background: 'transparent' }}
-                frameloop="always"
+                frameloop={isVisible ? "always" : "never"}
                 performance={{ min: 0.5 }}
             >
                 <RendererOptimizer />

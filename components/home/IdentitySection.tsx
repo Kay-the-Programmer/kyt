@@ -686,7 +686,7 @@ const IdentitySection: React.FC = () => {
               onTouchStart={() => setIsPaused(true)}
               onTouchEnd={() => setIsPaused(false)}
             >
-              <ServiceScene3D activeIndex={activeImage} isMobile={isMobile} />
+              <ServiceScene3D activeIndex={activeImage} isMobile={isMobile} isVisible={isVisible} />
             </div>
 
             {/* Mobile Description Overlay */}

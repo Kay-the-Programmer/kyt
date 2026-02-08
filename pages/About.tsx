@@ -570,7 +570,8 @@ const About: React.FC = () => {
                 </span>
                 <h2 className="section-title text-4xl md:text-6xl font-heading font-bold text-gray-900 dark:text-white leading-[1.1] mb-6">
                   <SplitText text="Software That" className="block" />
-                  <span className="gradient-text"><SplitText text="Feels Alive" isGradient={true} /></span>
+                  <br />
+                  <SplitText text="Feels Alive" isGradient={true} />
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 text-base md:text-xl leading-relaxed">
                   We believe software is a living entity. It shouldn't just function—it should evolve. We bridge human ambition and technology by building systems that feel human and act intelligent.

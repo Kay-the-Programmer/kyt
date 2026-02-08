@@ -4,38 +4,15 @@ import { Float, Sphere, RoundedBox, Line } from "@react-three/drei";
 import * as THREE from "three";
 
 /** ---------- Shared geometry/material (perf) ---------- */
-const nodeGeometry = new THREE.SphereGeometry(0.06, 16, 16);
-const packetGeometry = new THREE.SphereGeometry(0.03, 10, 10);
+// Moved inside components for proper lifecycle management
+// const nodeGeometry = new THREE.SphereGeometry(0.06, 16, 16);
+// const packetGeometry = new THREE.SphereGeometry(0.03, 10, 10);
 
-const coreMaterial = new THREE.MeshStandardMaterial({
-    color: "#3b82f6",
-    emissive: "#1d4ed8",
-    emissiveIntensity: 1.0,
-    transparent: true,
-    opacity: 0.92,
-});
-
-const nodeMaterial = new THREE.MeshStandardMaterial({
-    color: "#60a5fa",
-    emissive: "#60a5fa",
-    emissiveIntensity: 0.55,
-    transparent: true,
-    opacity: 0.9,
-});
-
-const outerNodeMaterial = new THREE.MeshStandardMaterial({
-    color: "#a78bfa",
-    emissive: "#8b5cf6",
-    emissiveIntensity: 0.55,
-    transparent: true,
-    opacity: 0.9,
-});
-
-const packetMaterial = new THREE.MeshStandardMaterial({
-    color: "#22d3ee",
-    emissive: "#06b6d4",
-    emissiveIntensity: 1.25,
-});
+// Moved inside components
+// const coreMaterial = ...
+// const nodeMaterial = ...
+// const outerNodeMaterial = ...
+// const packetMaterial = ...
 
 /** ---------- Layout (systems/modules) ---------- */
 const innerNodes: [number, number, number][] = [
@@ -78,6 +55,14 @@ const AICore = memo(() => {
     const ring2 = useMemo(() => new THREE.TorusGeometry(0.60, 0.014, 14, 80), []);
     const haloGeo = useMemo(() => new THREE.RingGeometry(0.72, 0.86, 64), []);
 
+    const coreMat = useMemo(() => new THREE.MeshStandardMaterial({
+        color: "#3b82f6",
+        emissive: "#1d4ed8",
+        emissiveIntensity: 1.0,
+        transparent: true,
+        opacity: 0.92,
+    }), []);
+
     useFrame(({ clock }) => {
         const t = clock.getElapsedTime();
         if (g.current) {
@@ -98,7 +83,7 @@ const AICore = memo(() => {
     return (
         <group ref={g}>
             <Sphere ref={inner} args={[0.26, 28, 28]}>
-                <primitive object={coreMaterial} attach="material" />
+                <primitive object={coreMat} attach="material" />
             </Sphere>
 
             <mesh rotation={[Math.PI / 2, 0, 0]} geometry={ring1}>
@@ -165,6 +150,24 @@ const InstancedNodes = memo<{ positions: [number, number, number][]; outer?: boo
         const meshRef = useRef<THREE.InstancedMesh>(null);
         const temp = useMemo(() => new THREE.Object3D(), []);
 
+        // Memoize resources
+        const geometry = useMemo(() => new THREE.SphereGeometry(0.06, 16, 16), []);
+        const material = useMemo(() => outer
+            ? new THREE.MeshStandardMaterial({
+                color: "#a78bfa",
+                emissive: "#8b5cf6",
+                emissiveIntensity: 0.55,
+                transparent: true,
+                opacity: 0.9,
+            })
+            : new THREE.MeshStandardMaterial({
+                color: "#60a5fa",
+                emissive: "#60a5fa",
+                emissiveIntensity: 0.55,
+                transparent: true,
+                opacity: 0.9,
+            }), [outer]);
+
         useFrame(({ clock }) => {
             const t = clock.getElapsedTime();
             if (!meshRef.current) return;
@@ -184,7 +187,7 @@ const InstancedNodes = memo<{ positions: [number, number, number][]; outer?: boo
         return (
             <instancedMesh
                 ref={meshRef}
-                args={[nodeGeometry, outer ? outerNodeMaterial : nodeMaterial, positions.length]}
+                args={[geometry, material, positions.length]}
             />
         );
     }
@@ -192,12 +195,21 @@ const InstancedNodes = memo<{ positions: [number, number, number][]; outer?: boo
 InstancedNodes.displayName = "InstancedNodes";
 
 /** ---------- Outer Modules (boxes) - Cached Geometry ---------- */
-// Create geometry once
-const moduleGeometry = new THREE.BoxGeometry(0.26, 0.16, 0.12);
-
 const Modules = memo(() => {
     const meshRef = useRef<THREE.InstancedMesh>(null);
     const temp = useMemo(() => new THREE.Object3D(), []);
+
+    // Memoize resources
+    const geometry = useMemo(() => new THREE.BoxGeometry(0.26, 0.16, 0.12), []);
+    const material = useMemo(() => new THREE.MeshStandardMaterial({
+        color: "#111827",
+        emissive: "#8b5cf6",
+        emissiveIntensity: 0.25,
+        metalness: 0.3,
+        roughness: 0.35,
+        transparent: true,
+        opacity: 0.95,
+    }), []);
 
     useFrame(({ clock }) => {
         const t = clock.getElapsedTime();
@@ -215,17 +227,8 @@ const Modules = memo(() => {
     return (
         <instancedMesh
             ref={meshRef}
-            args={[moduleGeometry, undefined, outerModules.length]}
+            args={[geometry, material, outerModules.length]}
         >
-            <meshStandardMaterial
-                color="#111827"
-                emissive="#8b5cf6"
-                emissiveIntensity={0.25}
-                metalness={0.3}
-                roughness={0.35}
-                transparent
-                opacity={0.95}
-            />
         </instancedMesh>
     );
 });
@@ -330,6 +333,14 @@ const DataPackets = memo<{ links: Conn[] }>(({ links }) => {
 
         meshRef.current.instanceMatrix.needsUpdate = true;
     });
+
+    // Memoize resources
+    const packetGeometry = useMemo(() => new THREE.SphereGeometry(0.03, 10, 10), []);
+    const packetMaterial = useMemo(() => new THREE.MeshStandardMaterial({
+        color: "#22d3ee",
+        emissive: "#06b6d4",
+        emissiveIntensity: 1.25,
+    }), []);
 
     return <instancedMesh ref={meshRef} args={[packetGeometry, packetMaterial, vecs.length]} />;
 });

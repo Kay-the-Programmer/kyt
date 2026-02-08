@@ -17,45 +17,152 @@ const Navbar: React.FC = () => {
   const menuTimelineRef = useRef<gsap.core.Timeline | null>(null);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
 
-  // Memoized nav links to prevent re-renders
+  // Dock refs for macOS-style animation
+  const dockRef = useRef<HTMLUListElement>(null);
+  const dockItemsRef = useRef<HTMLLIElement[]>([]);
+
+  // Memoized nav links with dock items
   const navLinks = useMemo(() => [
     {
       name: 'Home',
       path: '/',
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-full h-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
         </svg>
-      )
+      ),
+      gradient: 'from-blue-400 to-indigo-600'
     },
     {
       name: 'About',
       path: '/about',
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-full h-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
         </svg>
-      )
+      ),
+      gradient: 'from-purple-400 to-pink-600'
     },
     {
       name: 'Projects',
       path: '/projects',
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-full h-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
         </svg>
-      )
+      ),
+      gradient: 'from-emerald-400 to-teal-600'
     },
     {
       name: 'Services',
       path: '/services',
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-full h-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
-      )
+      ),
+      gradient: 'from-amber-400 to-orange-600'
     },
   ], []);
+
+  // Dock action items (contact, theme toggle)
+  const dockActions = useMemo(() => [
+    {
+      name: 'WhatsApp',
+      href: 'https://wa.me/+260570135415',
+      icon: <i className="fa-brands fa-whatsapp text-lg"></i>,
+      gradient: 'from-green-400 to-emerald-600',
+      external: true
+    },
+    {
+      name: 'Call',
+      href: 'tel:+260570135415',
+      icon: <i className="fa-solid fa-phone text-sm"></i>,
+      gradient: 'from-cyan-400 to-blue-600',
+      external: false
+    },
+  ], []);
+
+  // macOS Dock animation constants
+  const DOCK_CONFIG = useMemo(() => ({
+    minSize: 48,
+    maxSize: 80,
+    bound: 48 * Math.PI,
+    duration: 0.25
+  }), []);
+
+  // Dock magnification effect
+  const updateDockIcons = useCallback((pointer: number) => {
+    const items = dockItemsRef.current;
+    const { minSize, maxSize, bound, duration } = DOCK_CONFIG;
+
+    items.forEach((item, i) => {
+      if (!item) return;
+
+      const distance = (i * minSize + minSize / 2) - pointer;
+      let x = 0;
+      let scale = 1;
+
+      if (-bound < distance && distance < bound) {
+        const rad = distance / minSize * 0.5;
+        scale = 1 + (maxSize / minSize - 1) * Math.cos(rad);
+        x = 2.5 * (maxSize - minSize) * Math.sin(rad);
+      } else {
+        x = (-bound < distance ? 2.5 : -2.5) * (maxSize - minSize);
+      }
+
+      gsap.to(item, {
+        duration,
+        x,
+        scale,
+        ease: 'power2.out'
+      });
+    });
+  }, [DOCK_CONFIG]);
+
+  const resetDockIcons = useCallback(() => {
+    dockItemsRef.current.forEach((item) => {
+      if (!item) return;
+      gsap.to(item, {
+        duration: 0.3,
+        scale: 1,
+        x: 0,
+        ease: 'power2.out'
+      });
+    });
+  }, []);
+
+  // Set up dock event listeners
+  useEffect(() => {
+    const dock = dockRef.current;
+    if (!dock || window.innerWidth < 768) return;
+
+    const firstItem = dockItemsRef.current[0];
+    if (!firstItem) return;
+
+    const handleMouseMove = (event: MouseEvent) => {
+      const offset = dock.getBoundingClientRect().left + firstItem.offsetLeft;
+      updateDockIcons(event.clientX - offset);
+    };
+
+    const handleMouseLeave = () => {
+      resetDockIcons();
+    };
+
+    dock.addEventListener('mousemove', handleMouseMove);
+    dock.addEventListener('mouseleave', handleMouseLeave);
+
+    // Initial setup for dock items
+    gsap.set(dockItemsRef.current.filter(Boolean), {
+      transformOrigin: '50% 100%',
+      height: DOCK_CONFIG.minSize
+    });
+
+    return () => {
+      dock.removeEventListener('mousemove', handleMouseMove);
+      dock.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, [updateDockIcons, resetDockIcons, DOCK_CONFIG.minSize]);
 
   // Optimized scroll handler with requestAnimationFrame
   useEffect(() => {
@@ -107,50 +214,6 @@ const Navbar: React.FC = () => {
   useEffect(() => {
     const currentIsDark = document.documentElement.classList.contains('dark');
     setIsDark(currentIsDark);
-
-    // Only set up magnetic effects on desktop
-    if (window.innerWidth < 1024) return;
-
-    const magnets = document.querySelectorAll('.magnetic-area');
-    const cleanups: (() => void)[] = [];
-
-    magnets.forEach((magnet) => {
-      const m = magnet as HTMLElement;
-      const xTo = gsap.quickTo(m, "x", { duration: 0.3, ease: "power3" });
-      const yTo = gsap.quickTo(m, "y", { duration: 0.3, ease: "power3" });
-      let rect: DOMRect | null = null;
-
-      const updateRect = () => {
-        rect = m.getBoundingClientRect();
-      };
-
-      const handleMove = (e: MouseEvent) => {
-        if (!rect) updateRect();
-        const { left, top, width, height } = rect!;
-        const x = e.clientX - (left + width / 2);
-        const y = e.clientY - (top + height / 2);
-        xTo(x * 0.35);
-        yTo(y * 0.35);
-      };
-
-      const handleLeave = () => {
-        xTo(0);
-        yTo(0);
-        rect = null;
-      };
-
-      m.addEventListener("mouseenter", updateRect);
-      m.addEventListener("mousemove", handleMove);
-      m.addEventListener("mouseleave", handleLeave);
-
-      cleanups.push(() => {
-        m.removeEventListener("mouseenter", updateRect);
-        m.removeEventListener("mousemove", handleMove);
-        m.removeEventListener("mouseleave", handleLeave);
-      });
-    });
-
-    return () => cleanups.forEach(cleanup => cleanup());
   }, []);
 
   // Performance-optimized Mobile Menu Animation
@@ -270,6 +333,10 @@ const Navbar: React.FC = () => {
           gsap.to(btn, { scale: 1, duration: 0.3, ease: 'back.out' });
         }
       });
+    } else {
+      setIsDark(newThemeIsDark);
+      document.documentElement.classList.toggle('dark', newThemeIsDark);
+      localStorage.setItem('theme', newThemeIsDark ? 'dark' : 'light');
     }
   }, [isDark]);
 
@@ -283,93 +350,156 @@ const Navbar: React.FC = () => {
     setIsOpen(prev => !prev);
   }, []);
 
-  return (
-    <nav ref={navRef} className="fixed top-0 left-0 right-0 z-50 glass-nav transition-colors duration-500">
-      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <Link to="/" className="flex items-center group magnetic-area nav-item relative z-[60]">
-          <img
-            src={logo}
-            alt="Kytriq Logo"
-            width="112"
-            height="48"
-            className="h-10 md:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
-          />
-        </Link>
+  // Helper to set dock item refs
+  const setDockItemRef = (el: HTMLLIElement | null, index: number) => {
+    if (el) dockItemsRef.current[index] = el;
+  };
 
-        {/* Desktop Menu */}
-        <div className="hidden md:flex items-center space-x-8">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              to={link.path}
-              className={`nav-item text-sm font-medium tracking-wide transition-colors ${isActive(link.path) ? 'text-blue-600 font-bold' : 'text-gray-500 dark:text-gray-400 hover:text-blue-500'
-                }`}
+  return (
+    <>
+      {/* Top Navigation Bar with Logo */}
+      <nav ref={navRef} className="fixed top-0 left-0 right-0 z-50 glass-nav transition-colors duration-500">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+          <Link to="/" className="flex items-center group magnetic-area nav-item relative z-[60]">
+            <img
+              src={logo}
+              alt="Kytriq Logo"
+              width="112"
+              height="48"
+              className="h-10 md:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+            />
+          </Link>
+
+          {/* Mobile Toggle */}
+          <div className="flex items-center space-x-3 md:hidden relative z-[60]">
+            <button
+              onClick={toggleTheme}
+              className="text-gray-600 dark:text-gray-300 w-11 h-11 flex items-center justify-center rounded-full bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm"
+              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             >
-              {link.name}
-            </Link>
+              {isDark ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              )}
+            </button>
+            <button
+              ref={hamburgerRef}
+              className="w-11 h-11 flex flex-col items-center justify-center gap-1.5 rounded-full bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm"
+              onClick={handleMenuToggle}
+              aria-label={isOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={isOpen}
+            >
+              <span className="hamburger-line block w-5 h-0.5 bg-gray-600 dark:bg-gray-300 origin-center"></span>
+              <span className="hamburger-line block w-5 h-0.5 bg-gray-600 dark:bg-gray-300 origin-center"></span>
+              <span className="hamburger-line block w-5 h-0.5 bg-gray-600 dark:bg-gray-300 origin-center"></span>
+            </button>
+          </div>
+
+          {/* Empty space for desktop - dock is at bottom */}
+          <div className="hidden md:block"></div>
+        </div>
+      </nav>
+
+      {/* Desktop Dock - macOS Style Bottom Navigation */}
+      <div className="hidden md:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-50 justify-center">
+        <ul
+          ref={dockRef}
+          className="dock-container inline-flex items-end gap-2 px-4 py-3 rounded-2xl bg-white/20 dark:bg-gray-900/30 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 shadow-2xl shadow-black/10 dark:shadow-black/30"
+          style={{
+            height: '70px',
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 100%)',
+          }}
+        >
+          {/* Navigation Links */}
+          {navLinks.map((link, index) => (
+            <li
+              key={link.name}
+              ref={(el) => setDockItemRef(el, index)}
+              className="dock-item relative"
+              style={{ width: '48px', height: '48px' }}
+            >
+              <Link
+                to={link.path}
+                className={`dock-link group relative flex items-center justify-center w-full h-full rounded-xl transition-all duration-200 ${isActive(link.path)
+                    ? `bg-gradient-to-br ${link.gradient} shadow-lg`
+                    : 'bg-white/60 dark:bg-gray-800/60 hover:bg-white/80 dark:hover:bg-gray-700/80'
+                  }`}
+                aria-label={link.name}
+              >
+                <span className={`w-6 h-6 ${isActive(link.path) ? 'text-white' : 'text-gray-700 dark:text-gray-200'}`}>
+                  {link.icon}
+                </span>
+
+                {/* Tooltip */}
+                <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-lg bg-gray-900 dark:bg-gray-700 text-white text-xs font-medium whitespace-nowrap opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 pointer-events-none shadow-lg">
+                  {link.name}
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45"></span>
+                </span>
+              </Link>
+
+              {/* Active indicator dot */}
+              {isActive(link.path) && (
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-gray-600 dark:bg-gray-300"></span>
+              )}
+            </li>
           ))}
 
-          {/* Contact Icons - Desktop */}
-          <span className="nav-item flex items-center space-x-2 mr-2">
-            <a
-              href="https://wa.me/+260570135415"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="magnetic-area w-10 h-10 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-green-500 hover:text-green-500 transition-all"
-              aria-label="Contact via WhatsApp"
-            >
-              <i className="fa-brands fa-whatsapp text-lg"></i>
-            </a>
-            <a
-              href="tel:+260570135415"
-              className="magnetic-area w-10 h-10 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-blue-500 hover:text-blue-500 transition-all"
-              aria-label="Call Us"
-            >
-              <i className="fa-solid fa-phone text-sm"></i>
-            </a>
-          </span>
+          {/* Separator */}
+          <li className="w-px h-8 bg-gray-300/50 dark:bg-gray-600/50 mx-1 self-center"></li>
 
-          <span className="nav-item">
+          {/* Action Items (Contact) */}
+          {dockActions.map((action, index) => (
+            <li
+              key={action.name}
+              ref={(el) => setDockItemRef(el, navLinks.length + 1 + index)}
+              className="dock-item relative"
+              style={{ width: '48px', height: '48px' }}
+            >
+              <a
+                href={action.href}
+                target={action.external ? '_blank' : undefined}
+                rel={action.external ? 'noopener noreferrer' : undefined}
+                className={`dock-link group relative flex items-center justify-center w-full h-full rounded-xl bg-gradient-to-br ${action.gradient} text-white shadow-md hover:shadow-lg transition-all duration-200`}
+                aria-label={action.name}
+              >
+                {action.icon}
+
+                {/* Tooltip */}
+                <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-lg bg-gray-900 dark:bg-gray-700 text-white text-xs font-medium whitespace-nowrap opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 pointer-events-none shadow-lg">
+                  {action.name}
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45"></span>
+                </span>
+              </a>
+            </li>
+          ))}
+
+          {/* Theme Toggle */}
+          <li
+            ref={(el) => setDockItemRef(el, navLinks.length + 1 + dockActions.length)}
+            className="dock-item relative"
+            style={{ width: '48px', height: '48px' }}
+          >
             <button
               ref={themeBtnRef}
               onClick={toggleTheme}
-              className="magnetic-area w-10 h-10 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-blue-500 hover:text-blue-500 transition-all"
+              className="dock-link group relative flex items-center justify-center w-full h-full rounded-xl bg-white/60 dark:bg-gray-800/60 hover:bg-white/80 dark:hover:bg-gray-700/80 text-gray-700 dark:text-gray-200 transition-all duration-200"
               aria-label="Toggle Theme"
             >
-              <i className={`fa-solid ${isDark ? 'fa-sun' : 'fa-moon'}`}></i>
-            </button>
-          </span>
-        </div>
+              <i className={`fa-solid ${isDark ? 'fa-sun' : 'fa-moon'} text-lg`}></i>
 
-        {/* Mobile Toggle */}
-        <div className="flex items-center space-x-3 md:hidden relative z-[60]">
-          <button
-            onClick={toggleTheme}
-            className="text-gray-600 dark:text-gray-300 w-11 h-11 flex items-center justify-center rounded-full bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm"
-            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            {isDark ? (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
-            )}
-          </button>
-          <button
-            ref={hamburgerRef}
-            className="w-11 h-11 flex flex-col items-center justify-center gap-1.5 rounded-full bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm"
-            onClick={handleMenuToggle}
-            aria-label={isOpen ? 'Close menu' : 'Open menu'}
-            aria-expanded={isOpen}
-          >
-            <span className="hamburger-line block w-5 h-0.5 bg-gray-600 dark:bg-gray-300 origin-center"></span>
-            <span className="hamburger-line block w-5 h-0.5 bg-gray-600 dark:bg-gray-300 origin-center"></span>
-            <span className="hamburger-line block w-5 h-0.5 bg-gray-600 dark:bg-gray-300 origin-center"></span>
-          </button>
-        </div>
+              {/* Tooltip */}
+              <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-lg bg-gray-900 dark:bg-gray-700 text-white text-xs font-medium whitespace-nowrap opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 pointer-events-none shadow-lg">
+                {isDark ? 'Light Mode' : 'Dark Mode'}
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45"></span>
+              </span>
+            </button>
+          </li>
+        </ul>
       </div>
 
       {/* Mobile Menu - Full Screen Opaque Overlay */}
@@ -426,7 +556,7 @@ const Navbar: React.FC = () => {
                     : 'text-gray-800 dark:text-gray-100 bg-white/50 dark:bg-gray-900/50 hover:bg-white/80 dark:hover:bg-gray-800/80'
                     }`}
                 >
-                  <span className="flex items-center justify-center p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 group-hover:bg-blue-500 group-hover:text-white transition-colors" aria-hidden="true">{link.icon}</span>
+                  <span className={`flex items-center justify-center w-10 h-10 p-2 rounded-xl bg-gradient-to-br ${link.gradient} text-white`} aria-hidden="true">{link.icon}</span>
                   <span className="text-xl font-heading font-bold tracking-tight">{link.name}</span>
                   {isActive(link.path) && (
                     <span className="ml-auto w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
@@ -476,9 +606,10 @@ const Navbar: React.FC = () => {
           </div>
         </div>
       </div>
-    </nav>
+    </>
   );
 };
 
 export default Navbar;
+
 

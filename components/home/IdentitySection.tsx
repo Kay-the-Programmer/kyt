@@ -144,6 +144,7 @@ const IdentitySection: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const badgeRef = useRef<HTMLDivElement>(null);
   const featureRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const mobileTabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const sceneContainerRef = useRef<HTMLDivElement>(null);
   const progressTweenRef = useRef<gsap.core.Tween | null>(null);
   const delayedCallRef = useRef<gsap.core.Tween | null>(null);
@@ -152,11 +153,20 @@ const IdentitySection: React.FC = () => {
   const [activeImage, setActiveImage] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const progressRingRef = useRef<SVGCircleElement | null>(null);
 
   // Track last transition time to prevent rapid-fire transitions
   const lastTransitionRef = useRef(0);
   const TRANSITION_DEBOUNCE = 200;
+
+  // Handle mobile detection safely
+  useLayoutEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Memoize features to prevent re-creation
   const features = useMemo(() => [
@@ -265,6 +275,39 @@ const IdentitySection: React.FC = () => {
             clearProps: 'transform'
           }, 0.45);
       }
+    }
+
+    // Mobile Tabs Animation
+    const mobileTabs = mobileTabRefs.current;
+    if (mobileTabs[fromIndex] && mobileTabs[toIndex]) {
+      const fromTab = mobileTabs[fromIndex];
+      const toTab = mobileTabs[toIndex];
+
+      // Animate out previous
+      tl.to(fromTab, {
+        width: 0,
+        padding: 0,
+        opacity: 0,
+        duration: 0.3,
+        ease: 'power2.in',
+        onComplete: () => {
+          gsap.set(fromTab, { display: 'none' });
+        }
+      }, 0);
+
+      // Animate in new
+      tl.set(toTab, { display: 'block' }, 0);
+      tl.fromTo(toTab,
+        { width: 0, padding: 0, opacity: 0 },
+        {
+          width: 'auto',
+          padding: '0.625rem 0.75rem', // Match py-2.5 px-3
+          opacity: 1,
+          duration: 0.3,
+          ease: 'power2.out'
+        },
+        0.1
+      );
     }
 
     setActiveImage(toIndex);
@@ -514,6 +557,19 @@ const IdentitySection: React.FC = () => {
     return () => stopAutoRotate();
   }, [isVisible, isPaused, startAutoRotate, stopAutoRotate]);
 
+  // Initialize Mobile Tabs State
+  useLayoutEffect(() => {
+    mobileTabRefs.current.forEach((tab, i) => {
+      if (tab) {
+        if (i === activeImage) {
+          gsap.set(tab, { display: 'block', width: 'auto', opacity: 1, padding: '0.625rem 0.75rem' });
+        } else {
+          gsap.set(tab, { display: 'none', width: 0, opacity: 0, padding: 0 });
+        }
+      }
+    });
+  }, []); // Run once on mount to set initial styles
+
   return (
     <section
       id="who-we-are"
@@ -539,20 +595,22 @@ const IdentitySection: React.FC = () => {
             <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">What We Do</span>
           </div>
           <h3 className="text-4xl font-heading font-bold text-gray-900 dark:text-white leading-tight">
-            Architecting <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Solutions</span>
+            <SplitText text="Architecting" className="block" /> <br />
+            <SplitText isGradient={true} text="Solutions" />
           </h3>
         </div>
 
         {/* MOBILE TABS - Only visible on mobile */}
-        <div className="lg:hidden w-full order-2 mb-6">
-          <div className="flex p-1 bg-gray-100/50 dark:bg-gray-800/50 rounded-xl overflow-x-auto no-scrollbar gap-2">
+        <div className="lg:hidden w-full order-2 mb-8">
+          <div className="flex p-1.5 bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl border border-gray-200/50 dark:border-gray-700/50 overflow-x-auto no-scrollbar gap-1 shadow-inner">
             {features.map((item, i) => (
               <button
                 key={i}
+                ref={(el) => { mobileTabRefs.current[i] = el; }}
                 onClick={() => handleFeatureHover(i)}
-                className={`flex-1 min-w-[100px] py-2.5 px-3 rounded-lg text-sm font-bold transition-all duration-300 whitespace-nowrap ${activeImage === i
-                  ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                className={`flex-1 min-w-[100px] py-2.5 px-3 rounded-lg text-xs font-bold transition-all duration-300 whitespace-nowrap overflow-hidden ${activeImage === i
+                  ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm ring-1 ring-black/5 dark:ring-white/5'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-700/50'
                   }`}
               >
                 {item.title.split(' ')[0]} {/* Show first word only for compactness (Web, Mobile, AI) */}
@@ -571,7 +629,7 @@ const IdentitySection: React.FC = () => {
             className="identity-title text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-heading font-bold mb-8 leading-[0.9] text-gray-900 dark:text-white tracking-tight"
             style={{ perspective: '1000px' }}
           >
-            <SplitText text="Architecting" className="block" />
+            <SplitText text="Architecting" className="block" /> <br />
             <SplitText isGradient={true} text="Solutions" />
           </h3>
 
@@ -597,45 +655,42 @@ const IdentitySection: React.FC = () => {
         {/* RIGHT 3D SCENE - Shared but reordered on mobile */}
         <div className="relative w-full order-3 lg:order-none" style={{ perspective: '1200px' }}>
           <div
-            className="image-reveal-wrapper relative aspect-[4/5] md:aspect-square lg:aspect-[4/5] rounded-[2.5rem] overflow-hidden bg-transparent"
+            className="image-reveal-wrapper relative aspect-square md:aspect-square lg:aspect-[4/5] rounded-[2rem] lg:rounded-[2.5rem] overflow-hidden bg-transparent shadow-2xl shadow-blue-900/10 dark:shadow-blue-900/20"
           >
             <div
               ref={sceneContainerRef}
-              className="w-full h-full overflow-hidden rounded-[2.5rem] relative"
+              className="w-full h-full overflow-hidden rounded-[2rem] lg:rounded-[2.5rem] relative cursor-grab active:cursor-grabbing touch-none"
+              onMouseEnter={() => setIsPaused(true)}
+              onMouseLeave={() => setIsPaused(false)}
+              onTouchStart={() => setIsPaused(true)}
+              onTouchEnd={() => setIsPaused(false)}
             >
-              <ServiceScene3D activeIndex={activeImage} />
-            </div>
-
-            {/* Floating label - Desktop only */}
-            <div className="absolute top-6 hidden lg:block left-6 px-4 py-2 rounded-full bg-transparent shadow-lg z-10">
-              <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                {features[activeImage].title}
-              </span>
+              <ServiceScene3D activeIndex={activeImage} isMobile={isMobile} />
             </div>
 
             {/* Mobile Description Overlay */}
-            <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-white via-white/95 to-transparent dark:from-gray-950 dark:via-gray-900/95 pt-20 lg:hidden flex flex-col items-center text-center z-10">
+            <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-white/95 via-white/90 to-transparent dark:from-gray-950/95 dark:via-gray-900/90 pt-24 lg:hidden flex flex-col items-center text-center z-10 backdrop-blur-[2px]">
               <h4 key={`title-${activeImage}`} className="text-xl font-bold mb-2 text-gray-900 dark:text-white"
                 ref={(el) => {
                   if (el) {
                     gsap.fromTo(el,
-                      { y: 20, opacity: 0 },
-                      { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" }
+                      { y: 15, opacity: 0 },
+                      { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" }
                     );
                   }
                 }}
               >
                 <SplitText text={features[activeImage].title} />
               </h4>
-              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed max-w-xs mx-auto min-h-[3rem]">
+              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed max-w-[280px] mx-auto min-h-[3rem] font-medium">
                 <TypewriterText text={features[activeImage].text} />
               </p>
-              <div className="mt-3 w-12 h-1 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 opacity-50"></div>
+              <div className="mt-4 w-16 h-1 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 opacity-80"></div>
             </div>
           </div>
 
           {/* Decorative rings */}
-          <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] aspect-square">
+          <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] aspect-square pointer-events-none">
             <div className="absolute inset-0 border border-blue-200/20 dark:border-blue-500/10 rounded-full animate-pulse" style={{ animationDuration: '4s' }} />
             <div className="absolute inset-8 border border-indigo-200/15 dark:border-indigo-500/10 rounded-full animate-pulse" style={{ animationDuration: '3s', animationDelay: '0.5s' }} />
           </div>

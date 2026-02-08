@@ -8,6 +8,7 @@ import AIScene from './3d/AIScene';
 
 interface ServiceScene3DProps {
     activeIndex: number;
+    isMobile?: boolean;
 }
 
 // Simple loading fallback
@@ -135,9 +136,9 @@ const RendererOptimizer: React.FC = () => {
     return null;
 };
 
-const ServiceScene3D: React.FC<ServiceScene3DProps> = ({ activeIndex }) => {
+const ServiceScene3D: React.FC<ServiceScene3DProps> = ({ activeIndex, isMobile = false }) => {
     return (
-        <div className="w-full h-full" style={{ minHeight: '400px' }}>
+        <div className="w-full h-full" style={{ minHeight: isMobile ? '300px' : '400px' }}>
             <Canvas
                 dpr={[1, 2]}
                 gl={{
@@ -163,15 +164,17 @@ const ServiceScene3D: React.FC<ServiceScene3DProps> = ({ activeIndex }) => {
 
                 <OrbitControls
                     makeDefault
-                    enableZoom={false}
+                    enableZoom={!isMobile}
+                    minDistance={2.5}
+                    maxDistance={8}
                     enablePan={false}
-                    maxPolarAngle={Math.PI / 1.7}
-                    minPolarAngle={Math.PI / 2.6}
+                    maxPolarAngle={Math.PI / 1.5}
+                    minPolarAngle={Math.PI / 3.5}
                     autoRotate
-                    autoRotateSpeed={0.4}
+                    autoRotateSpeed={isMobile ? 0.3 : 0.5}
                     enableDamping
-                    dampingFactor={0.05}
-                    rotateSpeed={0.5}
+                    dampingFactor={0.1}
+                    rotateSpeed={1.0}
                 />
             </Canvas>
         </div>

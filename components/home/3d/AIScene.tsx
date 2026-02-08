@@ -1,234 +1,367 @@
-import React, { useRef, useMemo, memo, useEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { Float, Sphere, Instance, Instances } from '@react-three/drei';
-import * as THREE from 'three';
+import React, { memo, useEffect, useMemo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
+import { Float, Sphere, RoundedBox, Line } from "@react-three/drei";
+import * as THREE from "three";
 
-// Shared geometries
-const nodeGeometrySmall = new THREE.SphereGeometry(0.05, 12, 12);
-const nodeGeometryMedium = new THREE.SphereGeometry(0.07, 12, 12);
-const particleGeometry = new THREE.SphereGeometry(0.03, 8, 8);
+/** ---------- Shared geometry/material (perf) ---------- */
+const nodeGeometry = new THREE.SphereGeometry(0.06, 16, 16);
+const packetGeometry = new THREE.SphereGeometry(0.03, 10, 10);
 
-// Shared materials
-const innerNodeMaterial = new THREE.MeshStandardMaterial({
-    color: '#60a5fa',
-    emissive: '#60a5fa',
-    emissiveIntensity: 0.6,
+const coreMaterial = new THREE.MeshStandardMaterial({
+    color: "#3b82f6",
+    emissive: "#1d4ed8",
+    emissiveIntensity: 1.0,
     transparent: true,
-    opacity: 0.9
+    opacity: 0.92,
+});
+
+const nodeMaterial = new THREE.MeshStandardMaterial({
+    color: "#60a5fa",
+    emissive: "#60a5fa",
+    emissiveIntensity: 0.55,
+    transparent: true,
+    opacity: 0.9,
 });
 
 const outerNodeMaterial = new THREE.MeshStandardMaterial({
-    color: '#a78bfa',
-    emissive: '#a78bfa',
-    emissiveIntensity: 0.6,
+    color: "#a78bfa",
+    emissive: "#8b5cf6",
+    emissiveIntensity: 0.55,
     transparent: true,
-    opacity: 0.9
+    opacity: 0.9,
 });
 
-const particleMaterial = new THREE.MeshStandardMaterial({
-    color: '#22d3ee',
-    emissive: '#06b6d4',
-    emissiveIntensity: 1
+const packetMaterial = new THREE.MeshStandardMaterial({
+    color: "#22d3ee",
+    emissive: "#06b6d4",
+    emissiveIntensity: 1.25,
 });
 
-// Optimized Instanced Nodes
-const InstancedNodes = memo<{ positions: [number, number, number][]; isOuter?: boolean; baseDelay: number }>(({
-    positions,
-    isOuter = false,
-    baseDelay
-}) => {
-    const meshRef = useRef<THREE.InstancedMesh>(null);
-    const tempObj = useMemo(() => new THREE.Object3D(), []);
+/** ---------- Layout (systems/modules) ---------- */
+const innerNodes: [number, number, number][] = [
+    [-0.65, 0.35, 0.25],
+    [0.65, 0.35, 0.25],
+    [-0.55, -0.35, 0.25],
+    [0.55, -0.35, 0.25],
+    [0, 0.75, 0.2],
+    [0, -0.7, 0.2],
+];
 
-    useFrame(({ clock }) => {
-        if (!meshRef.current) return;
-        const t = clock.getElapsedTime();
+const outerModules: [number, number, number][] = [
+    [-1.25, 0.75, -0.1],
+    [1.25, 0.75, -0.1],
+    [-1.35, 0.0, -0.1],
+    [1.35, 0.0, -0.1],
+    [-1.25, -0.75, -0.1],
+    [1.25, -0.75, -0.1],
+];
 
-        for (let i = 0; i < positions.length; i++) {
-            const delay = i * (isOuter ? 0.4 : 0.3) + baseDelay;
-            const scale = 1 + Math.sin(t * 2 + delay) * 0.2;
+type Conn = { start: [number, number, number]; end: [number, number, number] };
 
-            tempObj.position.set(positions[i][0], positions[i][1], positions[i][2]);
-            tempObj.scale.setScalar(scale);
-            tempObj.updateMatrix();
-            meshRef.current.setMatrixAt(i, tempObj.matrix);
-        }
-        meshRef.current.instanceMatrix.needsUpdate = true;
-    });
+const connections: Conn[] = [
+    ...innerNodes.map((n) => ({ start: [0, 0, 0] as [number, number, number], end: n })),
+    { start: innerNodes[0], end: outerModules[0] },
+    { start: innerNodes[1], end: outerModules[1] },
+    { start: innerNodes[2], end: outerModules[2] },
+    { start: innerNodes[3], end: outerModules[3] },
+    { start: innerNodes[5], end: outerModules[4] },
+    { start: innerNodes[5], end: outerModules[5] },
+];
 
-    return (
-        <instancedMesh
-            ref={meshRef}
-            args={[isOuter ? nodeGeometrySmall : nodeGeometryMedium, isOuter ? outerNodeMaterial : innerNodeMaterial, positions.length]}
-        />
-    );
-});
-
-InstancedNodes.displayName = 'InstancedNodes';
-
-// Optimized Connections
-const Connections = memo<{ connections: { start: [number, number, number]; end: [number, number, number] }[] }>(({ connections }) => {
-    const linesRef = useRef<THREE.Group>(null);
-
-    const lines = useMemo(() => {
-        return connections.map((conn, i) => {
-            const points = [new THREE.Vector3(...conn.start), new THREE.Vector3(...conn.end)];
-            const geometry = new THREE.BufferGeometry().setFromPoints(points);
-            const material = new THREE.LineBasicMaterial({
-                color: '#60a5fa',
-                transparent: true,
-                opacity: 0.5
-            });
-            const line = new THREE.Line(geometry, material);
-            return <primitive key={i} object={line} />;
-        });
-    }, [connections]);
-
-    useFrame(({ clock }) => {
-        const t = clock.getElapsedTime();
-        if (linesRef.current) {
-            linesRef.current.children.forEach((child, i) => {
-                const line = child as THREE.Line;
-                const material = line.material as THREE.LineBasicMaterial;
-                if (material) {
-                    const delay = i * 0.15;
-                    material.opacity = 0.3 + Math.sin(t * 2 + delay) * 0.25;
-                }
-            });
-        }
-    });
-
-    return <group ref={linesRef}>{lines}</group>;
-});
-
-Connections.displayName = 'Connections';
-
-// Optimized Particles
-const Particles = memo<{ connections: { start: [number, number, number]; end: [number, number, number] }[] }>(({ connections }) => {
-    const meshRef = useRef<THREE.InstancedMesh>(null);
-    const tempObj = useMemo(() => new THREE.Object3D(), []);
-    // Pre-calculate vectors to avoid creation in loop
-    const vectors = useMemo(() => connections.map(c => ({
-        start: new THREE.Vector3(...c.start),
-        dir: new THREE.Vector3(...c.end).sub(new THREE.Vector3(...c.start))
-    })), [connections]);
-
-    useFrame(({ clock }) => {
-        if (!meshRef.current) return;
-        const t = clock.getElapsedTime();
-
-        for (let i = 0; i < vectors.length; i++) {
-            const delay = i * 0.5;
-            const progress = ((t + delay) * 0.3) % 1;
-
-            // LERP manually
-            tempObj.position.copy(vectors[i].start).addScaledVector(vectors[i].dir, progress);
-            tempObj.updateMatrix();
-            meshRef.current.setMatrixAt(i, tempObj.matrix);
-        }
-        meshRef.current.instanceMatrix.needsUpdate = true;
-    });
-
-    return (
-        <instancedMesh
-            ref={meshRef}
-            args={[particleGeometry, particleMaterial, connections.length]}
-        />
-    );
-});
-
-Particles.displayName = 'Particles';
-
-// Smooth rotating core
+/** ---------- AI Core (brain) ---------- */
 const AICore = memo(() => {
-    const coreRef = useRef<THREE.Group>(null);
-    const innerRef = useRef<THREE.Mesh>(null);
+    const g = useRef<THREE.Group>(null);
+    const inner = useRef<THREE.Mesh>(null);
+    const halo = useRef<THREE.Mesh>(null);
+
+    const ring1 = useMemo(() => new THREE.TorusGeometry(0.48, 0.018, 14, 80), []);
+    const ring2 = useMemo(() => new THREE.TorusGeometry(0.60, 0.014, 14, 80), []);
+    const haloGeo = useMemo(() => new THREE.RingGeometry(0.72, 0.86, 64), []);
 
     useFrame(({ clock }) => {
         const t = clock.getElapsedTime();
-        if (coreRef.current) {
-            coreRef.current.rotation.y = t * 0.3;
-            coreRef.current.rotation.x = Math.sin(t * 0.2) * 0.1;
+        if (g.current) {
+            g.current.rotation.y = t * 0.28;
+            g.current.rotation.x = Math.sin(t * 0.18) * 0.08;
         }
-        if (innerRef.current) {
-            const scale = 1 + Math.sin(t * 2) * 0.1;
-            innerRef.current.scale.setScalar(scale);
+        if (inner.current) {
+            const s = 1 + Math.sin(t * 2.1) * 0.09;
+            inner.current.scale.setScalar(s);
+        }
+        if (halo.current) {
+            const p = 0.35 + (Math.sin(t * 1.6) + 1) * 0.12;
+            (halo.current.material as THREE.MeshBasicMaterial).opacity = p;
+            halo.current.rotation.z = t * 0.18;
         }
     });
 
-    const torusGeometry1 = useMemo(() => new THREE.TorusGeometry(0.4, 0.02, 12, 48), []);
-    const torusGeometry2 = useMemo(() => new THREE.TorusGeometry(0.5, 0.015, 12, 48), []);
-
     return (
-        <group ref={coreRef}>
-            <Sphere ref={innerRef} args={[0.25, 24, 24]}>
-                <meshStandardMaterial
-                    color="#3b82f6"
-                    emissive="#1d4ed8"
-                    emissiveIntensity={0.8}
-                    transparent
-                    opacity={0.9}
-                />
+        <group ref={g}>
+            <Sphere ref={inner} args={[0.26, 28, 28]}>
+                <primitive object={coreMaterial} attach="material" />
             </Sphere>
 
-            <mesh rotation={[Math.PI / 2, 0, 0]} geometry={torusGeometry1}>
-                <meshStandardMaterial color="#60a5fa" emissive="#3b82f6" emissiveIntensity={0.5} />
+            <mesh rotation={[Math.PI / 2, 0, 0]} geometry={ring1}>
+                <meshStandardMaterial
+                    color="#60a5fa"
+                    emissive="#3b82f6"
+                    emissiveIntensity={0.65}
+                />
             </mesh>
 
-            <mesh rotation={[Math.PI / 3, Math.PI / 4, 0]} geometry={torusGeometry2}>
-                <meshStandardMaterial color="#a78bfa" emissive="#8b5cf6" emissiveIntensity={0.4} />
+            <mesh rotation={[Math.PI / 3, Math.PI / 6, 0]} geometry={ring2}>
+                <meshStandardMaterial
+                    color="#a78bfa"
+                    emissive="#8b5cf6"
+                    emissiveIntensity={0.55}
+                />
+            </mesh>
+
+            {/* Holo halo */}
+            <mesh ref={halo} rotation={[-Math.PI / 2, 0, 0]} geometry={haloGeo} position={[0, -0.02, 0]}>
+                <meshBasicMaterial
+                    color="#22d3ee"
+                    transparent
+                    opacity={0.35}
+                    side={THREE.DoubleSide}
+                />
             </mesh>
         </group>
     );
 });
+AICore.displayName = "AICore";
 
-AICore.displayName = 'AICore';
+/** ---------- Circuit Grid (system plane) ---------- */
+const CircuitGrid = memo(() => {
+    const mat = useRef<THREE.MeshStandardMaterial>(null);
+    const geo = useMemo(() => new THREE.PlaneGeometry(4.4, 4.4, 1, 1), []);
 
-const innerNodes: [number, number, number][] = [
-    [-0.6, 0.4, 0.2],
-    [0.6, 0.4, 0.2],
-    [-0.5, -0.4, 0.3],
-    [0.5, -0.4, 0.3],
-    [0, 0.7, 0.1],
-    [0, -0.6, 0.2],
-];
+    useFrame(({ clock }) => {
+        const t = clock.getElapsedTime();
+        if (mat.current) {
+            mat.current.opacity = 0.08 + (Math.sin(t * 0.8) + 1) * 0.02;
+            mat.current.emissiveIntensity = 0.25 + (Math.sin(t * 0.9) + 1) * 0.08;
+        }
+    });
 
-const outerNodes: [number, number, number][] = [
-    [-1.0, 0.7, -0.1],
-    [1.0, 0.7, -0.1],
-    [-1.1, 0, 0],
-    [1.1, 0, 0],
-    [-1.0, -0.6, -0.1],
-    [1.0, -0.6, -0.1],
-];
-
-const connections: { start: [number, number, number]; end: [number, number, number] }[] = [
-    { start: [0, 0, 0], end: innerNodes[0] },
-    { start: [0, 0, 0], end: innerNodes[1] },
-    { start: [0, 0, 0], end: innerNodes[2] },
-    { start: [0, 0, 0], end: innerNodes[3] },
-    { start: [0, 0, 0], end: innerNodes[4] },
-    { start: [0, 0, 0], end: innerNodes[5] },
-    { start: innerNodes[0], end: outerNodes[0] },
-    { start: innerNodes[1], end: outerNodes[1] },
-    { start: innerNodes[2], end: outerNodes[2] },
-    { start: innerNodes[3], end: outerNodes[3] },
-];
-
-const AIScene: React.FC = () => {
     return (
-        <Float speed={1.2} rotationIntensity={0.1} floatIntensity={0.3}>
-            <group scale={1.3}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.05, 0]} geometry={geo}>
+            <meshStandardMaterial
+                ref={mat}
+                color="#0b1220"
+                emissive="#1d4ed8"
+                emissiveIntensity={0.3}
+                transparent
+                opacity={0.1}
+            />
+        </mesh>
+    );
+});
+CircuitGrid.displayName = "CircuitGrid";
+
+/** ---------- Inner Nodes (instanced) ---------- */
+const InstancedNodes = memo<{ positions: [number, number, number][]; outer?: boolean; baseDelay: number }>(
+    ({ positions, outer = false, baseDelay }) => {
+        const meshRef = useRef<THREE.InstancedMesh>(null);
+        const temp = useMemo(() => new THREE.Object3D(), []);
+
+        useFrame(({ clock }) => {
+            const t = clock.getElapsedTime();
+            if (!meshRef.current) return;
+
+            for (let i = 0; i < positions.length; i++) {
+                const delay = baseDelay + i * (outer ? 0.35 : 0.25);
+                const pulse = 1 + Math.sin(t * 2.2 + delay) * (outer ? 0.16 : 0.22);
+
+                temp.position.set(...positions[i]);
+                temp.scale.setScalar(pulse);
+                temp.updateMatrix();
+                meshRef.current.setMatrixAt(i, temp.matrix);
+            }
+            meshRef.current.instanceMatrix.needsUpdate = true;
+        });
+
+        return (
+            <instancedMesh
+                ref={meshRef}
+                args={[nodeGeometry, outer ? outerNodeMaterial : nodeMaterial, positions.length]}
+            />
+        );
+    }
+);
+InstancedNodes.displayName = "InstancedNodes";
+
+/** ---------- Outer Modules (boxes) - Cached Geometry ---------- */
+// Create geometry once
+const moduleGeometry = new THREE.BoxGeometry(0.26, 0.16, 0.12);
+
+const Modules = memo(() => {
+    const meshRef = useRef<THREE.InstancedMesh>(null);
+    const temp = useMemo(() => new THREE.Object3D(), []);
+
+    useFrame(({ clock }) => {
+        const t = clock.getElapsedTime();
+        if (!meshRef.current) return;
+
+        outerModules.forEach((pos, i) => {
+            const wobble = Math.sin(t * 1.4 + i * 0.6) * 0.04;
+            temp.position.set(pos[0], pos[1] + wobble, pos[2]);
+            temp.updateMatrix();
+            meshRef.current!.setMatrixAt(i, temp.matrix);
+        });
+        meshRef.current.instanceMatrix.needsUpdate = true;
+    });
+
+    return (
+        <instancedMesh
+            ref={meshRef}
+            args={[moduleGeometry, undefined, outerModules.length]}
+        >
+            <meshStandardMaterial
+                color="#111827"
+                emissive="#8b5cf6"
+                emissiveIntensity={0.25}
+                metalness={0.3}
+                roughness={0.35}
+                transparent
+                opacity={0.95}
+            />
+        </instancedMesh>
+    );
+});
+Modules.displayName = "Modules";
+
+/** ---------- Connections (Optimized Instanced Cylinders) ---------- */
+// Shared geometry for connections (Cylinder pointing up Y, height 1)
+const connectionGeometry = new THREE.CylinderGeometry(0.005, 0.005, 1, 8);
+// Rotate geometry so cylinder lies along Z axis for easier lookAt logic
+connectionGeometry.rotateX(Math.PI / 2);
+connectionGeometry.translate(0, 0, 0.5); // Pivot at start
+
+const Connections = memo<{ connections: Conn[] }>(({ connections }) => {
+    const meshRef = useRef<THREE.InstancedMesh>(null);
+    const temp = useMemo(() => new THREE.Object3D(), []);
+    const color = useMemo(() => new THREE.Color(), []);
+
+    // Static layout
+    React.useLayoutEffect(() => {
+        if (!meshRef.current) return;
+
+        connections.forEach((conn, i) => {
+            const start = new THREE.Vector3(...conn.start);
+            const end = new THREE.Vector3(...conn.end);
+            const dist = start.distanceTo(end);
+
+            temp.position.copy(start);
+            temp.lookAt(end);
+            temp.scale.set(1, 1, dist); // Scale length (Z)
+            temp.updateMatrix();
+
+            meshRef.current!.setMatrixAt(i, temp.matrix);
+        });
+        meshRef.current.instanceMatrix.needsUpdate = true;
+    }, [connections, temp]);
+
+    // Animation loop for opacity/color pulse
+    useFrame(({ clock }) => {
+        if (!meshRef.current) return;
+        const t = clock.getElapsedTime();
+
+        for (let i = 0; i < connections.length; i++) {
+            const phase = i * 0.18;
+            // Pulse opacity by modulating color brightness
+            const pulse = 0.22 + (Math.sin(t * 2.0 + phase) + 1) * 0.12;
+            color.set("#60a5fa").multiplyScalar(pulse);
+            meshRef.current.setColorAt(i, color);
+        }
+        if (meshRef.current.instanceColor) meshRef.current.instanceColor.needsUpdate = true;
+    });
+
+    return (
+        <instancedMesh
+            ref={meshRef}
+            args={[connectionGeometry, undefined, connections.length]}
+        >
+            <meshBasicMaterial
+                color="#ffffff" // Multiplied by instance color
+                transparent
+                opacity={1}
+                depthWrite={false}
+                toneMapped={false}
+            />
+        </instancedMesh>
+    );
+});
+Connections.displayName = "Connections";
+
+/** ---------- Data Packets flowing through links ---------- */
+const DataPackets = memo<{ links: Conn[] }>(({ links }) => {
+    const meshRef = useRef<THREE.InstancedMesh>(null);
+    const temp = useMemo(() => new THREE.Object3D(), []);
+
+    const vecs = useMemo(
+        () =>
+            links.map((c) => {
+                const a = new THREE.Vector3(...c.start);
+                const b = new THREE.Vector3(...c.end);
+                return { start: a, dir: b.sub(a) };
+            }),
+        [links]
+    );
+
+    useFrame(({ clock }) => {
+        const t = clock.getElapsedTime();
+        if (!meshRef.current) return;
+
+        for (let i = 0; i < vecs.length; i++) {
+            // scan-like packets
+            const speed = 0.35;
+            const offset = i * 0.55;
+            const p = ((t + offset) * speed) % 1;
+
+            // ease in/out to feel like "processing"
+            const eased = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+
+            temp.position.copy(vecs[i].start).addScaledVector(vecs[i].dir, eased);
+            temp.scale.setScalar(0.9 + Math.sin((t + i) * 6) * 0.15);
+            temp.updateMatrix();
+            meshRef.current.setMatrixAt(i, temp.matrix);
+        }
+
+        meshRef.current.instanceMatrix.needsUpdate = true;
+    });
+
+    return <instancedMesh ref={meshRef} args={[packetGeometry, packetMaterial, vecs.length]} />;
+});
+DataPackets.displayName = "DataPackets";
+
+/** ---------- Final Scene ---------- */
+const AIScene: React.FC = () => {
+    // choose which links carry packets (usually core -> inner + a few outward)
+    const packetLinks = useMemo(() => connections.slice(0, 8), []);
+
+    return (
+        <Float speed={1.0} rotationIntensity={0.12} floatIntensity={0.35}>
+            <group scale={1.35}>
+                {/* environment */}
+                <CircuitGrid />
+
+                {/* AI core */}
                 <AICore />
 
+                {/* nodes + modules */}
                 <InstancedNodes positions={innerNodes} baseDelay={0} />
-                <InstancedNodes positions={outerNodes} isOuter baseDelay={1} />
+                <Modules />
+                <InstancedNodes positions={outerModules} outer baseDelay={0.8} />
 
+                {/* wiring + flow */}
                 <Connections connections={connections} />
+                <DataPackets links={packetLinks} />
 
-                <Particles connections={connections.slice(0, 6)} />
-
-                <pointLight position={[0, 0, 2]} intensity={0.5} color="#3b82f6" />
+                {/* lighting */}
+                <ambientLight intensity={0.35} />
+                <pointLight position={[0, 0.2, 2]} intensity={0.9} color="#3b82f6" />
+                <pointLight position={[-1.6, 0.6, 1]} intensity={0.55} color="#a78bfa" />
             </group>
         </Float>
     );

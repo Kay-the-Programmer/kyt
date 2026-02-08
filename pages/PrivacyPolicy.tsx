@@ -52,7 +52,7 @@ const PrivacyPolicy: React.FC = () => {
                         Privacy <span className="gradient-text">Policy.</span>
                     </h1>
                     <p className="text-gray-500 dark:text-gray-400 text-sm font-mono uppercase tracking-widest">
-                        Last Updated: February 7, 2024
+                        Last Updated: February 8, 2026
                     </p>
                 </header>
 
@@ -64,10 +64,10 @@ const PrivacyPolicy: React.FC = () => {
                         </h3>
                         <div className="text-gray-600 dark:text-gray-400 leading-relaxed space-y-4">
                             <p>
-                                At Kytriq Technologies, we value your privacy and are committed to protecting your personal data. This Privacy Policy outlines how we collect, use, and safeguard your information when you interact with our website and services.
+                                At Kytriq Technologies, we value your privacy and are committed to protecting your personal data in accordance with the <strong>Zambian Data Protection Act No. 4 of 2021</strong>. This Privacy Policy outlines how we collect, use, and safeguard your information when you interact with our website and services.
                             </p>
                             <p>
-                                By using our services, you agree to the collection and use of information in accordance with this policy.
+                                By using our services, you agree to the collection and use of information in accordance with this policy and Zambian data protection regulations.
                             </p>
                         </div>
                     </section>

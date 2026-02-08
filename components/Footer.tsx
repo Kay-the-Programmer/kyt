@@ -369,39 +369,15 @@ const Footer: React.FC = memo(() => {
         <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base leading-relaxed max-w-xl mx-auto mb-10 font-light">
           Bringing digital ideas to life through intelligent systems and premium software engineering. Architects of the future, today.
         </p>
-        <div className="flex items-center justify-center space-x-8 md:space-x-12">
-          {[
-            { icon: 'fa-linkedin-in', href: '#', label: 'LinkedIn' },
-            { icon: 'fa-x-twitter', href: '#', label: 'Twitter' },
-            { icon: 'fa-github', href: '#', label: 'GitHub' },
-            { icon: 'fa-instagram', href: '#', label: 'Instagram' }
-          ].map((social, i) => (
-            <a
-              key={i}
-              href={social.href}
-              onClick={(e) => social.href === '#' && e.preventDefault()}
-              className="group flex flex-col items-center space-y-3"
-            >
-              <div className="w-12 h-12 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-400 group-hover:border-blue-600 group-hover:text-blue-600 dark:group-hover:border-blue-500 dark:group-hover:text-blue-500 transition-all duration-300 group-hover:shadow-xl group-hover:shadow-blue-500/10">
-                <i className={`fa-brands ${social.icon} text-lg`}></i>
-              </div>
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">{social.label}</span>
-            </a>
-          ))}
-        </div>
       </div>
 
       {/* BOTTOM BAR */}
       <div className="max-w-7xl mx-auto mt-24 pt-10 border-t border-gray-100 dark:border-gray-900 flex flex-col md:flex-row items-center justify-between text-[11px] text-gray-400 font-bold uppercase tracking-[0.2em] space-y-6 md:space-y-0">
-        <p>&copy; 2024 Kytriq Technologies. All Rights Reserved.</p>
+        <p>&copy; 2026 Kytriq Technologies. All Rights Reserved.</p>
 
         <div className="flex space-x-8">
           <Link to="/privacy-policy" className="hover:text-blue-600 transition-colors">Privacy Policy</Link>
           <Link to="/terms-conditions" className="hover:text-blue-600 transition-colors">Terms & Conditions</Link>
-        </div>
-
-        <div className="flex space-x-10 text-gray-500/50 dark:text-gray-400/30">
-          <span>Tech Hub Central // Palo Alto // CA</span>
         </div>
       </div>
     </footer>

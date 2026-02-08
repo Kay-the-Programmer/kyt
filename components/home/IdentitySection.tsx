@@ -507,7 +507,7 @@ const IdentitySection: React.FC = () => {
     <section
       id="who-we-are"
       ref={sectionRef}
-      className="relative z-10 py-24 md:py-40 lg:py-56 px-6 border-t border-gray-100 dark:border-gray-900/30 overflow-hidden bg-gradient-to-b from-white to-gray-50/50 dark:from-gray-950 dark:to-gray-900/50"
+      className="relative z-10 py-24 md:py-40 lg:py-56 px-6 border-t border-gray-100 dark:border-gray-900/30 overflow-hidden bg-transparent"
     >
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -536,7 +536,7 @@ const IdentitySection: React.FC = () => {
           </h3>
 
           <p className="identity-description text-gray-600 dark:text-gray-400 text-lg lg:text-xl leading-relaxed mb-12 max-w-lg">
-            We craft intelligent systems that transform ideas into impactful solutions, driving innovation at every step.
+            We craft powerfully productive systems that transform ideas into impactful solutions.
           </p>
 
           <div className="feature-list space-y-4" style={{ perspective: '800px' }}>
@@ -559,9 +559,6 @@ const IdentitySection: React.FC = () => {
           <div
             className="image-reveal-wrapper relative aspect-[4/5] rounded-[3rem] overflow-hidden border border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-gray-800 p-2 shadow-2xl shadow-gray-900/10 dark:shadow-black/30"
           >
-            {/* Inner glow effect */}
-            <div className="absolute inset-2 rounded-[2.5rem] bg-gradient-to-br from-blue-500/5 to-indigo-500/5 pointer-events-none" />
-
             <div
               ref={imageContainerRef}
               className="w-full h-full overflow-hidden rounded-[2.5rem] relative shadow-inner"
@@ -585,19 +582,7 @@ const IdentitySection: React.FC = () => {
                   }}
                 />
               ))}
-
-              {/* Overlay gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
             </div>
-
-            <IndicatorDots
-              count={features.length}
-              activeIndex={activeImage}
-              onSelect={handleFeatureHover}
-              labels={featureLabels}
-              progressRingRef={progressRingRef}
-            />
-
             {/* Floating label */}
             <div className="absolute top-6 left-6 px-4 py-2 rounded-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 shadow-lg">
               <span className="text-sm font-semibold text-gray-900 dark:text-white">

@@ -52,7 +52,7 @@ const TermsConditions: React.FC = () => {
                         Terms & <span className="gradient-text">Conditions.</span>
                     </h1>
                     <p className="text-gray-500 dark:text-gray-400 text-sm font-mono uppercase tracking-widest">
-                        Last Updated: February 7, 2024
+                        Last Updated: February 8, 2026
                     </p>
                 </header>
 
@@ -102,7 +102,29 @@ const TermsConditions: React.FC = () => {
                     <section className="terms-section">
                         <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
                             <span className="w-8 h-px bg-blue-600 mr-4"></span>
-                            04. Limitation of Liability
+                            04. Payment Terms
+                        </h3>
+                        <div className="text-gray-600 dark:text-gray-400 leading-relaxed space-y-4">
+                            <p>
+                                Clients agree to the following payment schedule for all software development projects and services:
+                            </p>
+                            <ul className="list-none space-y-3 ml-4">
+                                <li className="flex items-start">
+                                    <span className="text-blue-600 mr-2">/</span>
+                                    <span><strong>Deposit:</strong> A non-refundable 50% upfront payment of the total project cost is required before work commences.</span>
+                                </li>
+                                <li className="flex items-start">
+                                    <span className="text-blue-600 mr-2">/</span>
+                                    <span><strong>Final Payment:</strong> The remaining 50% balance is due immediately upon project completion and before delivery of final assets or deployment to production.</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </section>
+
+                    <section className="terms-section">
+                        <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+                            <span className="w-8 h-px bg-blue-600 mr-4"></span>
+                            05. Limitation of Liability
                         </h3>
                         <div className="text-gray-600 dark:text-gray-400 leading-relaxed space-y-4">
                             <p>
@@ -114,11 +136,11 @@ const TermsConditions: React.FC = () => {
                     <section className="terms-section">
                         <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
                             <span className="w-8 h-px bg-blue-600 mr-4"></span>
-                            05. Governing Law
+                            06. Governing Law
                         </h3>
                         <div className="text-gray-600 dark:text-gray-400 leading-relaxed">
                             <p>
-                                These Terms shall be governed and construed in accordance with the laws of California, United States, without regard to its conflict of law provisions.
+                                These Terms shall be governed and construed in accordance with the laws of <strong>Zambia</strong>, without regard to its conflict of law provisions.
                             </p>
                         </div>
                     </section>

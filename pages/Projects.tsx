@@ -256,8 +256,8 @@ const Projects: React.FC = () => {
             }
 
             if (sweep && sL && sT && sO) {
-              sL(`${(x + 0.5) * 100}%`);
-              sT(`${(y + 0.5) * 100}%`);
+              sL((x + 0.5) * r.width);
+              sT((y + 0.5) * r.height);
               sO(0.35);
             }
           };
@@ -355,7 +355,7 @@ const Projects: React.FC = () => {
           </h1>
 
           <p className="project-header-desc text-base sm:text-lg md:text-2xl text-gray-500 dark:text-gray-400 font-light leading-relaxed max-w-4xl border-l-2 md:border-l-4 border-emerald-500/25 pl-5 md:pl-10">
-            Architecting high-frequency intelligent systems. We specialize in software designed for absolute stability and sub-millisecond precision.
+            We specialize in software designed for absolute stability.
           </p>
         </header>
 

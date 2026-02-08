@@ -1,6 +1,6 @@
 import React, { Suspense, memo, useRef, useEffect, useState, useMemo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera, Environment, ContactShadows } from '@react-three/drei';
 import * as THREE from 'three';
 import WebAppScene from './3d/WebAppScene';
 import MobileAppScene from './3d/MobileAppScene';
@@ -79,10 +79,10 @@ TransitionWrapper.displayName = 'TransitionWrapper';
 const SceneContent = memo<{ activeIndex: number }>(({ activeIndex }) => {
     return (
         <>
-            {/* Lighting */}
-            <ambientLight intensity={0.4} />
-            <directionalLight position={[5, 5, 5]} intensity={0.7} />
-            <directionalLight position={[-3, -3, 3]} intensity={0.3} color="#60a5fa" />
+            {/* Lighting - reduced intensity to balance with Environment */}
+            <ambientLight intensity={0.2} />
+            <directionalLight position={[5, 5, 5]} intensity={0.5} castShadow />
+            <directionalLight position={[-3, -3, 3]} intensity={0.2} color="#60a5fa" />
 
             {/* Scenes */}
             <TransitionWrapper isActive={activeIndex === 0}>
@@ -163,13 +163,29 @@ const ServiceScene3D: React.FC<ServiceScene3DProps> = ({ activeIndex, isMobile =
                     alpha: true,
                     powerPreference: 'high-performance',
                     preserveDrawingBuffer: false,
+                    toneMapping: THREE.ACESFilmicToneMapping,
+                    toneMappingExposure: 0.9
                 }}
                 style={{ background: 'transparent' }}
                 frameloop={isVisible ? "always" : "never"}
                 performance={{ min: 0.5 }}
+                shadows
             >
                 <RendererOptimizer />
                 <AnimatedCamera activeIndex={activeIndex} />
+
+                {/* Global Environment */}
+                <Environment preset="city" blur={1} />
+
+                {/* Soft Contact Shadows for grounding */}
+                <ContactShadows
+                    opacity={0.4}
+                    scale={10}
+                    blur={2.5}
+                    far={4}
+                    resolution={256}
+                    color="#000000"
+                />
 
                 <Suspense fallback={<LoadingFallback />}>
                     <SceneContent activeIndex={activeIndex} />

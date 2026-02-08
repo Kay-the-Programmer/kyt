@@ -175,6 +175,8 @@ const About: React.FC = () => {
       safeAnimate('to', headerDesc, { y: 0, opacity: 1, filter: 'blur(0px)', rotation: 0, duration: baseDuration * 1.2 }, heroTl, '-=0.8');
 
       // ===== CARDS REVEAL =====
+      const cleanupFns: (() => void)[] = [];
+
       [missionCard, visionCard].forEach((card, i) => {
         if (!card) return;
         const icon = card.querySelector('.mission-icon, .vision-icon');
@@ -213,25 +215,43 @@ const About: React.FC = () => {
 
         // Desktop Only Interactions
         if (isDesktop && !prefersReducedMotion) {
-          card.addEventListener('mouseenter', () => {
+          const xTo = gsap.quickTo(card, "rotateY", { duration: 0.3, ease: "power2.out" });
+          const yTo = gsap.quickTo(card, "rotateX", { duration: 0.3, ease: "power2.out" });
+
+          const handleMouseEnter = () => {
             gsap.to(card, { scale: 1.02, duration: 0.4, ease: 'power2.out' });
             gsap.to(card.querySelector('.card-inner'), { y: -5, duration: 0.4, ease: 'power2.out' });
-          });
+          };
 
-          card.addEventListener('mouseleave', () => {
-            gsap.to(card, { scale: 1, rotateX: 0, rotateY: 0, duration: 0.5, ease: 'power2.out' });
+          const handleMouseLeave = () => {
+            gsap.to(card, { scale: 1, duration: 0.5, ease: 'power2.out' });
+            xTo(0);
+            yTo(0);
             gsap.to(card.querySelector('.card-inner'), { y: 0, duration: 0.4, ease: 'power2.out' });
-          });
+          };
 
-          card.addEventListener('mousemove', (e: any) => {
+          const handleMouseMove = (e: MouseEvent) => {
             const rect = card.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
             const centerX = rect.width / 2;
             const centerY = rect.height / 2;
+
             const rotateX = (y - centerY) / 25;
             const rotateY = (centerX - x) / 25;
-            gsap.to(card, { rotateX: rotateX, rotateY: rotateY, duration: 0.3, ease: 'power2.out' });
+
+            yTo(rotateX);
+            xTo(rotateY);
+          };
+
+          card.addEventListener('mouseenter', handleMouseEnter);
+          card.addEventListener('mouseleave', handleMouseLeave);
+          card.addEventListener('mousemove', handleMouseMove as EventListener);
+
+          cleanupFns.push(() => {
+            card.removeEventListener('mouseenter', handleMouseEnter);
+            card.removeEventListener('mouseleave', handleMouseLeave);
+            card.removeEventListener('mousemove', handleMouseMove as EventListener);
           });
         }
       });
@@ -289,14 +309,22 @@ const About: React.FC = () => {
         safeAnimate('from', desc, { y: 15, opacity: 0, duration: baseDuration * 0.5 }, cardTl, '-=0.3');
 
         if (isDesktop && !prefersReducedMotion) {
-          card.addEventListener('mouseenter', () => {
+          const handleMouseEnter = () => {
             gsap.to(card, { y: -8, scale: 1.03, duration: 0.3, ease: 'power2.out' });
             if (icon) gsap.to(icon, { scale: 1.2, backgroundColor: 'rgb(59, 130, 246)', color: 'white', duration: 0.3 });
-          });
+          };
 
-          card.addEventListener('mouseleave', () => {
+          const handleMouseLeave = () => {
             gsap.to(card, { y: 0, scale: 1, duration: 0.3, ease: 'power2.out' });
             if (icon) gsap.to(icon, { scale: 1, clearProps: 'backgroundColor,color', duration: 0.3 });
+          };
+
+          card.addEventListener('mouseenter', handleMouseEnter);
+          card.addEventListener('mouseleave', handleMouseLeave);
+
+          cleanupFns.push(() => {
+            card.removeEventListener('mouseenter', handleMouseEnter);
+            card.removeEventListener('mouseleave', handleMouseLeave);
           });
         }
       });
@@ -329,8 +357,16 @@ const About: React.FC = () => {
         }, itemTl, isDesktop ? i * baseStagger * 1.2 : 0);
 
         if (isDesktop && !prefersReducedMotion) {
-          item.addEventListener('mouseenter', () => gsap.to(item, { scale: 1.08, duration: 0.3, ease: 'power2.out' }));
-          item.addEventListener('mouseleave', () => gsap.to(item, { scale: 1, duration: 0.3, ease: 'power2.out' }));
+          const handleMouseEnter = () => gsap.to(item, { scale: 1.08, duration: 0.3, ease: 'power2.out' });
+          const handleMouseLeave = () => gsap.to(item, { scale: 1, duration: 0.3, ease: 'power2.out' });
+
+          item.addEventListener('mouseenter', handleMouseEnter);
+          item.addEventListener('mouseleave', handleMouseLeave);
+
+          cleanupFns.push(() => {
+            item.removeEventListener('mouseenter', handleMouseEnter);
+            item.removeEventListener('mouseleave', handleMouseLeave);
+          });
         }
       });
 
@@ -362,6 +398,10 @@ const About: React.FC = () => {
         });
       });
 
+      return () => {
+        cleanupFns.forEach(fn => fn());
+      };
+
     });
 
     return () => mm.revert();
@@ -389,7 +429,7 @@ const About: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-12" style={{ perspective: '1200px' }}>
 
             {/* Mission Card */}
-            <div className="mission-card interactive-card group relative" style={{ transformStyle: 'preserve-3d' }}>
+            <div className="mission-card interactive-card group relative will-change-transform" style={{ transformStyle: 'preserve-3d' }}>
               <div className="card-inner relative overflow-hidden rounded-[2rem] md:rounded-[3rem] bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 p-6 md:p-12 lg:p-16 h-full min-h-[350px] md:min-h-[500px]">
                 <div className="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full blur-3xl transform translate-x-1/3 -translate-y-1/3"></div>
                 <div className="absolute bottom-0 left-0 w-56 h-56 bg-blue-400/10 rounded-full blur-2xl transform -translate-x-1/3 translate-y-1/3"></div>
@@ -417,7 +457,7 @@ const About: React.FC = () => {
             </div>
 
             {/* Vision Card */}
-            <div className="vision-card interactive-card group relative" style={{ transformStyle: 'preserve-3d' }}>
+            <div className="vision-card interactive-card group relative will-change-transform" style={{ transformStyle: 'preserve-3d' }}>
               <div className="card-inner relative overflow-hidden rounded-[2rem] md:rounded-[3rem] bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 p-6 md:p-12 lg:p-16 h-full min-h-[350px] md:min-h-[500px]">
                 <div className="absolute top-0 right-0 w-72 h-72 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-3xl transform translate-x-1/3 -translate-y-1/3"></div>
                 <div className="absolute bottom-0 left-0 w-56 h-56 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-2xl transform -translate-x-1/3 translate-y-1/3"></div>
@@ -450,6 +490,10 @@ const About: React.FC = () => {
             <div className="aspect-[4/5] rounded-[2rem] md:rounded-[4rem] overflow-hidden border border-gray-100 dark:border-gray-800 p-1 md:p-2 bg-gray-50 dark:bg-gray-900/20">
               <img
                 src="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&q=80&w=1000"
+                srcSet="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&q=80&w=600 600w, https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&q=80&w=1000 1000w"
+                sizes="(max-width: 768px) 100vw, 50vw"
+                width="1000"
+                height="1250"
                 alt="Innovation"
                 loading="lazy"
                 className="w-full h-full object-cover rounded-[1.8rem] md:rounded-[3.5rem] grayscale hover:grayscale-0 transition-all duration-1000"

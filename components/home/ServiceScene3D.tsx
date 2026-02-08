@@ -136,6 +136,22 @@ const RendererOptimizer: React.FC = () => {
     return null;
 };
 
+// Mobile auto-rotate optimized
+const MobileAutoRotate = memo(() => {
+    useFrame((state) => {
+        const time = state.clock.getElapsedTime();
+        const radius = 4;
+        const speed = 0.2;
+        // Gentle rotation around Y axis
+        state.camera.position.x = Math.sin(time * speed) * radius;
+        state.camera.position.z = Math.cos(time * speed) * radius;
+        state.camera.lookAt(0, 0, 0);
+    });
+    return null;
+});
+
+MobileAutoRotate.displayName = 'MobileAutoRotate';
+
 const ServiceScene3D: React.FC<ServiceScene3DProps> = ({ activeIndex, isMobile = false }) => {
     return (
         <div className="w-full h-full" style={{ minHeight: isMobile ? '300px' : '400px' }}>
@@ -150,10 +166,6 @@ const ServiceScene3D: React.FC<ServiceScene3DProps> = ({ activeIndex, isMobile =
                 style={{ background: 'transparent' }}
                 frameloop="always"
                 performance={{ min: 0.5 }}
-                events={(store: any) => ({
-                    ...store.events,
-                    passive: true,
-                })}
             >
                 <RendererOptimizer />
                 <AnimatedCamera activeIndex={activeIndex} />
@@ -162,20 +174,24 @@ const ServiceScene3D: React.FC<ServiceScene3DProps> = ({ activeIndex, isMobile =
                     <SceneContent activeIndex={activeIndex} />
                 </Suspense>
 
-                <OrbitControls
-                    makeDefault
-                    enableZoom={!isMobile}
-                    minDistance={2.5}
-                    maxDistance={8}
-                    enablePan={false}
-                    maxPolarAngle={Math.PI / 1.5}
-                    minPolarAngle={Math.PI / 3.5}
-                    autoRotate
-                    autoRotateSpeed={isMobile ? 0.3 : 0.5}
-                    enableDamping
-                    dampingFactor={0.1}
-                    rotateSpeed={1.0}
-                />
+                {!isMobile ? (
+                    <OrbitControls
+                        makeDefault
+                        enableZoom={true}
+                        minDistance={2.5}
+                        maxDistance={8}
+                        enablePan={false}
+                        maxPolarAngle={Math.PI / 1.5}
+                        minPolarAngle={Math.PI / 3.5}
+                        autoRotate
+                        autoRotateSpeed={0.5}
+                        enableDamping
+                        dampingFactor={0.1}
+                        rotateSpeed={1.0}
+                    />
+                ) : (
+                    <MobileAutoRotate />
+                )}
             </Canvas>
         </div>
     );

@@ -140,6 +140,27 @@ const TypewriterText = ({ text }: { text: string }) => {
   return <span>{displayedText}</span>;
 };
 
+// Optimized Mobile Title Component
+const MobileTitle = memo(({ title }: { title: string }) => {
+  const elRef = useRef<HTMLHeadingElement>(null);
+
+  useLayoutEffect(() => {
+    if (elRef.current) {
+      gsap.fromTo(elRef.current,
+        { y: 15, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" }
+      );
+    }
+  }, [title]);
+
+  return (
+    <h4 ref={elRef} className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
+      <SplitText text={title} />
+    </h4>
+  );
+});
+MobileTitle.displayName = 'MobileTitle';
+
 const IdentitySection: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const badgeRef = useRef<HTMLDivElement>(null);
@@ -621,7 +642,7 @@ const IdentitySection: React.FC = () => {
 
         {/* LEFT CONTENT - Desktop Only */}
         <div className="hidden lg:block">
-          <div className="identity-intro-badge inline-flex items-center gap-3 mb-8 px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-900/50">
+          <div ref={badgeRef} className="identity-intro-badge inline-flex items-center gap-3 mb-8 px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-900/50">
             <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">What We Do</span>
           </div>
 
@@ -670,18 +691,7 @@ const IdentitySection: React.FC = () => {
 
             {/* Mobile Description Overlay */}
             <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-white/95 via-white/90 to-transparent dark:from-gray-950/95 dark:via-gray-900/90 pt-24 lg:hidden flex flex-col items-center text-center z-10 backdrop-blur-[2px]">
-              <h4 key={`title-${activeImage}`} className="text-xl font-bold mb-2 text-gray-900 dark:text-white"
-                ref={(el) => {
-                  if (el) {
-                    gsap.fromTo(el,
-                      { y: 15, opacity: 0 },
-                      { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" }
-                    );
-                  }
-                }}
-              >
-                <SplitText text={features[activeImage].title} />
-              </h4>
+              <MobileTitle title={features[activeImage].title} />
               <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed max-w-[280px] mx-auto min-h-[3rem] font-medium">
                 <TypewriterText text={features[activeImage].text} />
               </p>

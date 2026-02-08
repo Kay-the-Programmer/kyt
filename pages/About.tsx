@@ -83,6 +83,7 @@ const About: React.FC = () => {
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    const cleanupFns: (() => void)[] = [];
     const mm = gsap.matchMedia();
 
     mm.add({
@@ -175,7 +176,6 @@ const About: React.FC = () => {
       safeAnimate('to', headerDesc, { y: 0, opacity: 1, filter: 'blur(0px)', rotation: 0, duration: baseDuration * 1.2 }, heroTl, '-=0.8');
 
       // ===== CARDS REVEAL =====
-      const cleanupFns: (() => void)[] = [];
 
       [missionCard, visionCard].forEach((card, i) => {
         if (!card) return;
@@ -218,20 +218,27 @@ const About: React.FC = () => {
           const xTo = gsap.quickTo(card, "rotateY", { duration: 0.3, ease: "power2.out" });
           const yTo = gsap.quickTo(card, "rotateX", { duration: 0.3, ease: "power2.out" });
 
+          let rect: DOMRect | null = null;
+          const updateRect = () => { rect = card.getBoundingClientRect(); };
+
           const handleMouseEnter = () => {
+            updateRect();
             gsap.to(card, { scale: 1.02, duration: 0.4, ease: 'power2.out' });
-            gsap.to(card.querySelector('.card-inner'), { y: -5, duration: 0.4, ease: 'power2.out' });
+            const inner = card.querySelector('.card-inner');
+            if (inner) gsap.to(inner, { y: -5, duration: 0.4, ease: 'power2.out' });
           };
 
           const handleMouseLeave = () => {
             gsap.to(card, { scale: 1, duration: 0.5, ease: 'power2.out' });
             xTo(0);
             yTo(0);
-            gsap.to(card.querySelector('.card-inner'), { y: 0, duration: 0.4, ease: 'power2.out' });
+            const inner = card.querySelector('.card-inner');
+            if (inner) gsap.to(inner, { y: 0, duration: 0.4, ease: 'power2.out' });
+            rect = null;
           };
 
           const handleMouseMove = (e: MouseEvent) => {
-            const rect = card.getBoundingClientRect();
+            if (!rect) return;
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
             const centerX = rect.width / 2;
@@ -244,14 +251,16 @@ const About: React.FC = () => {
             xTo(rotateY);
           };
 
-          card.addEventListener('mouseenter', handleMouseEnter);
-          card.addEventListener('mouseleave', handleMouseLeave);
-          card.addEventListener('mousemove', handleMouseMove as EventListener);
+          card.addEventListener('mouseenter', handleMouseEnter, { passive: true });
+          card.addEventListener('mouseleave', handleMouseLeave, { passive: true });
+          card.addEventListener('mousemove', handleMouseMove as EventListener, { passive: true });
+          window.addEventListener('scroll', updateRect, { passive: true });
 
           cleanupFns.push(() => {
             card.removeEventListener('mouseenter', handleMouseEnter);
             card.removeEventListener('mouseleave', handleMouseLeave);
             card.removeEventListener('mousemove', handleMouseMove as EventListener);
+            window.removeEventListener('scroll', updateRect);
           });
         }
       });
@@ -397,18 +406,19 @@ const About: React.FC = () => {
           scrollTrigger: { trigger: el, start: 'top 95%', once: true }
         });
       });
-
-      return () => {
-        cleanupFns.forEach(fn => fn());
-      };
-
     });
 
-    return () => mm.revert();
+    const refreshId = setInterval(() => ScrollTrigger.refresh(), 2000);
+
+    return () => {
+      mm.revert();
+      clearInterval(refreshId);
+      cleanupFns.forEach(fn => fn());
+    };
   }, []);
 
   return (
-    <div ref={containerRef} className="min-h-screen pt-24 md:pt-40 pb-20 md:pb-32 px-4 md:px-6 bg-white dark:bg-brand-dark transition-colors duration-300 overflow-hidden" style={{ perspective: '1500px' }}>
+    <div ref={containerRef} className="min-h-screen pt-24 md:pt-40 pb-20 md:pb-32 px-4 md:px-6 bg-white dark:bg-brand-dark transition-colors duration-300 overflow-x-hidden" style={{ perspective: '1500px' }}>
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}

@@ -184,7 +184,7 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
                         Retail Management System
                     </h3>
                     <p className="text-gray-500 dark:text-gray-400 text-base sm:text-lg md:text-xl font-light leading-relaxed max-w-xl mb-8 sm:mb-12 reveal-target">
-                        A <span className="text-blue-600 font-bold">Next generation</span> retail management system designed to streamline operations and provide actionable insights for business owners.
+                        The <span className="text-blue-600 font-bold">Next generation</span> retail management system designed to streamline operations and provide actionable insights for business owners.
                     </p>
                     <div className="reveal-target">
                         <Link to="/projects/salepilot" className="magnetic-area inline-flex items-center space-x-4 sm:space-x-6 group">

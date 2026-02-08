@@ -34,7 +34,7 @@ const AiAssistant: React.FC = () => {
     try {
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 
-      console.log('AI Assistant: Attempting to initialize with API Key:', apiKey ? (apiKey.substring(0, 5) + '...') : 'MISSING');
+      console.log('AI Assistant: Attempting to initialize with API Key:', apiKey ? 'PRESENT' : 'MISSING');
 
       if (!apiKey) {
         throw new Error("VITE_GEMINI_API_KEY is missing. Check .env.local and restart the dev server.");

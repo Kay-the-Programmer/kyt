@@ -73,19 +73,10 @@ const stats = [
   { label: 'Uptime Core', value: 99, suffix: '.9%' }
 ];
 
-// Timeline milestones
-const milestones = [
-  { year: '2023', title: 'The Spark', desc: 'Founded with a vision to democratize intelligent software.' },
-  { year: '2024', title: 'First Flight', desc: 'Launched SalePilot and Visionary platforms.' },
-  { year: '2025', title: 'Scaling Up', desc: 'Expanded team and client base across industries.' },
-  { year: 'Now', title: 'The Future', desc: 'Building the next generation of AI-powered solutions.' }
-];
 
 const About: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLElement>(null);
-  const timelineRef = useRef<HTMLDivElement>(null);
-  const rocketRef = useRef<HTMLDivElement>(null);
   const motionPathCtxRef = useRef<gsap.Context | null>(null);
 
   useSEO({
@@ -100,144 +91,6 @@ const About: React.FC = () => {
     backgroundSize: '60px 60px'
   }), []);
 
-  // Motion Path Animation - optimized for performance
-  useEffect(() => {
-    if (!containerRef.current || !rocketRef.current) return;
-
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const isMobile = window.innerWidth < 769;
-    
-    if (prefersReducedMotion || isMobile) {
-      gsap.set(rocketRef.current, { opacity: 0, display: 'none' });
-      return;
-    }
-
-    let isVisible = true;
-    let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
-    let rafId: number | null = null;
-
-    // Cache waypoint positions (calculated once, not on every scroll)
-    let cachedPoints: { x: number; y: number }[] = [];
-
-    const calculatePoints = () => {
-      const rocket = rocketRef.current;
-      const container = containerRef.current;
-      if (!rocket || !container) return [];
-
-      const rocketRect = rocket.getBoundingClientRect();
-      const waypoints = container.querySelectorAll<HTMLElement>('.motion-waypoint');
-      
-      return Array.from(waypoints).map((wp) => {
-        const wpRect = wp.getBoundingClientRect();
-        return {
-          x: wpRect.left + wpRect.width / 2 - (rocketRect.left + rocketRect.width / 2),
-          y: wpRect.top + wpRect.height / 2 - (rocketRect.top + rocketRect.height / 2)
-        };
-      });
-    };
-
-    const createMotionPath = () => {
-      motionPathCtxRef.current?.revert();
-
-      motionPathCtxRef.current = gsap.context(() => {
-        const rocket = rocketRef.current;
-        const container = containerRef.current;
-        if (!rocket || !container) return;
-
-        cachedPoints = calculatePoints();
-        if (cachedPoints.length === 0) return;
-
-        // GPU-accelerated initial state
-        gsap.set(rocket, { 
-          opacity: 1, 
-          scale: 1,
-          force3D: true,
-          willChange: 'transform'
-        });
-
-        // Main motion path with GPU optimization
-        gsap.to(rocket, {
-          duration: 1,
-          ease: 'none',
-          force3D: true,
-          motionPath: {
-            path: cachedPoints,
-            curviness: 1.5, // Reduced for smoother perf
-            autoRotate: 90
-          },
-          scrollTrigger: {
-            trigger: container.querySelector('.hero-section'),
-            start: 'top top',
-            endTrigger: container.querySelector('.stats-section'),
-            end: 'bottom center',
-            scrub: 2, // Higher value = smoother but less responsive
-            fastScrollEnd: true,
-            onToggle: (self) => {
-              // Pause animation when out of scroll range
-              if (!self.isActive) {
-                gsap.set(rocket, { willChange: 'auto' });
-              } else {
-                gsap.set(rocket, { willChange: 'transform' });
-              }
-            }
-          }
-        });
-
-        // Simplified glow - no blur, just opacity pulse
-        const glow = rocket.querySelector('.rocket-glow');
-        if (glow) {
-          gsap.to(glow, {
-            opacity: 0.5,
-            duration: 2,
-            repeat: -1,
-            yoyo: true,
-            ease: 'sine.inOut'
-          });
-        }
-      }, containerRef);
-    };
-
-    // Visibility observer - pause animations when not visible
-    const visibilityObserver = new IntersectionObserver(
-      ([entry]) => {
-        isVisible = entry.isIntersecting;
-        if (rocketRef.current) {
-          gsap.to(rocketRef.current, { 
-            opacity: isVisible ? 1 : 0, 
-            duration: 0.3 
-          });
-        }
-      },
-      { threshold: 0.1 }
-    );
-    visibilityObserver.observe(containerRef.current);
-
-    // Throttled resize handler (300ms debounce)
-    const handleResize = () => {
-      if (resizeTimeout) clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
-        if (rafId) cancelAnimationFrame(rafId);
-        rafId = requestAnimationFrame(createMotionPath);
-      }, 300);
-    };
-
-    // Initial creation after layout settles
-    const initTimer = setTimeout(createMotionPath, 300);
-    window.addEventListener('resize', handleResize, { passive: true });
-
-    return () => {
-      clearTimeout(initTimer);
-      if (resizeTimeout) clearTimeout(resizeTimeout);
-      if (rafId) cancelAnimationFrame(rafId);
-      window.removeEventListener('resize', handleResize);
-      visibilityObserver.disconnect();
-      motionPathCtxRef.current?.revert();
-      // Clean up will-change
-      if (rocketRef.current) {
-        gsap.set(rocketRef.current, { willChange: 'auto' });
-      }
-    };
-  }, []);
 
   useLayoutEffect(() => {
     if (!containerRef.current) return;
@@ -318,64 +171,6 @@ const About: React.FC = () => {
           });
         }
 
-        // ===== TIMELINE SECTION =====
-        const timelineSection = container.querySelector('.timeline-section');
-        const timelineItems = container.querySelectorAll<HTMLElement>('.timeline-item');
-        const timelineLine = container.querySelector('.timeline-line');
-
-        if (timelineLine) {
-          gsap.set(timelineLine, { scaleY: 0, transformOrigin: 'top' });
-          gsap.to(timelineLine, {
-            scaleY: 1,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: timelineSection,
-              start: 'top 60%',
-              end: 'bottom 80%',
-              scrub: 1
-            }
-          });
-        }
-
-        timelineItems.forEach((item, i) => {
-          gsap.set(item, {
-            x: isDesktop ? (i % 2 === 0 ? -80 : 80) : 0,
-            y: isDesktop ? 0 : 60,
-            opacity: 0
-          });
-
-          gsap.to(item, {
-            x: 0,
-            y: 0,
-            opacity: 1,
-            duration: baseDuration * 1.2,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: item,
-              start: isDesktop ? 'top 75%' : 'top 85%',
-              once: true
-            }
-          });
-
-          // Hover effects
-          if (isDesktop && !prefersReducedMotion) {
-            const dot = item.querySelector('.timeline-dot');
-            const handleEnter = () => {
-              gsap.to(item, { scale: 1.02, duration: 0.3 });
-              if (dot) gsap.to(dot, { scale: 1.5, backgroundColor: '#3b82f6', duration: 0.3 });
-            };
-            const handleLeave = () => {
-              gsap.to(item, { scale: 1, duration: 0.3 });
-              if (dot) gsap.to(dot, { scale: 1, clearProps: 'backgroundColor', duration: 0.3 });
-            };
-            item.addEventListener('mouseenter', handleEnter);
-            item.addEventListener('mouseleave', handleLeave);
-            cleanupFns.push(() => {
-              item.removeEventListener('mouseenter', handleEnter);
-              item.removeEventListener('mouseleave', handleLeave);
-            });
-          }
-        });
 
         // ===== MISSION & VISION CARDS =====
         const cards = container.querySelectorAll<HTMLElement>('.story-card');
@@ -647,7 +442,7 @@ const About: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      className="min-h-screen bg-white dark:bg-brand-dark transition-colors duration-300 overflow-x-hidden"
+      className="min-h-screen bg-white dark:bg-brand-dark transition-colors duration-300 overflow-x-hidden no-scrollbar"
       style={{ perspective: '2000px' }}
     >
       {/* Parallax Background */}
@@ -657,42 +452,6 @@ const About: React.FC = () => {
         aria-hidden="true"
       />
 
-      {/* ===== MOTION PATH FLOATING ELEMENT ===== */}
-      <div
-        ref={rocketRef}
-        className="fixed top-[15%] left-[85%] z-50 pointer-events-none hidden md:block"
-        style={{ 
-          opacity: 0,
-          willChange: 'transform',
-          transform: 'translateZ(0)', // Force GPU layer
-          backfaceVisibility: 'hidden'
-        }}
-        aria-hidden="true"
-      >
-        <div className="relative">
-          {/* Glow effect - simplified, no blur for performance */}
-          <div className="rocket-glow absolute -inset-2 w-16 h-16 bg-blue-500/20 rounded-full" />
-          {/* Rocket icon */}
-          <div className="relative w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/25">
-            <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
-              <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
-              <path d="M9 12H4s.55-3.03 2-5c1.62-2.2 5-3 5-3" />
-              <path d="M12 15v5s3.03-.55 5-2c2.2-1.62 3-5 3-5" />
-            </svg>
-          </div>
-          {/* Trail particles - CSS only animation for performance */}
-          <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-blue-400 rounded-full opacity-50" />
-          <div className="absolute -bottom-2 right-1 w-1.5 h-1.5 bg-indigo-400 rounded-full opacity-30" />
-        </div>
-      </div>
-
-      {/* Motion Path Waypoints - invisible markers for the path */}
-      <div className="motion-waypoint fixed top-[25%] left-[15%] w-4 h-4 pointer-events-none" aria-hidden="true" />
-      <div className="motion-waypoint fixed top-[40%] left-[75%] w-4 h-4 pointer-events-none" aria-hidden="true" />
-      <div className="motion-waypoint fixed top-[55%] left-[20%] w-4 h-4 pointer-events-none" aria-hidden="true" />
-      <div className="motion-waypoint fixed top-[70%] left-[65%] w-4 h-4 pointer-events-none" aria-hidden="true" />
-      <div className="motion-waypoint fixed top-[85%] left-[30%] w-4 h-4 pointer-events-none" aria-hidden="true" />
 
       {/* ===== HERO SECTION ===== */}
       <section ref={heroRef} className="hero-section relative min-h-[90vh] flex items-center justify-center px-4 md:px-8 pt-32 pb-20">
@@ -718,48 +477,6 @@ const About: React.FC = () => {
         <div className="decor-element absolute bottom-1/4 -right-32 w-80 h-80 bg-indigo-500/10 rounded-full blur-[120px] -z-10" aria-hidden="true" />
       </section>
 
-      {/* ===== TIMELINE SECTION ===== */}
-      <section className="timeline-section relative py-24 md:py-40 px-4 md:px-8">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16 md:mb-24">
-            <span className="text-[10px] md:text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.4em] mb-4 block">
-              02 // Our Journey
-            </span>
-            <h2 className="text-3xl md:text-5xl lg:text-6xl font-heading font-bold text-gray-900 dark:text-white">
-              The <span className="gradient-text">Evolution</span>
-            </h2>
-          </div>
-
-          <div ref={timelineRef} className="relative">
-            {/* Timeline line */}
-            <div className="timeline-line absolute left-4 md:left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 via-indigo-500 to-blue-600 md:-translate-x-1/2" aria-hidden="true" />
-
-            {milestones.map((milestone, i) => (
-              <div
-                key={i}
-                className={`timeline-item relative flex items-center mb-12 md:mb-20 ${i % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
-                  }`}
-              >
-                {/* Dot */}
-                <div className="timeline-dot absolute left-4 md:left-1/2 w-4 h-4 bg-white dark:bg-gray-900 border-4 border-blue-500 rounded-full md:-translate-x-1/2 z-10 transition-all duration-300" />
-
-                {/* Content */}
-                <div className={`ml-12 md:ml-0 md:w-[45%] ${i % 2 === 0 ? 'md:pr-16 md:text-right' : 'md:pl-16 md:text-left'}`}>
-                  <span className="text-5xl md:text-7xl font-heading font-black text-blue-500/20 dark:text-blue-400/20 block mb-2">
-                    {milestone.year}
-                  </span>
-                  <h3 className="text-xl md:text-2xl font-heading font-bold text-gray-900 dark:text-white mb-2">
-                    {milestone.title}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">
-                    {milestone.desc}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* ===== MISSION & VISION CARDS ===== */}
       <section className="py-20 md:py-32 px-4 md:px-8">

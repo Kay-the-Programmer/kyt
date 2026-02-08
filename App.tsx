@@ -10,6 +10,7 @@ import ScrollToTop from './components/ScrollToTop';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
+import AnalyticsTracker from './components/AnalyticsTracker';
 
 // Lazy load all page components for code splitting
 const Home = React.lazy(() => import('./pages/Home'));
@@ -161,6 +162,7 @@ const App: React.FC = () => {
   return (
     <Router>
       <TransitionProvider>
+        <AnalyticsTracker />
         <AppContent />
       </TransitionProvider>
     </Router>

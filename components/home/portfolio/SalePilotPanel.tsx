@@ -61,7 +61,7 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
                 if (image) {
                     gsap.set(image, {
                         scale: 1.05,
-                        opacity: 0.7
+                        opacity: 0.5
                     });
                 }
 
@@ -173,7 +173,7 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
                     </div>
                     <h2
                         ref={headlineRef}
-                        className="text-4xl sm:text-6xl md:text-8xl lg:text-[10rem] font-heading font-black tracking-tighter text-gray-900 dark:text-white mb-6 sm:mb-8 leading-[0.85]"
+                        className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-heading font-black tracking-tighter text-gray-900 dark:text-white mb-6 sm:mb-8 leading-[0.85]"
                     >
                         <SplitText text="Sale" className="inline-block" />
                         <span className="text-blue-600 inline-block ml-2 sm:ml-3">
@@ -184,24 +184,14 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
                         Retail Management System
                     </h3>
                     <p className="text-gray-500 dark:text-gray-400 text-base sm:text-lg md:text-xl font-light leading-relaxed max-w-xl mb-8 sm:mb-12 reveal-target">
-                        Moving beyond traditional POS by simplifying operations and providing AI-driven insights into everyday operations. Scalable, usability-first, and resilient.
+                        A <span className="text-blue-600 font-bold">Next generation</span> retail management system designed to streamline operations and provide actionable insights for business owners.
                     </p>
-                    <div className="grid grid-cols-2 gap-6 sm:gap-8 mb-8 sm:mb-12 reveal-target">
-                        {[{ label: 'Integrated', val: 'Accounting' }, { label: 'Inventory', val: 'Management' }].map((f, i) => (
-                            <div key={i} className="border-l border-blue-600/20 pl-4 sm:pl-6 py-2 hover:border-blue-600 transition-colors duration-500">
-                                <div className="text-[8px] sm:text-[9px] font-black text-blue-500 uppercase tracking-widest mb-2">{f.label}</div>
-                                <div className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{f.val}</div>
-                            </div>
-                        ))}
-                    </div>
                     <div className="reveal-target">
                         <Link to="/projects/salepilot" className="magnetic-area inline-flex items-center space-x-4 sm:space-x-6 group">
                             <div className="px-8 sm:px-10 py-4 sm:py-5 bg-blue-600 text-white rounded-full font-bold text-sm shadow-xl shadow-blue-600/20 group-hover:bg-blue-700 group-hover:shadow-blue-600/40 transition-all duration-500 group-hover:scale-105">
                                 Explore Case Study
                             </div>
-                            <div className="w-12 h-12 sm:w-14 sm:h-14 border border-gray-200 dark:border-gray-800 rounded-full flex items-center justify-center group-hover:border-blue-600 group-hover:bg-blue-600/5 transition-all duration-500">
-                                <i className="fa-solid fa-arrow-right group-hover:translate-x-2 transition-transform duration-500 dark:text-white" />
-                            </div>
+
                         </Link>
                     </div>
                 </div>

@@ -118,9 +118,15 @@ const Navbar: React.FC = () => {
       const m = magnet as HTMLElement;
       const xTo = gsap.quickTo(m, "x", { duration: 0.3, ease: "power3" });
       const yTo = gsap.quickTo(m, "y", { duration: 0.3, ease: "power3" });
+      let rect: DOMRect | null = null;
+
+      const updateRect = () => {
+        rect = m.getBoundingClientRect();
+      };
 
       const handleMove = (e: MouseEvent) => {
-        const { left, top, width, height } = m.getBoundingClientRect();
+        if (!rect) updateRect();
+        const { left, top, width, height } = rect!;
         const x = e.clientX - (left + width / 2);
         const y = e.clientY - (top + height / 2);
         xTo(x * 0.35);
@@ -130,12 +136,15 @@ const Navbar: React.FC = () => {
       const handleLeave = () => {
         xTo(0);
         yTo(0);
+        rect = null;
       };
 
+      m.addEventListener("mouseenter", updateRect);
       m.addEventListener("mousemove", handleMove);
       m.addEventListener("mouseleave", handleLeave);
 
       cleanups.push(() => {
+        m.removeEventListener("mouseenter", updateRect);
         m.removeEventListener("mousemove", handleMove);
         m.removeEventListener("mouseleave", handleLeave);
       });

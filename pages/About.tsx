@@ -81,9 +81,13 @@ const About: React.FC = () => {
   useLayoutEffect(() => {
     if (!containerRef.current) return;
 
-    const ctx = gsap.context((self) => {
+    // Track cleanup functions for event listeners
+    const cleanupFns: (() => void)[] = [];
+    let mm: gsap.MatchMedia | null = null;
+
+    const ctx = gsap.context(() => {
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const mm = gsap.matchMedia(containerRef.current!); // Scope to container
+      mm = gsap.matchMedia();
 
       mm.add({
         isDesktop: "(min-width: 769px)",
@@ -160,7 +164,7 @@ const About: React.FC = () => {
         // ===== HERO ENTRANCE TIMELINE =====
         const heroTl = gsap.timeline({
           scrollTrigger: {
-            trigger: '.about-header',
+            trigger: container.querySelector('.about-header'),
             start: isDesktop ? 'top 85%' : 'top 95%',
             once: true
           },
@@ -251,7 +255,7 @@ const About: React.FC = () => {
             card.addEventListener('mousemove', handleMouseMove as EventListener, { passive: true });
             window.addEventListener('scroll', updateRect, { passive: true });
 
-            self.add(() => {
+            cleanupFns.push(() => {
               card.removeEventListener('mouseenter', handleMouseEnter);
               card.removeEventListener('mouseleave', handleMouseLeave);
               card.removeEventListener('mousemove', handleMouseMove as EventListener);
@@ -261,30 +265,34 @@ const About: React.FC = () => {
         });
 
         // ===== IMAGE REVEAL =====
-        gsap.to(imgContainer, {
-          clipPath: 'inset(0% 0% 0% 0%)',
-          scale: 1,
-          filter: 'blur(0px)',
-          duration: baseDuration * 2,
-          ease: 'power4.inOut',
-          scrollTrigger: {
-            trigger: imgContainer,
-            start: isDesktop ? 'top 80%' : 'top 95%',
-            once: true
-          }
-        });
+        if (imgContainer) {
+          gsap.to(imgContainer, {
+            clipPath: 'inset(0% 0% 0% 0%)',
+            scale: 1,
+            filter: 'blur(0px)',
+            duration: baseDuration * 2,
+            ease: 'power4.inOut',
+            scrollTrigger: {
+              trigger: imgContainer,
+              start: isDesktop ? 'top 80%' : 'top 95%',
+              once: true
+            }
+          });
+        }
 
         // ===== PHILOSOPHY SECTION =====
-        const philoTl = gsap.timeline({
-          scrollTrigger: {
-            trigger: philosophyHeader,
-            start: isDesktop ? 'top 85%' : 'top 95%',
-            once: true
-          }
-        });
-        safeAnimate('to', philosophyHeader, { y: 0, opacity: 1, filter: 'blur(0px)', duration: baseDuration }, philoTl);
-        safeAnimate('to', philosophyTitle, { y: 0, opacity: 1, filter: 'blur(0px)', duration: baseDuration }, philoTl, '-=0.7');
-        safeAnimate('to', philosophyDesc, { y: 0, opacity: 1, filter: 'blur(0px)', duration: baseDuration }, philoTl, '-=0.6');
+        if (philosophyHeader) {
+          const philoTl = gsap.timeline({
+            scrollTrigger: {
+              trigger: philosophyHeader,
+              start: isDesktop ? 'top 85%' : 'top 95%',
+              once: true
+            }
+          });
+          safeAnimate('to', philosophyHeader, { y: 0, opacity: 1, filter: 'blur(0px)', duration: baseDuration }, philoTl);
+          safeAnimate('to', philosophyTitle, { y: 0, opacity: 1, filter: 'blur(0px)', duration: baseDuration }, philoTl, '-=0.7');
+          safeAnimate('to', philosophyDesc, { y: 0, opacity: 1, filter: 'blur(0px)', duration: baseDuration }, philoTl, '-=0.6');
+        }
 
         philosophyCards.forEach((card, i) => {
           const icon = card.querySelector('.philosophy-icon');
@@ -326,7 +334,7 @@ const About: React.FC = () => {
             card.addEventListener('mouseenter', handleMouseEnter);
             card.addEventListener('mouseleave', handleMouseLeave);
 
-            self.add(() => {
+            cleanupFns.push(() => {
               card.removeEventListener('mouseenter', handleMouseEnter);
               card.removeEventListener('mouseleave', handleMouseLeave);
             });
@@ -334,14 +342,16 @@ const About: React.FC = () => {
         });
 
         // ===== STATS SECTION =====
-        const statsTl = gsap.timeline({
-          scrollTrigger: {
-            trigger: statsHeader,
-            start: isDesktop ? 'top 85%' : 'top 95%',
-            once: true
-          }
-        });
-        statsTl.to(statsHeader, { y: 0, opacity: 1, duration: baseDuration });
+        if (statsHeader) {
+          const statsTl = gsap.timeline({
+            scrollTrigger: {
+              trigger: statsHeader,
+              start: isDesktop ? 'top 85%' : 'top 95%',
+              once: true
+            }
+          });
+          statsTl.to(statsHeader, { y: 0, opacity: 1, duration: baseDuration });
+        }
 
         statItems.forEach((item, i) => {
           const itemTl = gsap.timeline({
@@ -367,7 +377,7 @@ const About: React.FC = () => {
             item.addEventListener('mouseenter', handleMouseEnter);
             item.addEventListener('mouseleave', handleMouseLeave);
 
-            self.add(() => {
+            cleanupFns.push(() => {
               item.removeEventListener('mouseenter', handleMouseEnter);
               item.removeEventListener('mouseleave', handleMouseLeave);
             });
@@ -402,13 +412,22 @@ const About: React.FC = () => {
           });
         });
       });
-    }, containerRef); // Scope cleanup to containerRef
+    }, containerRef);
 
     // Force a refresh after a small delay to catch late-loading layout changes
     const timerId = setTimeout(() => ScrollTrigger.refresh(), 500);
 
     return () => {
+      // Clean up event listeners first
+      cleanupFns.forEach(fn => fn());
+      cleanupFns.length = 0;
+
+      // Kill matchMedia
+      if (mm) mm.revert();
+
+      // Kill all GSAP context (timelines, ScrollTriggers, etc.)
       ctx.revert();
+
       clearTimeout(timerId);
     };
   }, []);

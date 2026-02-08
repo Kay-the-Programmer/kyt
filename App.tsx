@@ -158,44 +158,57 @@ const AppContent: React.FC = () => {
     const follower = document.getElementById('cursor-follower');
     const isMobile = window.innerWidth < 768;
 
+    if (isMobile || !cursor || !follower) return;
+
+    // Use quickTo for high-frequency updates
+    const cursorXTo = gsap.quickTo(cursor, "x", { duration: 0.1, ease: 'power2.out' });
+    const cursorYTo = gsap.quickTo(cursor, "y", { duration: 0.1, ease: 'power2.out' });
+    const followerXTo = gsap.quickTo(follower, "x", { duration: 0.4, ease: 'power3.out' });
+    const followerYTo = gsap.quickTo(follower, "y", { duration: 0.4, ease: 'power3.out' });
+
     const updateCursor = () => {
-      if (isMobile || !globalMousePos.active) return;
-      gsap.to(cursor, { x: globalMousePos.x, y: globalMousePos.y, duration: 0.1, ease: 'power2.out', overwrite: 'auto' });
-      gsap.to(follower, { x: globalMousePos.x - 16, y: globalMousePos.y - 16, duration: 0.4, ease: 'power3.out', overwrite: 'auto' });
+      if (!globalMousePos.active) return;
+      cursorXTo(globalMousePos.x);
+      cursorYTo(globalMousePos.y);
+      followerXTo(globalMousePos.x - 16);
+      followerYTo(globalMousePos.y - 16);
     };
 
+    // Use a simpler throttled hover check to avoid deep closest() calls on every move
+    let lastHoverCheck = 0;
     const handleHover = (e: MouseEvent) => {
-      if (isMobile) return;
+      const now = performance.now();
+      if (now - lastHoverCheck < 50) return; // Limit to 20fps check
+      lastHoverCheck = now;
+
       const target = e.target as HTMLElement;
+      if (!target) return;
+
       const isHoverable = target.closest('a, button, input, textarea, [role="button"], .magnetic-area');
 
       if (isHoverable) {
-        gsap.to(cursor, { scale: 3, backgroundColor: 'transparent', border: '1px solid #2563eb', duration: 0.3 });
-        gsap.to(follower, { scale: 0.5, opacity: 0.1, duration: 0.3 });
+        gsap.to(cursor, { scale: 3, backgroundColor: 'transparent', border: '1px solid #2563eb', duration: 0.3, overwrite: 'auto' });
+        gsap.to(follower, { scale: 0.5, opacity: 0.1, duration: 0.3, overwrite: 'auto' });
       } else {
-        gsap.to(cursor, { scale: 1, backgroundColor: '#2563eb', border: 'none', duration: 0.3 });
-        gsap.to(follower, { scale: 1, opacity: 1, duration: 0.3 });
+        gsap.to(cursor, { scale: 1, backgroundColor: '#2563eb', border: 'none', duration: 0.3, overwrite: 'auto' });
+        gsap.to(follower, { scale: 1, opacity: 1, duration: 0.3, overwrite: 'auto' });
       }
     };
 
     const handleMouseDown = () => {
-      if (isMobile) return;
-      gsap.to(cursor, { scale: 0.8, duration: 0.2 });
-      gsap.to(follower, { scale: 1.5, duration: 0.2 });
+      gsap.to(cursor, { scale: 0.8, duration: 0.2, overwrite: 'auto' });
+      gsap.to(follower, { scale: 1.5, duration: 0.2, overwrite: 'auto' });
     };
 
     const handleMouseUp = () => {
-      if (isMobile) return;
-      gsap.to(cursor, { scale: 1, duration: 0.2 });
-      gsap.to(follower, { scale: 1, duration: 0.2 });
+      gsap.to(cursor, { scale: 1, duration: 0.2, overwrite: 'auto' });
+      gsap.to(follower, { scale: 1, duration: 0.2, overwrite: 'auto' });
     };
 
     gsap.ticker.add(updateCursor);
-    window.addEventListener('mouseover', handleHover);
-    window.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mouseup', handleMouseUp);
-
-
+    window.addEventListener('mouseover', handleHover, { passive: true });
+    window.addEventListener('mousedown', handleMouseDown, { passive: true });
+    window.addEventListener('mouseup', handleMouseUp, { passive: true });
 
     return () => {
       gsap.ticker.remove(updateCursor);

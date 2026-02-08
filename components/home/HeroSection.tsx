@@ -7,6 +7,18 @@ import SplitText from '../SplitText';
 import { useMagnetic } from '../../hooks/useMagnetic';
 import { useSharedMousePos, globalMousePos } from '../../hooks/useSharedMousePos';
 
+// Throttle utility
+const throttle = <T extends (...args: unknown[]) => void>(fn: T, delay: number): T => {
+  let lastCall = 0;
+  return ((...args: unknown[]) => {
+    const now = performance.now();
+    if (now - lastCall >= delay) {
+      lastCall = now;
+      fn(...args);
+    }
+  }) as T;
+};
+
 gsap.registerPlugin(ScrollTrigger);
 
 const HeroSection = () => {
@@ -91,6 +103,14 @@ const HeroSection = () => {
 
   // Parallax Ticker - Persistent Reference
   useEffect(() => {
+    let centerX = window.innerWidth / 2;
+    let centerY = window.innerHeight / 2;
+
+    const handleResize = throttle(() => {
+      centerX = window.innerWidth / 2;
+      centerY = window.innerHeight / 2;
+    }, 200);
+
     const updateParallax = () => {
       // Logic checks using refs to avoid closure staleness
       if (isMobileRef.current) return;
@@ -101,8 +121,6 @@ const HeroSection = () => {
 
       if (!globalMousePos.active || !isInViewRef.current || isReducedMotionRef.current) return;
 
-      const centerX = window.innerWidth / 2;
-      const centerY = window.innerHeight / 2;
       // Safety check for 0 division, though unlikely standard window
       if (centerX === 0 || centerY === 0) return;
 
@@ -119,8 +137,11 @@ const HeroSection = () => {
     };
 
     gsap.ticker.add(updateParallax);
+    window.addEventListener('resize', handleResize, { passive: true });
+
     return () => {
       gsap.ticker.remove(updateParallax);
+      window.removeEventListener('resize', handleResize);
     };
   }, []); // Empty dependency array ensures this never re-binds unnecessarily
 

@@ -258,17 +258,34 @@ const InteractiveHeroBackground: React.FC = memo(() => {
         else if (p.baseY > height) p.baseY = 0;
 
         // Mouse interaction
-        const dx = mouseX - p.baseX;
-        const dy = mouseY - p.baseY;
-        const distSq = dx * dx + dy * dy;
+        if (mouseActive) {
+          const dx = mouseX - p.baseX;
+          const dy = mouseY - p.baseY;
+          const distSq = dx * dx + dy * dy;
 
-        if (mouseActive && distSq < mouseDistSq) {
-          const dist = Math.sqrt(distSq);
-          const force = (mouseDist - dist) / mouseDist;
-          const forceDepth = force * 0.5 * p.depth;
-          p.targetX = p.baseX - dx * forceDepth;
-          p.targetY = p.baseY - dy * forceDepth;
-          p.scale = 1 + force * 0.25;
+          if (distSq < mouseDistSq) {
+            const dist = Math.sqrt(distSq);
+            const force = (mouseDist - dist) / mouseDist;
+            const forceDepth = force * 0.5 * p.depth;
+            p.targetX = p.baseX - dx * forceDepth;
+            p.targetY = p.baseY - dy * forceDepth;
+            p.scale = 1 + force * 0.25;
+
+            // Optional mouse connection lines (less frequent)
+            if (i % 3 === 0) {
+              const opacity = (1 - dist / mouseDist) * 0.25 * p.depth;
+              ctx.beginPath();
+              ctx.moveTo(p.x, p.y);
+              ctx.lineTo(mouseX, mouseY);
+              ctx.strokeStyle = `rgba(147, 51, 234, ${opacity})`;
+              ctx.lineWidth = 1;
+              ctx.stroke();
+            }
+          } else {
+            p.targetX = p.baseX;
+            p.targetY = p.baseY;
+            p.scale = 1;
+          }
         } else {
           p.targetX = p.baseX;
           p.targetY = p.baseY;
@@ -285,8 +302,9 @@ const InteractiveHeroBackground: React.FC = memo(() => {
 
         // Connection lines (only check every other particle for performance)
         if (i % 2 === 0) {
-          for (let j = i + 2; j < particleCount; j += 2) {
+          for (let j = i + 2; j < particleCount; j += 4) { // Reduced density further
             const p2 = particles[j];
+            if (!p2) continue;
             const dxC = p.x - p2.x;
             const dyC = p.y - p2.y;
             const distCSq = dxC * dxC + dyC * dyC;
@@ -302,18 +320,6 @@ const InteractiveHeroBackground: React.FC = memo(() => {
               ctx.stroke();
             }
           }
-        }
-
-        // Mouse connection lines (less frequent)
-        if (mouseActive && distSq < mouseDistSq && i % 3 === 0) {
-          const dist = Math.sqrt(distSq);
-          const opacity = (1 - dist / mouseDist) * 0.25 * p.depth;
-          ctx.beginPath();
-          ctx.moveTo(p.x, p.y);
-          ctx.lineTo(mouseX, mouseY);
-          ctx.strokeStyle = `rgba(147, 51, 234, ${opacity})`;
-          ctx.lineWidth = 1;
-          ctx.stroke();
         }
       }
 

@@ -87,11 +87,21 @@ const Home: React.FC = () => {
         glowYTo.current = gsap.quickTo(glows, "y", { duration: 3, ease: "power2.out" });
       }
 
+      // Cache window dimensions to avoid repeated reads in the ticker
+      let winW = window.innerWidth;
+      let winH = window.innerHeight;
+
+      const handleResize = () => {
+        winW = window.innerWidth;
+        winH = window.innerHeight;
+      };
+      window.addEventListener('resize', handleResize, { passive: true });
+
       // Reduced parallax intensity for subtler movement - only runs when visible
       const updateGlow = () => {
-        if (!isGlowVisible || !globalMousePos.active) return;
-        const xPos = (globalMousePos.x / window.innerWidth - 0.5) * 40;
-        const yPos = (globalMousePos.y / window.innerHeight - 0.5) * 40;
+        if (!isGlowVisible || !globalMousePos.active || winW === 0) return;
+        const xPos = (globalMousePos.x / winW - 0.5) * 40;
+        const yPos = (globalMousePos.y / winH - 0.5) * 40;
 
         glowXTo.current?.(xPos);
         glowYTo.current?.(yPos);
@@ -128,52 +138,58 @@ const Home: React.FC = () => {
 
       // Enhanced scroll reveal for main sections
       const sections = gsap.utils.toArray<HTMLElement>('.section-reveal');
-      sections.forEach((section, i) => {
+      sections.forEach((section) => {
         gsap.fromTo(section,
-          { opacity: 0, y: 100 },
+          { opacity: 0, y: 50 },
           {
             opacity: 1,
             y: 0,
-            duration: 1.2,
+            duration: 1,
             ease: 'power3.out',
             scrollTrigger: {
               trigger: section,
-              start: 'top 85%',
-              end: 'top 50%',
-              toggleActions: 'play none none none', // Play once to avoid pinning conflicts on reverse
+              start: 'top 90%',
+              once: true,
+              toggleActions: 'play none none none',
             },
             onComplete: () => {
               // Vital for PortfolioScroll: remove transform context so position:fixed (pinning) works relative to viewport
+              // Use clearProps only for the specific transform property to minimize layout impact
               gsap.set(section, { clearProps: 'transform' });
             }
           }
         );
       });
 
-      // existing reveal-on-scroll logic
-      gsap.utils.toArray<HTMLElement>('.reveal-on-scroll').forEach((el) => {
-        const children = el.querySelectorAll('.reveal-child');
+      // Unified reveal-on-scroll logic for smaller elements
+      const revealElements = gsap.utils.toArray<HTMLElement>('.reveal-on-scroll');
+      if (revealElements.length > 0) {
+        revealElements.forEach((el) => {
+          const children = el.querySelectorAll('.reveal-child');
+          if (children.length === 0) return;
 
-        gsap.set(children, { opacity: 0, y: 24, scale: 0.98 });
+          gsap.set(children, { opacity: 0, y: 20, scale: 0.98 });
 
-        gsap.to(children, {
-          scrollTrigger: {
-            trigger: el,
-            start: 'top 88%',
-            end: 'top 60%',
-            toggleActions: 'play none none reverse'
-          },
-          y: 0,
-          opacity: 1,
-          scale: 1,
-          duration: 1,
-          stagger: 0.1,
-          ease: 'power3.out'
+          gsap.to(children, {
+            scrollTrigger: {
+              trigger: el,
+              start: 'top 90%',
+              once: true
+            },
+            y: 0,
+            opacity: 1,
+            scale: 1,
+            duration: 1,
+            stagger: 0.1,
+            ease: 'power3.out',
+            overwrite: 'auto'
+          });
         });
-      });
+      }
 
       return () => {
         gsap.ticker.remove(updateGlow);
+        window.removeEventListener('resize', handleResize);
         ScrollTrigger.getAll().forEach(t => t.kill());
       };
     }, containerRef);

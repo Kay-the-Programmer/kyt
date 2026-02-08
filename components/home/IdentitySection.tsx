@@ -203,11 +203,11 @@ const IdentitySection: React.FC = () => {
       // Ensure we set initial state for stability
       gsap.set(toImage, {
         zIndex: 2,
-        willChange: 'transform, opacity, filter'
+        willChange: 'transform, opacity'
       });
       gsap.set(fromImage, {
         zIndex: 1,
-        willChange: 'transform, opacity, filter'
+        willChange: 'transform, opacity'
       });
 
       // Prepare next image
@@ -284,29 +284,25 @@ const IdentitySection: React.FC = () => {
     });
   }, []);
 
-  // Auto-rotation logic with cleanup
+  // Auto-rotation logic with cleanup - uses stable tick pattern
   const startAutoRotate = useCallback(() => {
-    if (delayedCallRef.current) {
-      delayedCallRef.current.kill();
-    }
+    if (delayedCallRef.current) delayedCallRef.current.kill();
 
     startProgressAnimation();
 
     const tick = () => {
-      setActiveImage(prev => {
-        const next = (prev + 1) % features.length;
-        requestAnimationFrame(() => {
-          animateTransition(prev, next);
-          startProgressAnimation();
-        });
+      // Get current index outside of state setter for clarity
+      const current = activeImage;
+      const next = (current + 1) % features.length;
 
-        delayedCallRef.current = gsap.delayedCall(AUTO_ROTATE_INTERVAL / 1000, tick);
-        return next;
-      });
+      animateTransition(current, next);
+      startProgressAnimation();
+
+      delayedCallRef.current = gsap.delayedCall(AUTO_ROTATE_INTERVAL / 1000, tick);
     };
 
     delayedCallRef.current = gsap.delayedCall(AUTO_ROTATE_INTERVAL / 1000, tick);
-  }, [animateTransition, startProgressAnimation, features.length]);
+  }, [activeImage, animateTransition, startProgressAnimation, features.length]);
 
   const stopAutoRotate = useCallback(() => {
     if (delayedCallRef.current) {
@@ -314,7 +310,7 @@ const IdentitySection: React.FC = () => {
       delayedCallRef.current = null;
     }
     if (progressTweenRef.current) {
-      progressTweenRef.current.kill(); // Ensure we kill instead of pause to preventing memory leaks
+      progressTweenRef.current.kill();
       progressTweenRef.current = null;
     }
   }, []);
@@ -511,7 +507,7 @@ const IdentitySection: React.FC = () => {
     <section
       id="who-we-are"
       ref={sectionRef}
-      className="reveal-on-scroll relative z-10 py-24 md:py-40 lg:py-56 px-6 border-t border-gray-100 dark:border-gray-900/30 overflow-hidden bg-gradient-to-b from-white to-gray-50/50 dark:from-gray-950 dark:to-gray-900/50"
+      className="relative z-10 py-24 md:py-40 lg:py-56 px-6 border-t border-gray-100 dark:border-gray-900/30 overflow-hidden bg-gradient-to-b from-white to-gray-50/50 dark:from-gray-950 dark:to-gray-900/50"
     >
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -559,7 +555,7 @@ const IdentitySection: React.FC = () => {
         </div>
 
         {/* Right image section */}
-        <div className="reveal-child relative" style={{ perspective: '1200px' }}>
+        <div className="relative" style={{ perspective: '1200px' }}>
           <div
             className="image-reveal-wrapper relative aspect-[4/5] rounded-[3rem] overflow-hidden border border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-gray-800 p-2 shadow-2xl shadow-gray-900/10 dark:shadow-black/30"
           >

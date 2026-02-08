@@ -21,7 +21,7 @@ const SplitText: React.FC<SplitTextProps> = React.memo(({ text, className, isGra
           className={`letter-reveal inline-block ${isGradient ? 'gradient-text' : ''}`}
           style={{
             transformOrigin: 'bottom center',
-            willChange: 'transform, opacity, filter',
+            willChange: 'transform, opacity',
             display: 'inline-block',
             whiteSpace: 'pre'
           }}

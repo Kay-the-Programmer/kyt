@@ -14,6 +14,7 @@ const CTASection: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const bgRef = useRef<HTMLDivElement>(null);
   const glowBorderRef = useRef<HTMLDivElement>(null);
+  const boundingRef = useRef<DOMRect | null>(null);
 
   // Viewport-based content rendering
   const [isInViewport, setIsInViewport] = useState(false);
@@ -142,55 +143,60 @@ const CTASection: React.FC = () => {
       }
     }, section);
 
-    // Mouse interaction - only on desktop, with throttling
-    let rafId: number | null = null;
+    // Mouse interaction - only on desktop, with caching
+    const updateBounding = () => {
+      if (sectionRef.current) {
+        boundingRef.current = sectionRef.current.getBoundingClientRect();
+      }
+    };
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (rafId !== null || !container || !bg) return;
+      if (!container || !bg) return;
+      if (!boundingRef.current) updateBounding();
 
-      rafId = requestAnimationFrame(() => {
-        const { left, top, width, height } = section.getBoundingClientRect();
-        const xPercent = (e.clientX - left) / width - 0.5;
-        const yPercent = (e.clientY - top) / height - 0.5;
+      const { left, top, width, height } = boundingRef.current!;
+      const xPercent = (e.clientX - left) / width - 0.5;
+      const yPercent = (e.clientY - top) / height - 0.5;
 
-        gsap.to(bg, {
-          x: xPercent * 40,
-          y: yPercent * 40,
-          duration: 1.5,
-          ease: 'power2.out'
-        });
-
-        if (glowBorder) {
-          const cRect = container.getBoundingClientRect();
-          gsap.to(glowBorder, {
-            left: e.clientX - cRect.left,
-            top: e.clientY - cRect.top,
-            opacity: 1,
-            duration: 0.5,
-            ease: 'power2.out'
-          });
-        }
-
-        rafId = null;
+      gsap.to(bg, {
+        x: xPercent * 40,
+        y: yPercent * 40,
+        duration: 1.5,
+        ease: 'power2.out',
+        overwrite: 'auto'
       });
+
+      if (glowBorder) {
+        const cRect = container.getBoundingClientRect(); // This is the only reflow left, but it's less frequent and container is smaller
+        gsap.to(glowBorder, {
+          left: e.clientX - cRect.left,
+          top: e.clientY - cRect.top,
+          opacity: 1,
+          duration: 0.5,
+          ease: 'power2.out',
+          overwrite: 'auto'
+        });
+      }
     };
 
     const handleMouseLeave = () => {
       if (glowBorder) {
-        gsap.to(glowBorder, { opacity: 0, duration: 0.8 });
+        gsap.to(glowBorder, { opacity: 0, duration: 0.8, overwrite: 'auto' });
       }
     };
 
     // Only add mouse listeners on desktop
     const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
     if (isDesktop) {
+      updateBounding();
+      window.addEventListener('resize', updateBounding, { passive: true });
       section.addEventListener('mousemove', handleMouseMove, { passive: true });
       section.addEventListener('mouseleave', handleMouseLeave);
     }
 
     return () => {
       ctx.revert();
-      if (rafId !== null) cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', updateBounding);
       section.removeEventListener('mousemove', handleMouseMove);
       section.removeEventListener('mouseleave', handleMouseLeave);
     };

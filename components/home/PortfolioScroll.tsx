@@ -114,6 +114,13 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
   // Track scroll progress to trigger lazy panel rendering
   const [scrollProgress, setScrollProgress] = useState(0);
 
+  // Throttled scroll progress update to avoid excessive re-renders
+  const throttledSetProgress = useMemo(() =>
+    throttle((progress: number) => {
+      setScrollProgress(progress);
+    }, 100),
+    []);
+
   // Store the desktop horizontal scroll tween for panel animations
   const [desktopTween, setDesktopTween] = useState<gsap.core.Tween | null>(null);
 
@@ -147,28 +154,29 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
     if (isMobile) return;
 
     const magneticAreas = magneticAreasRef.current.filter(Boolean) as HTMLDivElement[];
-    const eventHandlers = new Map<HTMLDivElement, { move: (e: MouseEvent) => void; leave: () => void }>();
+    const eventHandlers = new Map<HTMLDivElement, { move: (e: MouseEvent) => void; leave: () => void; resize: () => void }>();
 
     magneticAreas.forEach((areaEl) => {
-      // Cache bounding rect and recalculate on resize
+      // 1. Setup quickTo for performance
+      const xTo = gsap.quickTo(areaEl, "x", { duration: 0.8, ease: "power2.out" });
+      const yTo = gsap.quickTo(areaEl, "y", { duration: 0.8, ease: "power2.out" });
+      const rotateYTo = gsap.quickTo(areaEl, "rotateY", { duration: 0.8, ease: "power2.out" });
+      const rotateXTo = gsap.quickTo(areaEl, "rotateX", { duration: 0.8, ease: "power2.out" });
+
+      // 2. Cache bounding rect
       let bounding = areaEl.getBoundingClientRect();
 
-      const handleMove = throttle((e: MouseEvent) => {
+      const handleMove = (e: MouseEvent) => {
         const x = e.clientX - bounding.left;
         const y = e.clientY - bounding.top;
         const xPercent = (x / bounding.width - 0.5) * 2;
         const yPercent = (y / bounding.height - 0.5) * 2;
 
-        gsap.to(areaEl, {
-          x: xPercent * 15,
-          y: yPercent * 15,
-          rotateY: xPercent * 5,
-          rotateX: -yPercent * 5,
-          duration: 0.8,
-          ease: 'power2.out',
-          overwrite: 'auto'
-        });
-      }, 16); // ~60fps
+        xTo(xPercent * 15);
+        yTo(yPercent * 15);
+        rotateYTo(xPercent * 5);
+        rotateXTo(-yPercent * 5);
+      };
 
       const handleLeave = () => {
         gsap.to(areaEl, {
@@ -177,16 +185,17 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
           rotateY: 0,
           rotateX: 0,
           duration: 1.2,
-          ease: 'elastic.out(1, 0.5)'
+          ease: 'elastic.out(1, 0.5)',
+          overwrite: 'auto'
         });
       };
 
       // Update bounding on resize
-      const updateBounding = throttle(() => {
+      const updateBounding = () => {
         bounding = areaEl.getBoundingClientRect();
-      }, 100);
+      };
 
-      eventHandlers.set(areaEl, { move: handleMove, leave: handleLeave });
+      eventHandlers.set(areaEl, { move: handleMove, leave: handleLeave, resize: updateBounding });
 
       areaEl.addEventListener('mousemove', handleMove, { passive: true });
       areaEl.addEventListener('mouseleave', handleLeave, { passive: true });
@@ -199,6 +208,7 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
         if (handlers) {
           areaEl.removeEventListener('mousemove', handlers.move);
           areaEl.removeEventListener('mouseleave', handlers.leave);
+          window.removeEventListener('resize', handlers.resize);
         }
       });
       eventHandlers.clear();
@@ -215,25 +225,24 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
 
     // Define ticker callback at top level of effect for scope visibility
     const updateGlowPos = () => {
-      if (!cursorGlow) return;
-
-      if (!globalMousePos.active) {
-        gsap.to(cursorGlow, { opacity: 0, scale: 0, duration: 0.3, overwrite: 'auto' });
+      if (!cursorGlow || !globalMousePos.active) {
+        if (cursorGlow && (cursorGlow as any)._isVisible !== false) {
+          gsap.to(cursorGlow, { opacity: 0, scale: 0, duration: 0.3, overwrite: 'auto' });
+          (cursorGlow as any)._isVisible = false;
+        }
         return;
       }
 
-      const currentOpacity = parseFloat(cursorGlow.style.opacity || '0');
-      if (currentOpacity < 0.1) {
+      if ((cursorGlow as any)._isVisible !== true) {
         gsap.to(cursorGlow, { opacity: 1, scale: 1, duration: 0.4, overwrite: 'auto' });
+        (cursorGlow as any)._isVisible = true;
       }
 
-      // Use quickTo if available, otherwise direct set (fallback handled in setup)
-      if ((cursorGlow as any)._gsap?.xTo) {
-        (cursorGlow as any)._gsap.xTo(globalMousePos.x);
-        (cursorGlow as any)._gsap.yTo(globalMousePos.y);
-      } else {
-        // Fallback if quickTo hasn't initialized yet (rare)
-        gsap.set(cursorGlow, { left: globalMousePos.x, top: globalMousePos.y });
+      // Use quickTo if available
+      const el = cursorGlow as any;
+      if (el._gsap?.xTo) {
+        el._gsap.xTo(globalMousePos.x);
+        el._gsap.yTo(globalMousePos.y);
       }
     };
 
@@ -274,7 +283,7 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
             end: () => `+=${scrollWidth}`,
             onUpdate: (self) => {
               gsap.set(progressBar, { scaleX: self.progress });
-              setScrollProgress(self.progress);
+              throttledSetProgress(self.progress);
             }
           }
         });

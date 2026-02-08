@@ -5,6 +5,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import PortfolioScroll from '../components/home/PortfolioScroll';
 import Footer from '../components/Footer';
 import { useSEO } from '../hooks/useSEO';
+import { Link } from 'react-router-dom';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -848,10 +849,12 @@ const Services: React.FC = () => {
             <p className="text-blue-100/90 mb-6 sm:mb-8 md:mb-12 text-base sm:text-lg md:text-xl font-light">
               Your ambition deserves the highest level of technical precision. Let's build something legacy-worthy.
             </p>
-            <button className="magnetic-button relative px-8 sm:px-10 md:px-16 py-3 sm:py-4 md:py-6 bg-white text-blue-600 rounded-full font-bold text-sm sm:text-base md:text-lg hover:shadow-2xl hover:shadow-white/20 transition-all duration-300 overflow-hidden group/btn">
-              <span className="relative z-10">Schedule Strategy Session</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-100 to-white opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
-            </button>
+            <Link to="/contact">
+              <button className="magnetic-button relative px-8 sm:px-10 md:px-16 py-3 sm:py-4 md:py-6 bg-white text-blue-600 rounded-full font-bold text-sm sm:text-base md:text-lg hover:shadow-2xl hover:shadow-white/20 transition-all duration-300 overflow-hidden group/btn">
+                <span className="relative z-10">Schedule Strategy Session</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-100 to-white opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
+              </button>
+            </Link>
           </div>
         </section>
       </div>

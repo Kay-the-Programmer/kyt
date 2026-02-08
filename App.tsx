@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useRef, useLayoutEffect, Suspense } from 'react';
-import { TransitionContext } from './TransitionContext';
+import { TransitionContext, TransitionProvider, useTransition } from './TransitionContext';
 import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import AiAssistant from './components/AiAssistant';
@@ -61,9 +61,10 @@ const ScrollToTop = () => {
 /**
  * TransitionOverlay handles the visual wipe between pages.
  */
-const TransitionOverlay = ({ isPageTransition }: { isPageTransition: boolean }) => {
+const TransitionOverlay = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+  const isPageTransition = useTransition();
 
   useLayoutEffect(() => {
     if (!isPageTransition) return;
@@ -142,16 +143,8 @@ import { useSharedMousePos, globalMousePos } from './hooks/useSharedMousePos';
 const AppContent: React.FC = () => {
   const mainRef = useRef<HTMLElement>(null);
   const location = useLocation();
-  const [isPageTransition, setIsPageTransition] = useState(false);
-  const firstPath = useRef(location.pathname);
+  const isPageTransition = useTransition();
   useSharedMousePos();
-
-  // Track if we are in a page transition (navigation) vs initial load
-  useEffect(() => {
-    if (location.pathname !== firstPath.current) {
-      setIsPageTransition(true);
-    }
-  }, [location.pathname]);
 
   useEffect(() => {
     const cursor = document.getElementById('cursor');
@@ -245,28 +238,26 @@ const AppContent: React.FC = () => {
     <>
       <div className="transition-colors duration-300">
         <ScrollToTop />
-        <TransitionOverlay isPageTransition={isPageTransition} />
+        <TransitionOverlay />
         <div className="flex flex-col min-h-screen">
           <Navbar />
           <main ref={mainRef} className="flex-grow">
-            <TransitionContext.Provider value={isPageTransition}>
-              <Suspense fallback={
-                <div className="flex-grow flex items-center justify-center min-h-[60vh]">
-                  <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                </div>
-              }>
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/projects" element={<Projects />} />
-                  <Route path="/projects/salepilot" element={<SalePilotDetail />} />
-                  <Route path="/services" element={<Services />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                  <Route path="/terms-conditions" element={<TermsConditions />} />
-                </Routes>
-              </Suspense>
-            </TransitionContext.Provider>
+            <Suspense fallback={
+              <div className="flex-grow flex items-center justify-center min-h-[60vh]">
+                <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              </div>
+            }>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/projects" element={<Projects />} />
+                <Route path="/projects/salepilot" element={<SalePilotDetail />} />
+                <Route path="/services" element={<Services />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms-conditions" element={<TermsConditions />} />
+              </Routes>
+            </Suspense>
           </main>
           <AiAssistant />
           <ScrollToTopButton />
@@ -279,7 +270,9 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => {
   return (
     <Router>
-      <AppContent />
+      <TransitionProvider>
+        <AppContent />
+      </TransitionProvider>
     </Router>
   );
 };

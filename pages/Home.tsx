@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef, useContext, useState } from 'react';
 import { gsap } from 'gsap';
-import { TransitionContext } from '../TransitionContext';
+import { TransitionContext, useTransition } from '../TransitionContext';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useSEO } from '../hooks/useSEO';
 import { useLazyRender } from '../hooks/useLazyRender';
@@ -54,7 +54,7 @@ const LazySection: React.FC<LazySectionProps> = ({
 
 const Home: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const isPageTransition = useContext(TransitionContext);
+  const isPageTransition = useTransition();
   const glowXTo = useRef<gsap.QuickToFunc | null>(null);
   const glowYTo = useRef<gsap.QuickToFunc | null>(null);
   useSharedMousePos();

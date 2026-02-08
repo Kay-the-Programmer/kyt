@@ -273,7 +273,7 @@ const CTASection: React.FC = () => {
                 </h2>
 
                 <p className="cta-desc text-gray-500 dark:text-gray-400 text-xl md:text-3xl font-light mb-20 leading-relaxed max-w-2xl mx-auto">
-                  We engineer the <span className="text-gray-900 dark:text-white font-medium">intelligence</span> that drives the future. Let's build your enterprise legacy with <span className="text-blue-600 font-medium">unrivaled precision</span>.
+                  We engineer the <span className="text-gray-900 dark:text-white font-medium">solutions</span> that drives the future. Let's build your enterprise legacy with <span className="text-blue-600 font-medium">unrivaled precision</span>.
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-10 md:gap-14">

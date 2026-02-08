@@ -1,5 +1,5 @@
 import React, { useRef, useLayoutEffect, useContext, useCallback, useState, useEffect, useMemo } from 'react';
-import { TransitionContext } from '../../TransitionContext';
+import { TransitionContext, useTransition } from '../../TransitionContext';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -37,7 +37,7 @@ const HeroSection = () => {
   // State for hooks that require re-render/logic updates
   const [isMobile, setIsMobile] = useState(false);
 
-  const isPageTransition = useContext(TransitionContext);
+  const isPageTransition = useTransition();
 
   // Cache letter elements for hover effect
   const letterRefs = useRef<NodeListOf<Element> | null>(null);

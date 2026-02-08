@@ -3,8 +3,12 @@ import React, { useState, useRef, useEffect } from 'react';
 // GoogleGenAI will be imported dynamically
 import { gsap } from 'gsap';
 
-const AiAssistant: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
+interface AiAssistantProps {
+  isOpen: boolean;
+  onToggle: () => void;
+}
+
+const AiAssistant: React.FC<AiAssistantProps> = ({ isOpen, onToggle }) => {
   const [messages, setMessages] = useState<{ role: 'user' | 'model', text: string }[]>([
     { role: 'model', text: 'Hi! I am Kytriq AI. How can I help you bring your digital idea to life today?' }
   ]);
@@ -34,8 +38,6 @@ const AiAssistant: React.FC = () => {
     try {
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 
-      console.log('AI Assistant: Attempting to initialize with API Key:', apiKey ? 'PRESENT' : 'MISSING');
-
       if (!apiKey) {
         throw new Error("VITE_GEMINI_API_KEY is missing. Check .env.local and restart the dev server.");
       }
@@ -61,13 +63,6 @@ const AiAssistant: React.FC = () => {
     } catch (error: any) {
       console.error(error);
       let errorMessage = "Service is temporarily unavailable. Please contact us directly!";
-
-      if (error.message?.includes("VITE_GEMINI_API_KEY")) {
-        errorMessage = "AI Configuration missing. Please check the setup!";
-      } else if (error.status === "RESOURCE_EXHAUSTED" || error.message?.includes("429") || error.message?.includes("quota")) {
-        errorMessage = "The AI is currently at its capacity limit. Please try again in a minute!";
-      }
-
       setMessages(prev => [...prev, { role: 'model', text: errorMessage }]);
     } finally {
       setIsTyping(false);
@@ -75,9 +70,9 @@ const AiAssistant: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-8 right-8 z-[100] flex flex-col items-end">
+    <div className="fixed bottom-32 right-8 z-[120] flex flex-col items-end pointer-events-none">
       {isOpen && (
-        <div ref={chatRef} className="mb-4 w-[350px] max-w-[calc(100vw-2rem)] h-[450px] bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-[2rem] shadow-2xl flex flex-col overflow-hidden">
+        <div ref={chatRef} className="pointer-events-auto mb-4 w-[350px] max-w-[calc(100vw-2rem)] h-[450px] bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-[2rem] shadow-2xl flex flex-col overflow-hidden">
           <div className="p-5 border-b border-gray-100 dark:border-gray-900 bg-gray-50/50 dark:bg-gray-900/50 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -85,7 +80,7 @@ const AiAssistant: React.FC = () => {
               </div>
               <span className="font-heading font-bold dark:text-white">Kytriq AI</span>
             </div>
-            <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-white">
+            <button onClick={onToggle} className="text-gray-400 hover:text-gray-600 dark:hover:text-white">
               <i className="fa-solid fa-xmark"></i>
             </button>
           </div>
@@ -134,20 +129,9 @@ const AiAssistant: React.FC = () => {
           </div>
         </div>
       )}
-
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-16 h-16 bg-blue-600 rounded-full shadow-2xl flex items-center justify-center text-white hover:scale-110 active:scale-90 transition-transform relative"
-      >
-        <i className={`fa-solid ${isOpen ? 'fa-xmark' : 'fa-robot'} text-2xl`}></i>
-        {!isOpen && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-pink-500 rounded-full border-2 border-white dark:border-brand-dark flex items-center justify-center">
-            <span className="w-2 h-2 bg-white rounded-full animate-ping"></span>
-          </span>
-        )}
-      </button>
     </div>
   );
 };
+
 
 export default AiAssistant;

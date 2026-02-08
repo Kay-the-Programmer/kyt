@@ -32,6 +32,7 @@ const AppContent: React.FC = () => {
   const mainRef = useRef<HTMLElement>(null);
   const location = useLocation();
   const isPageTransition = useTransition();
+  const [isAiOpen, setIsAiOpen] = useState(false);
   useSharedMousePos();
 
   useEffect(() => {
@@ -128,7 +129,7 @@ const AppContent: React.FC = () => {
         <ScrollToTop />
         <TransitionOverlay />
         <div className="flex flex-col min-h-screen">
-          <Navbar />
+          <Navbar onAiToggle={() => setIsAiOpen(!isAiOpen)} isAiOpen={isAiOpen} />
           <main ref={mainRef} className="flex-grow">
             <Suspense fallback={
               <div className="flex-grow flex items-center justify-center min-h-[60vh]">
@@ -147,13 +148,14 @@ const AppContent: React.FC = () => {
               </Routes>
             </Suspense>
           </main>
-          <AiAssistant />
+          <AiAssistant isOpen={isAiOpen} onToggle={() => setIsAiOpen(false)} />
           <ScrollToTopButton />
         </div>
       </div>
     </>
   );
 };
+
 
 const App: React.FC = () => {
   return (

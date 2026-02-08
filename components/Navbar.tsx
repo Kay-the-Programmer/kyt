@@ -5,7 +5,12 @@ import { gsap } from 'gsap';
 
 import logo from '../assets/logo.png';
 
-const Navbar: React.FC = () => {
+interface NavbarProps {
+  onAiToggle: () => void;
+  isAiOpen: boolean;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ onAiToggle, isAiOpen }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDark, setIsDark] = useState(document.documentElement.classList.contains('dark'));
   const [isVisible, setIsVisible] = useState(true);
@@ -72,6 +77,14 @@ const Navbar: React.FC = () => {
   // Dock action items
   const dockActions = useMemo(() => [
     {
+      name: 'Kytriq AI',
+      onClick: onAiToggle,
+      icon: <i className={`fa-solid ${isAiOpen ? 'fa-xmark' : 'fa-robot'} text-lg`}></i>,
+      gradient: isAiOpen ? 'from-pink-500 to-rose-600' : 'from-blue-500 to-indigo-600',
+      isAction: true,
+      active: isAiOpen
+    },
+    {
       name: 'WhatsApp',
       href: 'https://wa.me/+260570135415',
       icon: <i className="fa-brands fa-whatsapp text-lg"></i>,
@@ -85,7 +98,7 @@ const Navbar: React.FC = () => {
       gradient: 'from-cyan-400 to-blue-600',
       external: false
     },
-  ], []);
+  ], [onAiToggle, isAiOpen]);
 
   // macOS Dock animation constants
   const DOCK_CONFIG = useMemo(() => ({
@@ -95,24 +108,25 @@ const Navbar: React.FC = () => {
     duration: 0.2
   }), []);
 
-  // Dock magnification effect with smooth easing
+  // Dock magnification effect with smooth easing - refined using actual offsetLeft
   const updateDockIcons = useCallback((pointer: number) => {
     const items = dockItemsRef.current;
     const { minSize, maxSize, bound, duration } = DOCK_CONFIG;
 
-    items.forEach((item, i) => {
+    items.forEach((item) => {
       if (!item) return;
 
-      const distance = (i * minSize + minSize / 2) - pointer;
+      const itemCenterX = item.offsetLeft + item.offsetWidth / 2;
+      const distance = itemCenterX - pointer;
       let x = 0;
       let scale = 1;
 
       if (-bound < distance && distance < bound) {
-        const rad = distance / minSize * 0.5;
+        const rad = Math.PI * (distance / bound) * 0.5;
         scale = 1 + (maxSize / minSize - 1) * Math.cos(rad);
-        x = 2.5 * (maxSize - minSize) * Math.sin(rad);
+        x = 2.0 * (maxSize - minSize) * Math.sin(rad);
       } else {
-        x = (-bound < distance ? 2.5 : -2.5) * (maxSize - minSize);
+        x = (distance > 0 ? 1 : -1) * (maxSize - minSize);
       }
 
       gsap.to(item, {
@@ -376,8 +390,8 @@ const Navbar: React.FC = () => {
               <Link
                 to={link.path}
                 className={`dock-link group relative flex items-center justify-center w-full h-full rounded-2xl transition-all duration-300 ${isActive(link.path)
-                    ? `bg-gradient-to-br ${link.gradient} shadow-lg ring-2 ring-white/20`
-                    : 'bg-white/60 dark:bg-gray-800/60 hover:bg-white/90 dark:hover:bg-gray-700/80'
+                  ? `bg-gradient-to-br ${link.gradient} shadow-lg ring-2 ring-white/20`
+                  : 'bg-white/60 dark:bg-gray-800/60 hover:bg-white/90 dark:hover:bg-gray-700/80'
                   } ${link.isLogo ? 'overflow-hidden p-1.5' : ''}`}
                 aria-label={link.name}
               >
@@ -406,31 +420,46 @@ const Navbar: React.FC = () => {
           {dockActions.map((action, index) => (
             <li
               key={action.name}
-              ref={(el) => setDockItemRef(el, navLinks.length + 1 + index)}
+              ref={(el) => setDockItemRef(el, navLinks.length + index)}
               className="dock-item relative"
               style={{ width: '48px', height: '48px' }}
             >
-              <a
-                href={action.href}
-                target={action.external ? '_blank' : undefined}
-                rel={action.external ? 'noopener noreferrer' : undefined}
-                className={`dock-link group relative flex items-center justify-center w-full h-full rounded-2xl bg-gradient-to-br ${action.gradient} text-white shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group-active:scale-95`}
-                aria-label={action.name}
-              >
-                {action.icon}
+              {action.isAction ? (
+                <button
+                  onClick={action.onClick}
+                  className={`dock-link group relative flex items-center justify-center w-full h-full rounded-2xl bg-gradient-to-br ${action.gradient} text-white shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group-active:scale-95`}
+                  aria-label={action.name}
+                >
+                  {action.icon}
+                  {/* Tooltip */}
+                  <span className="absolute -top-14 left-1/2 -translate-x-1/2 px-4 py-2 rounded-xl bg-gray-900/90 dark:bg-gray-800/95 backdrop-blur-md text-white text-[0.8rem] font-semibold whitespace-nowrap opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 pointer-events-none shadow-xl border border-white/10">
+                    {action.name}
+                    <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-gray-900/90 dark:border-t-gray-800/95"></span>
+                  </span>
+                </button>
+              ) : (
+                <a
+                  href={action.href}
+                  target={action.external ? '_blank' : undefined}
+                  rel={action.external ? 'noopener noreferrer' : undefined}
+                  className={`dock-link group relative flex items-center justify-center w-full h-full rounded-2xl bg-gradient-to-br ${action.gradient} text-white shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group-active:scale-95`}
+                  aria-label={action.name}
+                >
+                  {action.icon}
 
-                {/* Tooltip */}
-                <span className="absolute -top-14 left-1/2 -translate-x-1/2 px-4 py-2 rounded-xl bg-gray-900/90 dark:bg-gray-800/95 backdrop-blur-md text-white text-[0.8rem] font-semibold whitespace-nowrap opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 pointer-events-none shadow-xl border border-white/10">
-                  {action.name}
-                  <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-gray-900/90 dark:border-t-gray-800/95"></span>
-                </span>
-              </a>
+                  {/* Tooltip */}
+                  <span className="absolute -top-14 left-1/2 -translate-x-1/2 px-4 py-2 rounded-xl bg-gray-900/90 dark:bg-gray-800/95 backdrop-blur-md text-white text-[0.8rem] font-semibold whitespace-nowrap opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 pointer-events-none shadow-xl border border-white/10">
+                    {action.name}
+                    <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-gray-900/90 dark:border-t-gray-800/95"></span>
+                  </span>
+                </a>
+              )}
             </li>
           ))}
 
           {/* Theme Toggle */}
           <li
-            ref={(el) => setDockItemRef(el, navLinks.length + 1 + dockActions.length)}
+            ref={(el) => setDockItemRef(el, navLinks.length + dockActions.length)}
             className="dock-item relative"
             style={{ width: '48px', height: '48px' }}
           >

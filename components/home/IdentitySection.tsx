@@ -144,8 +144,8 @@ const IdentitySection: React.FC = () => {
   // Memoize features to prevent re-creation
   const features = useMemo(() => [
     {
-      title: 'Web Applications',
-      text: 'Crafting responsive, performant web experiences that scale with your business needs.',
+      title: 'Web/Desktop Applications',
+      text: 'Crafting responsive, performant web and desktop experiences that scale with your business needs.',
       icon: 'fa-globe'
     },
     {

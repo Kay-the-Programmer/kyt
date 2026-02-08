@@ -1,18 +1,50 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, memo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Float, Sphere } from '@react-three/drei';
 import * as THREE from 'three';
 
-// Neural node
-const NeuralNode: React.FC<{ position: [number, number, number]; size?: number; color?: string; pulseDelay?: number }> = ({
+// Shared geometries - lower polygon counts
+const nodeGeometrySmall = new THREE.SphereGeometry(0.05, 8, 8);
+const nodeGeometryMedium = new THREE.SphereGeometry(0.07, 8, 8);
+const particleGeometry = new THREE.SphereGeometry(0.03, 6, 6);
+
+// Shared materials
+const innerNodeMaterial = new THREE.MeshStandardMaterial({
+    color: '#60a5fa',
+    emissive: '#60a5fa',
+    emissiveIntensity: 0.6,
+    transparent: true,
+    opacity: 0.9
+});
+
+const outerNodeMaterial = new THREE.MeshStandardMaterial({
+    color: '#a78bfa',
+    emissive: '#a78bfa',
+    emissiveIntensity: 0.6,
+    transparent: true,
+    opacity: 0.9
+});
+
+const particleMaterial = new THREE.MeshStandardMaterial({
+    color: '#22d3ee',
+    emissive: '#06b6d4',
+    emissiveIntensity: 1
+});
+
+// Optimized neural node with shared geometry
+const NeuralNode = memo<{ position: [number, number, number]; isOuter?: boolean; pulseDelay: number }>(({
     position,
-    size = 0.08,
-    color = '#60a5fa',
-    pulseDelay = 0
+    isOuter = false,
+    pulseDelay
 }) => {
     const ref = useRef<THREE.Mesh>(null);
+    let frameCount = 0;
 
     useFrame(({ clock }) => {
+        // Frame skip
+        frameCount++;
+        if (frameCount % 3 !== 0) return;
+
         if (ref.current) {
             const t = clock.getElapsedTime() + pulseDelay;
             const scale = 1 + Math.sin(t * 2) * 0.2;
@@ -21,69 +53,71 @@ const NeuralNode: React.FC<{ position: [number, number, number]; size?: number; 
     });
 
     return (
-        <Sphere ref={ref} args={[size, 16, 16]} position={position}>
-            <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.6} transparent opacity={0.9} />
-        </Sphere>
+        <mesh
+            ref={ref}
+            position={position}
+            geometry={isOuter ? nodeGeometrySmall : nodeGeometryMedium}
+            material={isOuter ? outerNodeMaterial : innerNodeMaterial}
+        />
     );
-};
+});
 
-// Connection line between nodes
-const ConnectionLine: React.FC<{ start: [number, number, number]; end: [number, number, number]; delay: number }> = ({ start, end, delay }) => {
-    const ref = useRef<THREE.Line>(null);
+NeuralNode.displayName = 'NeuralNode';
 
+// Optimized connection line - static, no animation for performance
+const ConnectionLine = memo<{ start: [number, number, number]; end: [number, number, number] }>(({ start, end }) => {
     const geometry = useMemo(() => {
-        const points = [
-            new THREE.Vector3(...start),
-            new THREE.Vector3(...end)
-        ];
+        const points = [new THREE.Vector3(...start), new THREE.Vector3(...end)];
         return new THREE.BufferGeometry().setFromPoints(points);
     }, [start, end]);
 
-    useFrame(({ clock }) => {
-        if (ref.current && ref.current.material) {
-            const t = clock.getElapsedTime() + delay;
-            const material = ref.current.material as THREE.LineBasicMaterial;
-            material.opacity = 0.3 + Math.sin(t * 3) * 0.3;
-        }
-    });
+    const material = useMemo(() => new THREE.LineBasicMaterial({
+        color: '#60a5fa',
+        transparent: true,
+        opacity: 0.4
+    }), []);
 
-    return (
-        <line ref={ref} geometry={geometry}>
-            <lineBasicMaterial color="#60a5fa" transparent opacity={0.5} />
-        </line>
-    );
-};
+    return <line geometry={geometry} material={material} />;
+});
 
-// Data particle flowing along connection
-const DataParticle: React.FC<{ start: [number, number, number]; end: [number, number, number]; speed: number; delay: number }> = ({ start, end, speed, delay }) => {
+ConnectionLine.displayName = 'ConnectionLine';
+
+// Optimized data particle
+const DataParticle = memo<{ start: [number, number, number]; end: [number, number, number]; speed: number; delay: number }>(({ start, end, speed, delay }) => {
     const ref = useRef<THREE.Mesh>(null);
+    const startVec = useMemo(() => new THREE.Vector3(...start), [start]);
+    const direction = useMemo(() => new THREE.Vector3(...end).sub(startVec), [end, startVec]);
+    let frameCount = 0;
 
     useFrame(({ clock }) => {
+        // Frame skip
+        frameCount++;
+        if (frameCount % 2 !== 0) return;
+
         if (ref.current) {
             const t = ((clock.getElapsedTime() + delay) * speed) % 1;
-            ref.current.position.x = start[0] + (end[0] - start[0]) * t;
-            ref.current.position.y = start[1] + (end[1] - start[1]) * t;
-            ref.current.position.z = start[2] + (end[2] - start[2]) * t;
+            ref.current.position.copy(startVec).addScaledVector(direction, t);
         }
     });
 
-    return (
-        <mesh ref={ref}>
-            <sphereGeometry args={[0.03, 8, 8]} />
-            <meshStandardMaterial color="#22d3ee" emissive="#06b6d4" emissiveIntensity={1} />
-        </mesh>
-    );
-};
+    return <mesh ref={ref} geometry={particleGeometry} material={particleMaterial} />;
+});
 
-// Central AI core
-const AICore: React.FC = () => {
+DataParticle.displayName = 'DataParticle';
+
+// Optimized AI core
+const AICore = memo(() => {
     const coreRef = useRef<THREE.Group>(null);
     const innerRef = useRef<THREE.Mesh>(null);
+    let frameCount = 0;
 
     useFrame(({ clock }) => {
+        // Frame skip
+        frameCount++;
+        if (frameCount % 2 !== 0) return;
+
         if (coreRef.current) {
             coreRef.current.rotation.y = clock.getElapsedTime() * 0.3;
-            coreRef.current.rotation.x = Math.sin(clock.getElapsedTime() * 0.2) * 0.1;
         }
         if (innerRef.current) {
             const scale = 1 + Math.sin(clock.getElapsedTime() * 2) * 0.1;
@@ -91,10 +125,14 @@ const AICore: React.FC = () => {
         }
     });
 
+    // Lower polygon torus
+    const torusGeometry1 = useMemo(() => new THREE.TorusGeometry(0.4, 0.02, 8, 32), []);
+    const torusGeometry2 = useMemo(() => new THREE.TorusGeometry(0.5, 0.015, 8, 32), []);
+
     return (
         <group ref={coreRef}>
-            {/* Core sphere */}
-            <Sphere ref={innerRef} args={[0.25, 32, 32]}>
+            {/* Core sphere - lower segments */}
+            <Sphere ref={innerRef} args={[0.25, 16, 16]}>
                 <meshStandardMaterial
                     color="#3b82f6"
                     emissive="#1d4ed8"
@@ -104,92 +142,80 @@ const AICore: React.FC = () => {
                 />
             </Sphere>
 
-            {/* Outer ring */}
-            <mesh rotation={[Math.PI / 2, 0, 0]}>
-                <torusGeometry args={[0.4, 0.02, 16, 64]} />
+            {/* Outer ring - lower segments */}
+            <mesh rotation={[Math.PI / 2, 0, 0]} geometry={torusGeometry1}>
                 <meshStandardMaterial color="#60a5fa" emissive="#3b82f6" emissiveIntensity={0.5} />
             </mesh>
 
             {/* Second ring */}
-            <mesh rotation={[Math.PI / 3, Math.PI / 4, 0]}>
-                <torusGeometry args={[0.5, 0.015, 16, 64]} />
+            <mesh rotation={[Math.PI / 3, Math.PI / 4, 0]} geometry={torusGeometry2}>
                 <meshStandardMaterial color="#a78bfa" emissive="#8b5cf6" emissiveIntensity={0.4} />
             </mesh>
         </group>
     );
-};
+});
+
+AICore.displayName = 'AICore';
+
+// Memoized node and connection data
+const innerNodes: [number, number, number][] = [
+    [-0.6, 0.4, 0.2],
+    [0.6, 0.4, 0.2],
+    [-0.5, -0.4, 0.3],
+    [0.5, -0.4, 0.3],
+    [0, 0.7, 0.1],
+    [0, -0.6, 0.2],
+];
+
+const outerNodes: [number, number, number][] = [
+    [-1.0, 0.7, -0.1],
+    [1.0, 0.7, -0.1],
+    [-1.1, 0, 0],
+    [1.1, 0, 0],
+];
+
+// Reduced connections for performance
+const connections: { start: [number, number, number]; end: [number, number, number] }[] = [
+    { start: [0, 0, 0], end: innerNodes[0] },
+    { start: [0, 0, 0], end: innerNodes[1] },
+    { start: [0, 0, 0], end: innerNodes[2] },
+    { start: [0, 0, 0], end: innerNodes[3] },
+    { start: innerNodes[0], end: outerNodes[0] },
+    { start: innerNodes[1], end: outerNodes[1] },
+    { start: innerNodes[2], end: outerNodes[2] },
+    { start: innerNodes[3], end: outerNodes[3] },
+];
 
 const AIScene: React.FC = () => {
-    // Neural network node positions
-    const nodes: [number, number, number][] = [
-        // Inner layer
-        [-0.6, 0.4, 0.2],
-        [0.6, 0.4, 0.2],
-        [-0.5, -0.4, 0.3],
-        [0.5, -0.4, 0.3],
-        [0, 0.7, 0.1],
-        [0, -0.6, 0.2],
-        // Outer layer
-        [-1.0, 0.7, -0.1],
-        [1.0, 0.7, -0.1],
-        [-1.1, 0, 0],
-        [1.1, 0, 0],
-        [-1.0, -0.6, -0.1],
-        [1.0, -0.6, -0.1],
-    ];
-
-    // Connections from core to inner nodes
-    const connections: { start: [number, number, number]; end: [number, number, number] }[] = [
-        { start: [0, 0, 0], end: nodes[0] },
-        { start: [0, 0, 0], end: nodes[1] },
-        { start: [0, 0, 0], end: nodes[2] },
-        { start: [0, 0, 0], end: nodes[3] },
-        { start: [0, 0, 0], end: nodes[4] },
-        { start: [0, 0, 0], end: nodes[5] },
-        // Inner to outer connections
-        { start: nodes[0], end: nodes[6] },
-        { start: nodes[0], end: nodes[8] },
-        { start: nodes[1], end: nodes[7] },
-        { start: nodes[1], end: nodes[9] },
-        { start: nodes[2], end: nodes[8] },
-        { start: nodes[2], end: nodes[10] },
-        { start: nodes[3], end: nodes[9] },
-        { start: nodes[3], end: nodes[11] },
-        { start: nodes[4], end: nodes[6] },
-        { start: nodes[4], end: nodes[7] },
-        { start: nodes[5], end: nodes[10] },
-        { start: nodes[5], end: nodes[11] },
-    ];
-
     return (
-        <Float speed={1.2} rotationIntensity={0.1} floatIntensity={0.3}>
+        <Float speed={1} rotationIntensity={0.08} floatIntensity={0.25}>
             <group scale={1.3}>
-                {/* Central AI core */}
                 <AICore />
 
-                {/* Neural nodes */}
-                {nodes.slice(0, 6).map((pos, i) => (
-                    <NeuralNode key={`inner-${i}`} position={pos} size={0.07} color="#60a5fa" pulseDelay={i * 0.3} />
-                ))}
-                {nodes.slice(6).map((pos, i) => (
-                    <NeuralNode key={`outer-${i}`} position={pos} size={0.05} color="#a78bfa" pulseDelay={i * 0.4 + 1} />
+                {/* Inner nodes */}
+                {innerNodes.map((pos, i) => (
+                    <NeuralNode key={`inner-${i}`} position={pos} pulseDelay={i * 0.3} />
                 ))}
 
-                {/* Connection lines */}
+                {/* Outer nodes - reduced count */}
+                {outerNodes.map((pos, i) => (
+                    <NeuralNode key={`outer-${i}`} position={pos} isOuter pulseDelay={i * 0.4 + 1} />
+                ))}
+
+                {/* Connection lines - static */}
                 {connections.map((conn, i) => (
-                    <ConnectionLine key={i} start={conn.start} end={conn.end} delay={i * 0.2} />
+                    <ConnectionLine key={i} start={conn.start} end={conn.end} />
                 ))}
 
-                {/* Data particles flowing */}
-                {connections.slice(0, 6).map((conn, i) => (
-                    <DataParticle key={i} start={conn.start} end={conn.end} speed={0.3 + i * 0.05} delay={i * 0.5} />
+                {/* Reduced data particles */}
+                {connections.slice(0, 4).map((conn, i) => (
+                    <DataParticle key={i} start={conn.start} end={conn.end} speed={0.25} delay={i * 0.5} />
                 ))}
 
-                {/* Ambient lighting */}
-                <pointLight position={[0, 0, 2]} intensity={0.6} color="#3b82f6" />
+                <pointLight position={[0, 0, 2]} intensity={0.5} color="#3b82f6" />
             </group>
         </Float>
     );
 };
 
-export default AIScene;
+export default memo(AIScene);

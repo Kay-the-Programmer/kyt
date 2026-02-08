@@ -7,16 +7,24 @@ const ScrollToTopButton: React.FC = () => {
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
+    let ticking = false;
+
     const toggleVisibility = () => {
-      // Threshold for "past hero section"
-      if (window.pageYOffset > 600) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          // Threshold for "past hero section"
+          if (window.scrollY > 600) {
+            setIsVisible(true);
+          } else {
+            setIsVisible(false);
+          }
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
-    window.addEventListener('scroll', toggleVisibility);
+    window.addEventListener('scroll', toggleVisibility, { passive: true });
     return () => window.removeEventListener('scroll', toggleVisibility);
   }, []);
 

@@ -210,6 +210,7 @@ const VisionaryPanel: React.FC<VisionaryPanelProps> = ({ registerMagneticArea, d
                         className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-heading font-black text-gray-900 dark:text-white mb-6 sm:mb-8 lg:mb-12 tracking-tighter leading-[0.85]"
                     >
                         <SplitText text="Visionary" className="block" />
+                        <br />
                         <SplitText isGradient={true} text="Engineering." />
                     </h2>
                     <p

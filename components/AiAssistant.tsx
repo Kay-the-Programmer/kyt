@@ -32,8 +32,17 @@ const AiAssistant: React.FC = () => {
     setIsTyping(true);
 
     try {
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+
+      console.log('AI Assistant: Attempting to initialize with API Key:', apiKey ? (apiKey.substring(0, 5) + '...') : 'MISSING');
+
+      if (!apiKey) {
+        throw new Error("VITE_GEMINI_API_KEY is missing. Check .env.local and restart the dev server.");
+      }
+
       const { GoogleGenAI } = await import("@google/genai");
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey });
+
       const response = await ai.models.generateContent({
         model: 'gemini-2.0-flash',
         contents: [...messages.map(m => ({ role: m.role, parts: [{ text: m.text }] })), { role: 'user', parts: [{ text: userMsg }] }],
@@ -49,9 +58,17 @@ const AiAssistant: React.FC = () => {
 
       const aiText = response.text || "I'm sorry, I couldn't process that. Can you try again?";
       setMessages(prev => [...prev, { role: 'model', text: aiText }]);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      setMessages(prev => [...prev, { role: 'model', text: "Service is temporarily unavailable. Please contact us directly!" }]);
+      let errorMessage = "Service is temporarily unavailable. Please contact us directly!";
+
+      if (error.message?.includes("VITE_GEMINI_API_KEY")) {
+        errorMessage = "AI Configuration missing. Please check the setup!";
+      } else if (error.status === "RESOURCE_EXHAUSTED" || error.message?.includes("429") || error.message?.includes("quota")) {
+        errorMessage = "The AI is currently at its capacity limit. Please try again in a minute!";
+      }
+
+      setMessages(prev => [...prev, { role: 'model', text: errorMessage }]);
     } finally {
       setIsTyping(false);
     }
@@ -77,8 +94,8 @@ const AiAssistant: React.FC = () => {
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${msg.role === 'user'
-                    ? 'bg-blue-600 text-white rounded-tr-none'
-                    : 'bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded-tl-none border border-gray-200 dark:border-gray-800'
+                  ? 'bg-blue-600 text-white rounded-tr-none'
+                  : 'bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded-tl-none border border-gray-200 dark:border-gray-800'
                   }`}>
                   {msg.text}
                 </div>

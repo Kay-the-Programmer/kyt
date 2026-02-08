@@ -1,13 +1,16 @@
 
-import React, { useLayoutEffect, useRef, Suspense } from 'react';
+import React, { useLayoutEffect, useRef, useCallback, useMemo, useState, useEffect } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 import { useSEO } from '../hooks/useSEO';
+import SplitText from '../components/SplitText';
 
 const Footer = React.lazy(() => import('../components/Footer'));
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
 
+// Philosophy items data
 const philosophyItems = [
   {
     title: 'Intelligence Driven',
@@ -62,6 +65,7 @@ const philosophyItems = [
   }
 ];
 
+// Stats data
 const stats = [
   { label: 'Active Systems', value: 12, suffix: '+' },
   { label: 'Success Rate', value: 99, suffix: '%' },
@@ -69,8 +73,20 @@ const stats = [
   { label: 'Uptime Core', value: 99, suffix: '.9%' }
 ];
 
+// Timeline milestones
+const milestones = [
+  { year: '2023', title: 'The Spark', desc: 'Founded with a vision to democratize intelligent software.' },
+  { year: '2024', title: 'First Flight', desc: 'Launched SalePilot and Visionary platforms.' },
+  { year: '2025', title: 'Scaling Up', desc: 'Expanded team and client base across industries.' },
+  { year: 'Now', title: 'The Future', desc: 'Building the next generation of AI-powered solutions.' }
+];
+
 const About: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLElement>(null);
+  const timelineRef = useRef<HTMLDivElement>(null);
+  const rocketRef = useRef<HTMLDivElement>(null);
+  const motionPathCtxRef = useRef<gsap.Context | null>(null);
 
   useSEO({
     title: 'About Us | Kytriq Technologies',
@@ -78,10 +94,154 @@ const About: React.FC = () => {
     keywords: 'about Kytriq, software company, AI solutions, digital innovation, tech startup',
   });
 
+  // Memoized styles for parallax layers
+  const parallaxStyle = useMemo(() => ({
+    backgroundImage: 'radial-gradient(rgba(37, 99, 235, 0.15) 1px, transparent 1px)',
+    backgroundSize: '60px 60px'
+  }), []);
+
+  // Motion Path Animation - optimized for performance
+  useEffect(() => {
+    if (!containerRef.current || !rocketRef.current) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isMobile = window.innerWidth < 769;
+    
+    if (prefersReducedMotion || isMobile) {
+      gsap.set(rocketRef.current, { opacity: 0, display: 'none' });
+      return;
+    }
+
+    let isVisible = true;
+    let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
+    let rafId: number | null = null;
+
+    // Cache waypoint positions (calculated once, not on every scroll)
+    let cachedPoints: { x: number; y: number }[] = [];
+
+    const calculatePoints = () => {
+      const rocket = rocketRef.current;
+      const container = containerRef.current;
+      if (!rocket || !container) return [];
+
+      const rocketRect = rocket.getBoundingClientRect();
+      const waypoints = container.querySelectorAll<HTMLElement>('.motion-waypoint');
+      
+      return Array.from(waypoints).map((wp) => {
+        const wpRect = wp.getBoundingClientRect();
+        return {
+          x: wpRect.left + wpRect.width / 2 - (rocketRect.left + rocketRect.width / 2),
+          y: wpRect.top + wpRect.height / 2 - (rocketRect.top + rocketRect.height / 2)
+        };
+      });
+    };
+
+    const createMotionPath = () => {
+      motionPathCtxRef.current?.revert();
+
+      motionPathCtxRef.current = gsap.context(() => {
+        const rocket = rocketRef.current;
+        const container = containerRef.current;
+        if (!rocket || !container) return;
+
+        cachedPoints = calculatePoints();
+        if (cachedPoints.length === 0) return;
+
+        // GPU-accelerated initial state
+        gsap.set(rocket, { 
+          opacity: 1, 
+          scale: 1,
+          force3D: true,
+          willChange: 'transform'
+        });
+
+        // Main motion path with GPU optimization
+        gsap.to(rocket, {
+          duration: 1,
+          ease: 'none',
+          force3D: true,
+          motionPath: {
+            path: cachedPoints,
+            curviness: 1.5, // Reduced for smoother perf
+            autoRotate: 90
+          },
+          scrollTrigger: {
+            trigger: container.querySelector('.hero-section'),
+            start: 'top top',
+            endTrigger: container.querySelector('.stats-section'),
+            end: 'bottom center',
+            scrub: 2, // Higher value = smoother but less responsive
+            fastScrollEnd: true,
+            onToggle: (self) => {
+              // Pause animation when out of scroll range
+              if (!self.isActive) {
+                gsap.set(rocket, { willChange: 'auto' });
+              } else {
+                gsap.set(rocket, { willChange: 'transform' });
+              }
+            }
+          }
+        });
+
+        // Simplified glow - no blur, just opacity pulse
+        const glow = rocket.querySelector('.rocket-glow');
+        if (glow) {
+          gsap.to(glow, {
+            opacity: 0.5,
+            duration: 2,
+            repeat: -1,
+            yoyo: true,
+            ease: 'sine.inOut'
+          });
+        }
+      }, containerRef);
+    };
+
+    // Visibility observer - pause animations when not visible
+    const visibilityObserver = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting;
+        if (rocketRef.current) {
+          gsap.to(rocketRef.current, { 
+            opacity: isVisible ? 1 : 0, 
+            duration: 0.3 
+          });
+        }
+      },
+      { threshold: 0.1 }
+    );
+    visibilityObserver.observe(containerRef.current);
+
+    // Throttled resize handler (300ms debounce)
+    const handleResize = () => {
+      if (resizeTimeout) clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(createMotionPath);
+      }, 300);
+    };
+
+    // Initial creation after layout settles
+    const initTimer = setTimeout(createMotionPath, 300);
+    window.addEventListener('resize', handleResize, { passive: true });
+
+    return () => {
+      clearTimeout(initTimer);
+      if (resizeTimeout) clearTimeout(resizeTimeout);
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', handleResize);
+      visibilityObserver.disconnect();
+      motionPathCtxRef.current?.revert();
+      // Clean up will-change
+      if (rocketRef.current) {
+        gsap.set(rocketRef.current, { willChange: 'auto' });
+      }
+    };
+  }, []);
+
   useLayoutEffect(() => {
     if (!containerRef.current) return;
 
-    // Track cleanup functions for event listeners
     const cleanupFns: (() => void)[] = [];
     let mm: gsap.MatchMedia | null = null;
 
@@ -96,290 +256,325 @@ const About: React.FC = () => {
       }, (context) => {
         const { isDesktop } = context.conditions as { isDesktop: boolean };
         const baseDuration = prefersReducedMotion ? 0.01 : 1;
-        const baseStagger = prefersReducedMotion ? 0 : 0.1;
-
         const container = containerRef.current;
         if (!container) return;
 
-        // Cache all DOM elements
-        const headerLabel = container.querySelector('.header-label');
-        const headerTitle = container.querySelector('.header-title');
-        const headerDesc = container.querySelector('.header-desc');
-        const missionCard = container.querySelector('.mission-card');
-        const visionCard = container.querySelector('.vision-card');
-        const missionIcon = container.querySelector('.mission-icon');
-        const visionIcon = container.querySelector('.vision-icon');
-        const imgContainer = container.querySelector('.img-reveal');
-        const philosophyHeader = container.querySelector('.philosophy-header');
-        const philosophyTitle = container.querySelector('.philosophy-title');
-        const philosophyDesc = container.querySelector('.philosophy-desc');
-        const philosophyCards = container.querySelectorAll<HTMLElement>('.philosophy-card');
-        const statsHeader = container.querySelector('.stats-header');
-        const statItems = container.querySelectorAll<HTMLElement>('.stat-item');
-        const statNumbers = container.querySelectorAll<HTMLElement>('.stat-number');
-        const decorElements = container.querySelectorAll<HTMLElement>('.decor-element');
+        // ===== HERO SECTION - SplitText Animation =====
+        const heroSection = container.querySelector('.hero-section');
+        const heroLabel = heroSection?.querySelector('.hero-label');
+        const heroTitleChars = heroSection?.querySelectorAll('.hero-title .letter-reveal');
+        const heroDesc = heroSection?.querySelector('.hero-desc');
+        const parallaxBg = container.querySelector('.parallax-bg');
 
-        // Helper to execute GSAP only if targets exist
-        const safeAnimate = (method: 'set' | 'to' | 'from' | 'fromTo', targets: any, vars: gsap.TweenVars, timeline?: gsap.core.Timeline, position?: string | number, fromVars?: gsap.TweenVars) => {
-          const validTargets = Array.isArray(targets) ? targets.filter(t => t !== null && t !== undefined) : (targets ? [targets] : []);
-          if (validTargets.length === 0) return;
+        // Set initial states
+        if (heroLabel) gsap.set(heroLabel, { y: 40, opacity: 0 });
+        if (heroTitleChars && heroTitleChars.length > 0) {
+          gsap.set(heroTitleChars, {
+            y: 120,
+            opacity: 0,
+            rotateX: -90,
+            transformPerspective: 1000
+          });
+        }
+        if (heroDesc) gsap.set(heroDesc, { y: 60, opacity: 0, filter: isDesktop ? 'blur(10px)' : 'none' });
 
-          if (timeline) {
-            if (method === 'to') timeline.to(validTargets, vars, position);
-            else if (method === 'from') timeline.from(validTargets, vars, position);
-            else if (method === 'set') timeline.set(validTargets, vars, position);
-            else if (method === 'fromTo') timeline.fromTo(validTargets, fromVars || {}, vars, position);
-          } else {
-            if (method === 'set') gsap.set(validTargets, vars);
-            else if (method === 'to') gsap.to(validTargets, vars);
-            else if (method === 'from') gsap.from(validTargets, vars);
-            else if (method === 'fromTo') gsap.fromTo(validTargets, fromVars || {}, vars);
-          }
-        };
-
-        // ===== SET INITIAL STATES =====
-        safeAnimate('set', [headerLabel, headerTitle, headerDesc], {
-          y: 80,
-          opacity: 0,
-          filter: prefersReducedMotion ? 'none' : 'blur(10px)',
-          rotation: prefersReducedMotion ? 0 : -2
-        });
-
-        safeAnimate('set', [missionCard, visionCard], {
-          y: 100,
-          opacity: 0,
-          rotateX: isDesktop ? 15 : 0,
-          scale: 0.95,
-          filter: isDesktop && !prefersReducedMotion ? 'blur(8px)' : 'none'
-        });
-
-        safeAnimate('set', [missionIcon, visionIcon], { scale: 0, rotation: -45, opacity: 0 });
-        safeAnimate('set', imgContainer, { clipPath: 'inset(100% 0% 0% 0%)', scale: 1.1, filter: isDesktop ? 'blur(5px)' : 'none' });
-        safeAnimate('set', [philosophyHeader, philosophyTitle, philosophyDesc], { y: 50, opacity: 0, filter: isDesktop ? 'blur(5px)' : 'none' });
-        safeAnimate('set', Array.from(philosophyCards), { y: 60, opacity: 0, scale: 0.9, filter: isDesktop ? 'blur(5px)' : 'none' });
-        safeAnimate('set', statsHeader, { y: 40, opacity: 0 });
-        safeAnimate('set', Array.from(statItems), { y: 50, opacity: 0, scale: 0.85 });
-        safeAnimate('set', Array.from(decorElements), { scale: 0, opacity: 0, filter: isDesktop ? 'blur(20px)' : 'none' });
-
-        // ===== HERO ENTRANCE TIMELINE =====
+        // Hero entrance timeline
         const heroTl = gsap.timeline({
           scrollTrigger: {
-            trigger: container.querySelector('.about-header'),
-            start: isDesktop ? 'top 85%' : 'top 95%',
+            trigger: heroSection,
+            start: 'top 80%',
             once: true
-          },
-          defaults: { ease: 'expo.out', force3D: true }
+          }
         });
 
-        safeAnimate('to', headerLabel, { y: 0, opacity: 1, filter: 'blur(0px)', rotation: 0, duration: baseDuration * 1.2 }, heroTl);
-        safeAnimate('to', headerTitle, { y: 0, opacity: 1, filter: 'blur(0px)', rotation: 0, duration: baseDuration * 1.4 }, heroTl, '-=0.9');
-        safeAnimate('to', headerDesc, { y: 0, opacity: 1, filter: 'blur(0px)', rotation: 0, duration: baseDuration * 1.2 }, heroTl, '-=0.8');
+        heroTl
+          .to(heroLabel, { y: 0, opacity: 1, duration: baseDuration * 0.8, ease: 'power3.out' })
+          .to(heroTitleChars, {
+            y: 0,
+            opacity: 1,
+            rotateX: 0,
+            duration: baseDuration * 1.4,
+            stagger: { amount: prefersReducedMotion ? 0 : 0.8, from: 'start' },
+            ease: 'expo.out'
+          }, '-=0.4')
+          .to(heroDesc, {
+            y: 0,
+            opacity: 1,
+            filter: 'blur(0px)',
+            duration: baseDuration * 1.2
+          }, '-=0.6');
 
-        // ===== CARDS REVEAL =====
-        [missionCard, visionCard].forEach((card, i) => {
-          if (!card) return;
-          const icon = card.querySelector('.mission-icon, .vision-icon');
-          const label = card.querySelector('.mission-label, .vision-label');
-          const title = card.querySelector('.mission-title, .vision-title');
-          const text = card.querySelector('.mission-text, .vision-text');
-
-          const tl = gsap.timeline({
+        // Parallax background on scroll
+        if (parallaxBg && isDesktop && !prefersReducedMotion) {
+          gsap.to(parallaxBg, {
+            y: 200,
+            ease: 'none',
             scrollTrigger: {
-              trigger: card,
-              start: isDesktop ? 'top 80%' : 'top 90%',
+              trigger: heroSection,
+              start: 'top top',
+              end: 'bottom top',
+              scrub: 1.5
+            }
+          });
+        }
+
+        // ===== TIMELINE SECTION =====
+        const timelineSection = container.querySelector('.timeline-section');
+        const timelineItems = container.querySelectorAll<HTMLElement>('.timeline-item');
+        const timelineLine = container.querySelector('.timeline-line');
+
+        if (timelineLine) {
+          gsap.set(timelineLine, { scaleY: 0, transformOrigin: 'top' });
+          gsap.to(timelineLine, {
+            scaleY: 1,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: timelineSection,
+              start: 'top 60%',
+              end: 'bottom 80%',
+              scrub: 1
+            }
+          });
+        }
+
+        timelineItems.forEach((item, i) => {
+          gsap.set(item, {
+            x: isDesktop ? (i % 2 === 0 ? -80 : 80) : 0,
+            y: isDesktop ? 0 : 60,
+            opacity: 0
+          });
+
+          gsap.to(item, {
+            x: 0,
+            y: 0,
+            opacity: 1,
+            duration: baseDuration * 1.2,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: item,
+              start: isDesktop ? 'top 75%' : 'top 85%',
               once: true
             }
           });
 
-          safeAnimate('to', card, {
-            y: 0,
-            opacity: 1,
-            rotateX: 0,
-            scale: 1,
-            filter: 'blur(0px)',
-            duration: baseDuration * 1.4,
-            ease: 'power3.out',
-          }, tl, isDesktop ? i * 0.15 : 0);
-
-          safeAnimate('to', icon, {
-            scale: 1,
-            rotation: 0,
-            opacity: 1,
-            duration: baseDuration * 0.8,
-            ease: 'back.out(2)'
-          }, tl, '-=0.6');
-          safeAnimate('to', label, { x: 0, opacity: 1, duration: baseDuration * 0.6 }, tl, '-=0.6');
-          safeAnimate('to', title, { y: 0, opacity: 1, duration: baseDuration * 0.8 }, tl, '-=0.4');
-          safeAnimate('to', text, { y: 0, opacity: 1, duration: baseDuration * 0.8 }, tl, '-=0.5');
-
-          // Desktop Only Interactions
+          // Hover effects
           if (isDesktop && !prefersReducedMotion) {
-            const xTo = gsap.quickTo(card, "rotateY", { duration: 0.3, ease: "power2.out" });
-            const yTo = gsap.quickTo(card, "rotateX", { duration: 0.3, ease: "power2.out" });
-
-            let rect: DOMRect | null = null;
-            const updateRect = () => { rect = card.getBoundingClientRect(); };
-
-            const handleMouseEnter = () => {
-              updateRect();
-              gsap.to(card, { scale: 1.02, duration: 0.4, ease: 'power2.out' });
-              const inner = card.querySelector('.card-inner');
-              if (inner) gsap.to(inner, { y: -5, duration: 0.4, ease: 'power2.out' });
+            const dot = item.querySelector('.timeline-dot');
+            const handleEnter = () => {
+              gsap.to(item, { scale: 1.02, duration: 0.3 });
+              if (dot) gsap.to(dot, { scale: 1.5, backgroundColor: '#3b82f6', duration: 0.3 });
             };
-
-            const handleMouseLeave = () => {
-              gsap.to(card, { scale: 1, duration: 0.5, ease: 'power2.out' });
-              xTo(0);
-              yTo(0);
-              const inner = card.querySelector('.card-inner');
-              if (inner) gsap.to(inner, { y: 0, duration: 0.4, ease: 'power2.out' });
-              rect = null;
+            const handleLeave = () => {
+              gsap.to(item, { scale: 1, duration: 0.3 });
+              if (dot) gsap.to(dot, { scale: 1, clearProps: 'backgroundColor', duration: 0.3 });
             };
-
-            const handleMouseMove = (e: MouseEvent) => {
-              if (!rect) return;
-              const x = e.clientX - rect.left;
-              const y = e.clientY - rect.top;
-              const centerX = rect.width / 2;
-              const centerY = rect.height / 2;
-
-              const rotateX = (y - centerY) / 25;
-              const rotateY = (centerX - x) / 25;
-
-              yTo(rotateX);
-              xTo(rotateY);
-            };
-
-            card.addEventListener('mouseenter', handleMouseEnter, { passive: true });
-            card.addEventListener('mouseleave', handleMouseLeave, { passive: true });
-            card.addEventListener('mousemove', handleMouseMove as EventListener, { passive: true });
-            window.addEventListener('scroll', updateRect, { passive: true });
-
+            item.addEventListener('mouseenter', handleEnter);
+            item.addEventListener('mouseleave', handleLeave);
             cleanupFns.push(() => {
-              card.removeEventListener('mouseenter', handleMouseEnter);
-              card.removeEventListener('mouseleave', handleMouseLeave);
-              card.removeEventListener('mousemove', handleMouseMove as EventListener);
-              window.removeEventListener('scroll', updateRect);
+              item.removeEventListener('mouseenter', handleEnter);
+              item.removeEventListener('mouseleave', handleLeave);
             });
           }
         });
 
-        // ===== IMAGE REVEAL =====
-        if (imgContainer) {
-          gsap.to(imgContainer, {
-            clipPath: 'inset(0% 0% 0% 0%)',
-            scale: 1,
-            filter: 'blur(0px)',
-            duration: baseDuration * 2,
-            ease: 'power4.inOut',
-            scrollTrigger: {
-              trigger: imgContainer,
-              start: isDesktop ? 'top 80%' : 'top 95%',
-              once: true
-            }
-          });
-        }
+        // ===== MISSION & VISION CARDS =====
+        const cards = container.querySelectorAll<HTMLElement>('.story-card');
+        cards.forEach((card, i) => {
+          const inner = card.querySelector('.card-inner');
+          const titleChars = card.querySelectorAll('.card-title .letter-reveal');
+          const cardText = card.querySelector('.card-text');
+          const cardIcon = card.querySelector('.card-icon');
 
-        // ===== PHILOSOPHY SECTION =====
-        if (philosophyHeader) {
-          const philoTl = gsap.timeline({
-            scrollTrigger: {
-              trigger: philosophyHeader,
-              start: isDesktop ? 'top 85%' : 'top 95%',
-              once: true
-            }
+          gsap.set(card, {
+            y: 100,
+            opacity: 0,
+            rotateX: isDesktop ? 15 : 0,
+            scale: 0.95
           });
-          safeAnimate('to', philosophyHeader, { y: 0, opacity: 1, filter: 'blur(0px)', duration: baseDuration }, philoTl);
-          safeAnimate('to', philosophyTitle, { y: 0, opacity: 1, filter: 'blur(0px)', duration: baseDuration }, philoTl, '-=0.7');
-          safeAnimate('to', philosophyDesc, { y: 0, opacity: 1, filter: 'blur(0px)', duration: baseDuration }, philoTl, '-=0.6');
-        }
-
-        philosophyCards.forEach((card, i) => {
-          const icon = card.querySelector('.philosophy-icon');
-          const title = card.querySelector('h4');
-          const desc = card.querySelector('p');
+          if (titleChars.length > 0) gsap.set(titleChars, { y: 40, opacity: 0 });
+          if (cardText) gsap.set(cardText, { y: 30, opacity: 0 });
+          if (cardIcon) gsap.set(cardIcon, { scale: 0, rotation: -45 });
 
           const cardTl = gsap.timeline({
             scrollTrigger: {
               trigger: card,
-              start: isDesktop ? 'top 88%' : 'top 95%',
+              start: isDesktop ? 'top 75%' : 'top 85%',
               once: true
             }
           });
 
-          safeAnimate('to', card, {
+          cardTl
+            .to(card, {
+              y: 0,
+              opacity: 1,
+              rotateX: 0,
+              scale: 1,
+              duration: baseDuration * 1.4,
+              ease: 'power3.out'
+            }, i * 0.15)
+            .to(cardIcon, { scale: 1, rotation: 0, duration: baseDuration * 0.6, ease: 'back.out(2)' }, '-=0.8')
+            .to(titleChars, {
+              y: 0,
+              opacity: 1,
+              duration: baseDuration * 0.8,
+              stagger: prefersReducedMotion ? 0 : 0.03,
+              ease: 'power2.out'
+            }, '-=0.6')
+            .to(cardText, { y: 0, opacity: 1, duration: baseDuration * 0.8 }, '-=0.5');
+
+          // 3D tilt effect on desktop
+          if (isDesktop && !prefersReducedMotion) {
+            const xTo = gsap.quickTo(card, "rotateY", { duration: 0.4, ease: "power2.out" });
+            const yTo = gsap.quickTo(card, "rotateX", { duration: 0.4, ease: "power2.out" });
+            let rect: DOMRect | null = null;
+
+            const handleEnter = () => {
+              rect = card.getBoundingClientRect();
+              gsap.to(card, { scale: 1.02, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', duration: 0.4 });
+            };
+            const handleLeave = () => {
+              gsap.to(card, { scale: 1, rotateX: 0, rotateY: 0, boxShadow: 'none', duration: 0.5 });
+              rect = null;
+            };
+            const handleMove = (e: MouseEvent) => {
+              if (!rect) return;
+              const x = (e.clientX - rect.left - rect.width / 2) / 20;
+              const y = (e.clientY - rect.top - rect.height / 2) / 20;
+              xTo(x);
+              yTo(-y);
+            };
+
+            card.addEventListener('mouseenter', handleEnter);
+            card.addEventListener('mouseleave', handleLeave);
+            card.addEventListener('mousemove', handleMove as EventListener);
+            cleanupFns.push(() => {
+              card.removeEventListener('mouseenter', handleEnter);
+              card.removeEventListener('mouseleave', handleLeave);
+              card.removeEventListener('mousemove', handleMove as EventListener);
+            });
+          }
+        });
+
+        // ===== PHILOSOPHY SECTION =====
+        const philoSection = container.querySelector('.philosophy-section');
+        const philoHeader = philoSection?.querySelector('.section-header');
+        const philoTitleChars = philoSection?.querySelectorAll('.section-title .letter-reveal');
+        const philoCards = container.querySelectorAll<HTMLElement>('.philosophy-card');
+
+        if (philoHeader) gsap.set(philoHeader, { y: 50, opacity: 0 });
+        if (philoTitleChars && philoTitleChars.length > 0) {
+          gsap.set(philoTitleChars, { y: 60, opacity: 0, rotateX: -60 });
+        }
+
+        const philoTl = gsap.timeline({
+          scrollTrigger: {
+            trigger: philoSection,
+            start: 'top 75%',
+            once: true
+          }
+        });
+
+        philoTl
+          .to(philoHeader, { y: 0, opacity: 1, duration: baseDuration * 0.8 })
+          .to(philoTitleChars, {
+            y: 0,
+            opacity: 1,
+            rotateX: 0,
+            duration: baseDuration * 1.2,
+            stagger: prefersReducedMotion ? 0 : 0.04,
+            ease: 'expo.out'
+          }, '-=0.5');
+
+        philoCards.forEach((card, i) => {
+          const icon = card.querySelector('.philosophy-icon');
+          gsap.set(card, { y: 60, opacity: 0, scale: 0.9 });
+
+          gsap.to(card, {
             y: 0,
             opacity: 1,
             scale: 1,
-            filter: 'blur(0px)',
             duration: baseDuration * 1.1,
-            ease: 'power3.out'
-          }, cardTl, isDesktop ? i * baseStagger * 1.5 : 0);
-
-          safeAnimate('from', icon, { scale: 0, rotation: -30, duration: baseDuration * 0.6, ease: 'back.out(2)' }, cardTl, '-=0.7');
-          safeAnimate('from', title, { y: 20, opacity: 0, duration: baseDuration * 0.5 }, cardTl, '-=0.4');
-          safeAnimate('from', desc, { y: 15, opacity: 0, duration: baseDuration * 0.5 }, cardTl, '-=0.3');
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: card,
+              start: isDesktop ? 'top 85%' : 'top 92%',
+              once: true
+            },
+            delay: isDesktop ? i * 0.1 : 0
+          });
 
           if (isDesktop && !prefersReducedMotion) {
-            const handleMouseEnter = () => {
-              gsap.to(card, { y: -8, scale: 1.03, duration: 0.3, ease: 'power2.out' });
-              if (icon) gsap.to(icon, { scale: 1.2, backgroundColor: 'rgb(59, 130, 246)', color: 'white', duration: 0.3 });
+            const handleEnter = () => {
+              gsap.to(card, { y: -8, scale: 1.03, duration: 0.3 });
+              if (icon) gsap.to(icon, { scale: 1.15, rotation: 5, duration: 0.3 });
             };
-
-            const handleMouseLeave = () => {
-              gsap.to(card, { y: 0, scale: 1, duration: 0.3, ease: 'power2.out' });
-              if (icon) gsap.to(icon, { scale: 1, clearProps: 'backgroundColor,color', duration: 0.3 });
+            const handleLeave = () => {
+              gsap.to(card, { y: 0, scale: 1, duration: 0.3 });
+              if (icon) gsap.to(icon, { scale: 1, rotation: 0, duration: 0.3 });
             };
-
-            card.addEventListener('mouseenter', handleMouseEnter);
-            card.addEventListener('mouseleave', handleMouseLeave);
-
+            card.addEventListener('mouseenter', handleEnter);
+            card.addEventListener('mouseleave', handleLeave);
             cleanupFns.push(() => {
-              card.removeEventListener('mouseenter', handleMouseEnter);
-              card.removeEventListener('mouseleave', handleMouseLeave);
+              card.removeEventListener('mouseenter', handleEnter);
+              card.removeEventListener('mouseleave', handleLeave);
             });
           }
         });
 
         // ===== STATS SECTION =====
-        if (statsHeader) {
-          const statsTl = gsap.timeline({
-            scrollTrigger: {
-              trigger: statsHeader,
-              start: isDesktop ? 'top 85%' : 'top 95%',
-              once: true
-            }
-          });
-          statsTl.to(statsHeader, { y: 0, opacity: 1, duration: baseDuration });
+        const statsSection = container.querySelector('.stats-section');
+        const statsHeader = statsSection?.querySelector('.section-header');
+        const statsTitleChars = statsSection?.querySelectorAll('.section-title .letter-reveal');
+        const statItems = container.querySelectorAll<HTMLElement>('.stat-item');
+        const statNumbers = container.querySelectorAll<HTMLElement>('.stat-number');
+
+        if (statsHeader) gsap.set(statsHeader, { y: 40, opacity: 0 });
+        if (statsTitleChars && statsTitleChars.length > 0) {
+          gsap.set(statsTitleChars, { y: 50, opacity: 0 });
         }
+        statItems.forEach(item => gsap.set(item, { y: 50, opacity: 0, scale: 0.85 }));
+
+        const statsTl = gsap.timeline({
+          scrollTrigger: {
+            trigger: statsSection,
+            start: 'top 75%',
+            once: true
+          }
+        });
+
+        statsTl
+          .to(statsHeader, { y: 0, opacity: 1, duration: baseDuration * 0.8 })
+          .to(statsTitleChars, {
+            y: 0,
+            opacity: 1,
+            duration: baseDuration,
+            stagger: prefersReducedMotion ? 0 : 0.05,
+            ease: 'power2.out'
+          }, '-=0.5');
 
         statItems.forEach((item, i) => {
-          const itemTl = gsap.timeline({
-            scrollTrigger: {
-              trigger: item,
-              start: isDesktop ? 'top 90%' : 'top 98%',
-              once: true
-            }
-          });
-
-          safeAnimate('to', item, {
+          gsap.to(item, {
             y: 0,
             opacity: 1,
             scale: 1,
             duration: baseDuration,
-            ease: 'power3.out'
-          }, itemTl, isDesktop ? i * baseStagger * 1.2 : 0);
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: item,
+              start: 'top 88%',
+              once: true
+            },
+            delay: isDesktop ? i * 0.1 : 0
+          });
 
           if (isDesktop && !prefersReducedMotion) {
-            const handleMouseEnter = () => gsap.to(item, { scale: 1.08, duration: 0.3, ease: 'power2.out' });
-            const handleMouseLeave = () => gsap.to(item, { scale: 1, duration: 0.3, ease: 'power2.out' });
-
-            item.addEventListener('mouseenter', handleMouseEnter);
-            item.addEventListener('mouseleave', handleMouseLeave);
-
+            const handleEnter = () => gsap.to(item, { scale: 1.1, duration: 0.3 });
+            const handleLeave = () => gsap.to(item, { scale: 1, duration: 0.3 });
+            item.addEventListener('mouseenter', handleEnter);
+            item.addEventListener('mouseleave', handleLeave);
             cleanupFns.push(() => {
-              item.removeEventListener('mouseenter', handleMouseEnter);
-              item.removeEventListener('mouseleave', handleMouseLeave);
+              item.removeEventListener('mouseenter', handleEnter);
+              item.removeEventListener('mouseleave', handleLeave);
             });
           }
         });
@@ -387,191 +582,334 @@ const About: React.FC = () => {
         // Counter animation
         statNumbers.forEach((stat) => {
           const value = parseInt(stat.getAttribute('data-value') || '0', 10);
-          safeAnimate('fromTo', stat, {
-            innerText: value,
-            duration: prefersReducedMotion ? 0.1 : 3,
-            snap: { innerText: 1 },
-            ease: 'expo.out',
-            scrollTrigger: {
-              trigger: stat,
-              start: isDesktop ? 'top 90%' : 'top 98%',
-              once: true
+          gsap.fromTo(stat,
+            { innerText: 0 },
+            {
+              innerText: value,
+              duration: prefersReducedMotion ? 0.1 : 2.5,
+              snap: { innerText: 1 },
+              ease: 'power2.out',
+              scrollTrigger: {
+                trigger: stat,
+                start: 'top 90%',
+                once: true
+              }
             }
-          }, undefined, undefined, { innerText: 0 });
+          );
         });
 
-        // Decorative elements
+        // ===== IMAGE SECTION - MASK REVEAL =====
+        const imgReveal = container.querySelector('.img-reveal');
+        if (imgReveal) {
+          gsap.set(imgReveal, {
+            clipPath: 'polygon(0 100%, 100% 100%, 100% 100%, 0 100%)',
+            scale: 1.15
+          });
+          gsap.to(imgReveal, {
+            clipPath: 'polygon(0 0%, 100% 0%, 100% 100%, 0 100%)',
+            scale: 1,
+            duration: baseDuration * 1.8,
+            ease: 'power3.inOut',
+            scrollTrigger: {
+              trigger: imgReveal,
+              start: isDesktop ? 'top 70%' : 'top 85%',
+              once: true
+            }
+          });
+        }
+
+        // ===== DECORATIVE ELEMENTS =====
+        const decorElements = container.querySelectorAll<HTMLElement>('.decor-element');
         decorElements.forEach((el) => {
-          safeAnimate('to', el, {
+          gsap.set(el, { scale: 0, opacity: 0 });
+          gsap.to(el, {
             scale: 1,
             opacity: 1,
-            filter: 'blur(40px)',
             duration: baseDuration * 2,
             ease: 'power2.out',
-            scrollTrigger: { trigger: el, start: 'top 95%', once: true }
+            scrollTrigger: { trigger: el, start: 'top 90%', once: true }
           });
         });
       });
     }, containerRef);
 
-    // Force a refresh after a small delay to catch late-loading layout changes
-    const timerId = setTimeout(() => ScrollTrigger.refresh(), 500);
+    const timerId = setTimeout(() => ScrollTrigger.refresh(), 300);
 
     return () => {
-      // Clean up event listeners first
       cleanupFns.forEach(fn => fn());
       cleanupFns.length = 0;
-
-      // Kill matchMedia
       if (mm) mm.revert();
-
-      // Kill all GSAP context (timelines, ScrollTriggers, etc.)
       ctx.revert();
-
       clearTimeout(timerId);
     };
   }, []);
 
   return (
-    <div ref={containerRef} className="min-h-screen pt-24 md:pt-40 pb-20 md:pb-32 px-4 md:px-6 bg-white dark:bg-brand-dark transition-colors duration-300 overflow-x-hidden" style={{ perspective: '1500px' }}>
-      <div className="max-w-7xl mx-auto">
+    <div
+      ref={containerRef}
+      className="min-h-screen bg-white dark:bg-brand-dark transition-colors duration-300 overflow-x-hidden"
+      style={{ perspective: '2000px' }}
+    >
+      {/* Parallax Background */}
+      <div
+        className="parallax-bg fixed inset-0 opacity-[0.03] dark:opacity-[0.08] pointer-events-none z-0"
+        style={parallaxStyle}
+        aria-hidden="true"
+      />
 
-        {/* Header */}
-        <header className="about-header mb-20 md:mb-40 max-w-5xl">
-          <h2 className="header-label text-[10px] md:text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.3em] md:tracking-[0.5em] mb-4 md:mb-8">
+      {/* ===== MOTION PATH FLOATING ELEMENT ===== */}
+      <div
+        ref={rocketRef}
+        className="fixed top-[15%] left-[85%] z-50 pointer-events-none hidden md:block"
+        style={{ 
+          opacity: 0,
+          willChange: 'transform',
+          transform: 'translateZ(0)', // Force GPU layer
+          backfaceVisibility: 'hidden'
+        }}
+        aria-hidden="true"
+      >
+        <div className="relative">
+          {/* Glow effect - simplified, no blur for performance */}
+          <div className="rocket-glow absolute -inset-2 w-16 h-16 bg-blue-500/20 rounded-full" />
+          {/* Rocket icon */}
+          <div className="relative w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+            <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
+              <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+              <path d="M9 12H4s.55-3.03 2-5c1.62-2.2 5-3 5-3" />
+              <path d="M12 15v5s3.03-.55 5-2c2.2-1.62 3-5 3-5" />
+            </svg>
+          </div>
+          {/* Trail particles - CSS only animation for performance */}
+          <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-blue-400 rounded-full opacity-50" />
+          <div className="absolute -bottom-2 right-1 w-1.5 h-1.5 bg-indigo-400 rounded-full opacity-30" />
+        </div>
+      </div>
+
+      {/* Motion Path Waypoints - invisible markers for the path */}
+      <div className="motion-waypoint fixed top-[25%] left-[15%] w-4 h-4 pointer-events-none" aria-hidden="true" />
+      <div className="motion-waypoint fixed top-[40%] left-[75%] w-4 h-4 pointer-events-none" aria-hidden="true" />
+      <div className="motion-waypoint fixed top-[55%] left-[20%] w-4 h-4 pointer-events-none" aria-hidden="true" />
+      <div className="motion-waypoint fixed top-[70%] left-[65%] w-4 h-4 pointer-events-none" aria-hidden="true" />
+      <div className="motion-waypoint fixed top-[85%] left-[30%] w-4 h-4 pointer-events-none" aria-hidden="true" />
+
+      {/* ===== HERO SECTION ===== */}
+      <section ref={heroRef} className="hero-section relative min-h-[90vh] flex items-center justify-center px-4 md:px-8 pt-32 pb-20">
+        <div className="max-w-6xl mx-auto text-center relative z-10">
+          <span className="hero-label inline-block text-[10px] md:text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.4em] md:tracking-[0.6em] mb-6 md:mb-10">
             01 // Who We Are
-          </h2>
-          <h1 className="header-title text-4xl sm:text-5xl md:text-[7rem] lg:text-[9rem] font-heading font-extrabold leading-[1] md:leading-[0.9] tracking-tighter mb-8 md:mb-14 text-gray-900 dark:text-white">
-            ARCHITECTING <br /> <span className="gradient-text">DIGITAL LIFE.</span>
-          </h1>
-          <p className="header-desc text-gray-600 dark:text-gray-400 text-base md:text-2xl font-light leading-relaxed max-w-3xl">
-            Kytriq Technologies was founded on a simple premise: <strong className="text-gray-900 dark:text-white">Digital ideas deserve to live.</strong> We are a startup with the heart of a pioneer and the precision of a master engineer.
-          </p>
-        </header>
+          </span>
 
-        {/* Mission & Vision Cards */}
-        <section className="mb-20 md:mb-40">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-12" style={{ perspective: '1200px' }}>
+          <h1 className="hero-title text-5xl sm:text-6xl md:text-[6rem] lg:text-[8rem] xl:text-[10rem] font-heading font-black leading-[0.85] tracking-tighter mb-8 md:mb-12 text-gray-900 dark:text-white">
+            <SplitText text="ARCHITECTING" className="block" />
+            <span className="gradient-text">
+              <SplitText text="DIGITAL LIFE." isGradient={true} />
+            </span>
+          </h1>
+
+          <p className="hero-desc text-gray-600 dark:text-gray-400 text-lg md:text-2xl lg:text-3xl font-light leading-relaxed max-w-4xl mx-auto">
+            A startup with the <strong className="text-gray-900 dark:text-white font-semibold">heart of a pioneer</strong> and the <strong className="text-gray-900 dark:text-white font-semibold">precision of a master engineer</strong>.
+          </p>
+        </div>
+
+        {/* Decorative gradient orbs */}
+        <div className="decor-element absolute top-1/4 -left-32 w-64 h-64 bg-blue-500/10 rounded-full blur-[100px] -z-10" aria-hidden="true" />
+        <div className="decor-element absolute bottom-1/4 -right-32 w-80 h-80 bg-indigo-500/10 rounded-full blur-[120px] -z-10" aria-hidden="true" />
+      </section>
+
+      {/* ===== TIMELINE SECTION ===== */}
+      <section className="timeline-section relative py-24 md:py-40 px-4 md:px-8">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16 md:mb-24">
+            <span className="text-[10px] md:text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.4em] mb-4 block">
+              02 // Our Journey
+            </span>
+            <h2 className="text-3xl md:text-5xl lg:text-6xl font-heading font-bold text-gray-900 dark:text-white">
+              The <span className="gradient-text">Evolution</span>
+            </h2>
+          </div>
+
+          <div ref={timelineRef} className="relative">
+            {/* Timeline line */}
+            <div className="timeline-line absolute left-4 md:left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 via-indigo-500 to-blue-600 md:-translate-x-1/2" aria-hidden="true" />
+
+            {milestones.map((milestone, i) => (
+              <div
+                key={i}
+                className={`timeline-item relative flex items-center mb-12 md:mb-20 ${i % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
+                  }`}
+              >
+                {/* Dot */}
+                <div className="timeline-dot absolute left-4 md:left-1/2 w-4 h-4 bg-white dark:bg-gray-900 border-4 border-blue-500 rounded-full md:-translate-x-1/2 z-10 transition-all duration-300" />
+
+                {/* Content */}
+                <div className={`ml-12 md:ml-0 md:w-[45%] ${i % 2 === 0 ? 'md:pr-16 md:text-right' : 'md:pl-16 md:text-left'}`}>
+                  <span className="text-5xl md:text-7xl font-heading font-black text-blue-500/20 dark:text-blue-400/20 block mb-2">
+                    {milestone.year}
+                  </span>
+                  <h3 className="text-xl md:text-2xl font-heading font-bold text-gray-900 dark:text-white mb-2">
+                    {milestone.title}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">
+                    {milestone.desc}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== MISSION & VISION CARDS ===== */}
+      <section className="py-20 md:py-32 px-4 md:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-16" style={{ perspective: '1500px' }}>
 
             {/* Mission Card */}
-            <div className="mission-card interactive-card group relative will-change-transform" style={{ transformStyle: 'preserve-3d' }}>
-              <div className="card-inner relative overflow-hidden rounded-[2rem] md:rounded-[3rem] bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 p-6 md:p-12 lg:p-16 h-full min-h-[350px] md:min-h-[500px]">
-                <div className="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full blur-3xl transform translate-x-1/3 -translate-y-1/3"></div>
-                <div className="absolute bottom-0 left-0 w-56 h-56 bg-blue-400/10 rounded-full blur-2xl transform -translate-x-1/3 translate-y-1/3"></div>
+            <div className="story-card will-change-transform" style={{ transformStyle: 'preserve-3d' }}>
+              <div className="card-inner relative overflow-hidden rounded-[2rem] md:rounded-[3rem] bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 p-8 md:p-14 min-h-[400px] md:min-h-[500px]">
+                {/* Glows */}
+                <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" aria-hidden="true" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" aria-hidden="true" />
 
                 <div className="relative z-10 h-full flex flex-col">
-                  <div className="flex items-center justify-between mb-6 md:mb-8">
-                    <span className="mission-label inline-block text-[10px] md:text-xs font-bold text-blue-200 uppercase tracking-[0.4em]">Our Mission</span>
-                    <div className="mission-icon">
-                      <svg className="w-8 h-8 md:w-10 md:h-10 text-white shadow-blue-400/20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <div className="flex items-center justify-between mb-8">
+                    <span className="text-[10px] md:text-xs font-bold text-blue-200 uppercase tracking-[0.4em]">Our Mission</span>
+                    <div className="card-icon w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-sm">
+                      <svg className="w-6 h-6 md:w-7 md:h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                         <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
                         <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
-                        <path d="M9 12H4s.55-3.03 2-5c1.62-2.2 5-3 5-3" />
-                        <path d="M12 15v5s3.03-.55 5-2c2.2-1.62 3-5 3-5" />
                       </svg>
                     </div>
                   </div>
-                  <h3 className="mission-title text-2xl md:text-3xl lg:text-4xl font-heading font-bold text-white mb-4 md:mb-6 leading-tight">
-                    Empowering Businesses Through Intelligent Software
+
+                  <h3 className="card-title text-2xl md:text-4xl lg:text-5xl font-heading font-bold text-white mb-6 leading-tight">
+                    <SplitText text="Empowering Through" className="block" />
+                    <SplitText text="Intelligent Software" className="block" />
                   </h3>
-                  <p className="mission-text text-blue-100/90 text-sm md:text-lg leading-relaxed mt-auto">
-                    We exist to transform bold ideas into powerful digital realities. By combining cutting-edge AI with human-centered design, we build software that doesn't just work—it thinks, adapts, and grows with your business.
+
+                  <p className="card-text text-blue-100/90 text-base md:text-lg leading-relaxed mt-auto">
+                    We transform bold ideas into powerful digital realities. By combining cutting-edge AI with human-centered design, we build software that thinks, adapts, and grows.
                   </p>
                 </div>
               </div>
             </div>
 
             {/* Vision Card */}
-            <div className="vision-card interactive-card group relative will-change-transform" style={{ transformStyle: 'preserve-3d' }}>
-              <div className="card-inner relative overflow-hidden rounded-[2rem] md:rounded-[3rem] bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 p-6 md:p-12 lg:p-16 h-full min-h-[350px] md:min-h-[500px]">
-                <div className="absolute top-0 right-0 w-72 h-72 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-3xl transform translate-x-1/3 -translate-y-1/3"></div>
-                <div className="absolute bottom-0 left-0 w-56 h-56 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-2xl transform -translate-x-1/3 translate-y-1/3"></div>
+            <div className="story-card will-change-transform" style={{ transformStyle: 'preserve-3d' }}>
+              <div className="card-inner relative overflow-hidden rounded-[2rem] md:rounded-[3rem] bg-gray-50 dark:bg-gray-900/60 border border-gray-200/50 dark:border-gray-800 p-8 md:p-14 min-h-[400px] md:min-h-[500px]">
+                {/* Glows */}
+                <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" aria-hidden="true" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" aria-hidden="true" />
 
                 <div className="relative z-10 h-full flex flex-col">
-                  <div className="flex items-center justify-between mb-6 md:mb-8">
-                    <span className="vision-label inline-block text-[10px] md:text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.4em]">Our Vision</span>
-                    <div className="vision-icon">
-                      <svg className="w-8 h-8 md:w-10 md:h-10 text-blue-600 dark:text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <div className="flex items-center justify-between mb-8">
+                    <span className="text-[10px] md:text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.4em]">Our Vision</span>
+                    <div className="card-icon w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center">
+                      <svg className="w-6 h-6 md:w-7 md:h-7 text-blue-600 dark:text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                         <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
                         <circle cx="12" cy="12" r="3" />
                       </svg>
                     </div>
                   </div>
-                  <h3 className="vision-title text-2xl md:text-3xl lg:text-4xl font-heading font-bold text-gray-900 dark:text-white mb-4 md:mb-6 leading-tight">
-                    A World Where Every Business Has Access to Intelligent Technology
+
+                  <h3 className="card-title text-2xl md:text-4xl lg:text-5xl font-heading font-bold text-gray-900 dark:text-white mb-6 leading-tight">
+                    <SplitText text="Technology For" className="block" />
+                    <span className="gradient-text"><SplitText text="Everyone" isGradient={true} /></span>
                   </h3>
-                  <p className="vision-text text-gray-600 dark:text-gray-400 text-sm md:text-lg leading-relaxed mt-auto">
-                    We envision a future where advanced software and seamless digital experiences are not exclusive to tech giants. Every entrepreneur, every small business, and every dreamer deserves tools that amplify their potential.
+
+                  <p className="card-text text-gray-600 dark:text-gray-400 text-base md:text-lg leading-relaxed mt-auto">
+                    We envision a future where intelligent technology isn't exclusive to giants. Every entrepreneur and dreamer deserves tools that amplify their potential.
                   </p>
                 </div>
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Philosophy Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-24 items-center mb-20 md:mb-40">
-          <div className="img-reveal order-2 lg:order-1 relative">
-            <div className="aspect-[4/5] rounded-[2rem] md:rounded-[4rem] overflow-hidden border border-gray-100 dark:border-gray-800 p-1 md:p-2 bg-gray-50 dark:bg-gray-900/20">
-              <img
-                src="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&q=80&w=1000"
-                srcSet="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&q=80&w=600 600w, https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&q=80&w=1000 1000w"
-                sizes="(max-width: 768px) 100vw, 50vw"
-                width="1000"
-                height="1250"
-                alt="Innovation"
-                loading="lazy"
-                className="w-full h-full object-cover rounded-[1.8rem] md:rounded-[3.5rem] grayscale hover:grayscale-0 transition-all duration-1000"
-              />
+      {/* ===== PHILOSOPHY SECTION ===== */}
+      <section className="philosophy-section py-20 md:py-40 px-4 md:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24 items-center">
+
+            {/* Image */}
+            <div className="img-reveal order-2 lg:order-1 relative overflow-hidden rounded-[2rem] md:rounded-[4rem]">
+              <div className="aspect-[4/5] bg-gray-100 dark:bg-gray-900/30 p-1.5 md:p-2.5 rounded-[2rem] md:rounded-[4rem] border border-gray-200/50 dark:border-gray-800">
+                <img
+                  src="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&q=80&w=1000"
+                  srcSet="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&q=80&w=600 600w, https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&q=80&w=1000 1000w"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  alt="Team collaboration and innovation"
+                  loading="lazy"
+                  className="w-full h-full object-cover rounded-[1.6rem] md:rounded-[3.3rem] grayscale-[0.3] hover:grayscale-0 transition-all duration-1000"
+                />
+              </div>
+              <div className="decor-element absolute -bottom-12 -left-12 w-56 md:w-72 h-56 md:h-72 bg-blue-600/15 rounded-full blur-[80px] -z-10" aria-hidden="true" />
             </div>
-            <div className="decor-element absolute -bottom-10 -left-10 w-48 md:w-64 h-48 md:h-64 bg-blue-600/10 rounded-full blur-[60px] md:blur-[80px] -z-10"></div>
-            <div className="decor-element absolute -top-6 -right-6 w-32 h-32 bg-indigo-500/10 rounded-full blur-[40px] -z-10"></div>
-          </div>
 
-          <div className="order-1 lg:order-2 space-y-8 md:space-y-12">
-            <div>
-              <h2 className="philosophy-header text-[10px] md:text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.3em] md:tracking-[0.5em] mb-4 md:mb-6">02 // Philosophy</h2>
-              <h3 className="philosophy-title text-3xl md:text-5xl font-heading font-bold mb-6 md:mb-8 text-gray-900 dark:text-white leading-tight">
-                Software That <span className="gradient-text">Feels Alive</span>
-              </h3>
-              <p className="philosophy-desc text-gray-600 dark:text-gray-400 text-sm md:text-lg leading-relaxed mb-8 md:mb-10">
-                We believe that software is a living entity. It shouldn't just function; it should evolve. At Kytriq, we bridge the gap between human ambition and technological reality by building systems that feel human and act intelligent.
-              </p>
+            {/* Content */}
+            <div className="order-1 lg:order-2 space-y-10">
+              <div>
+                <span className="section-header text-[10px] md:text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.4em] mb-4 block">
+                  03 // Philosophy
+                </span>
+                <h2 className="section-title text-4xl md:text-6xl font-heading font-bold text-gray-900 dark:text-white leading-[1.1] mb-6">
+                  <SplitText text="Software That" className="block" />
+                  <span className="gradient-text"><SplitText text="Feels Alive" isGradient={true} /></span>
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400 text-base md:text-xl leading-relaxed">
+                  We believe software is a living entity. It shouldn't just function—it should evolve. We bridge human ambition and technology by building systems that feel human and act intelligent.
+                </p>
+              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-6">
                 {philosophyItems.map((item, i) => (
-                  <div key={i} className="philosophy-card p-5 md:p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/30 border border-gray-100 dark:border-gray-800 transition-shadow duration-300">
-                    <div className="philosophy-icon w-10 h-10 md:w-12 md:h-12 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-500 mb-3 md:mb-4 transition-all duration-300">
+                  <div
+                    key={i}
+                    className="philosophy-card group p-5 md:p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/40 border border-gray-200/50 dark:border-gray-800 hover:border-blue-500/30 transition-all duration-300 cursor-default"
+                  >
+                    <div className="philosophy-icon w-11 h-11 md:w-13 md:h-13 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-500 mb-4 transition-all duration-300">
                       {item.icon}
                     </div>
-                    <h4 className="font-bold text-gray-900 dark:text-white text-sm md:text-base mb-1 md:mb-2 transition-colors">{item.title}</h4>
-                    <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{item.desc}</p>
+                    <h4 className="font-bold text-gray-900 dark:text-white text-base md:text-lg mb-2">{item.title}</h4>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{item.desc}</p>
                   </div>
                 ))}
               </div>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* Stats Section */}
-        <section className="py-12 md:py-28 border-y border-gray-100 dark:border-gray-800/50 mb-12 md:mb-16">
-          <div className="stats-header text-center mb-10 md:mb-16">
-            <h2 className="text-[10px] md:text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.3em] md:tracking-[0.5em] mb-3 md:mb-4">03 // By The Numbers</h2>
-            <h3 className="text-2xl md:text-5xl font-heading font-bold text-gray-900 dark:text-white">Our Impact</h3>
+      {/* ===== STATS SECTION ===== */}
+      <section className="stats-section py-20 md:py-32 px-4 md:px-8 border-y border-gray-200/50 dark:border-gray-800/50">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-14 md:mb-20">
+            <span className="section-header text-[10px] md:text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-[0.4em] mb-4 block">
+              04 // By The Numbers
+            </span>
+            <h2 className="section-title text-3xl md:text-5xl lg:text-6xl font-heading font-bold text-gray-900 dark:text-white">
+              <SplitText text="Our Impact" />
+            </h2>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 text-center">
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16 text-center">
             {stats.map((stat, i) => (
-              <div key={i} className="stat-item">
-                <div className="flex items-center justify-center text-3xl md:text-7xl font-heading font-extrabold text-gray-900 dark:text-white mb-2 md:mb-4 transition-colors duration-300">
+              <div key={i} className="stat-item group cursor-default">
+                <div className="flex items-center justify-center text-4xl md:text-7xl lg:text-8xl font-heading font-black text-gray-900 dark:text-white mb-3 md:mb-5 transition-colors duration-300">
                   <span className="stat-number" data-value={stat.value}>0</span>
-                  <span>{stat.suffix}</span>
+                  <span className="text-blue-500">{stat.suffix}</span>
                 </div>
-                <p className="text-[9px] md:text-xs text-blue-600 dark:text-blue-500 font-bold uppercase tracking-[0.2em] md:tracking-[0.3em]">{stat.label}</p>
+                <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-[0.25em]">{stat.label}</p>
               </div>
             ))}
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
+
+      {/* Footer */}
       <React.Suspense fallback={<div className="h-20" />}>
         <Footer />
       </React.Suspense>
@@ -579,6 +917,4 @@ const About: React.FC = () => {
   );
 };
 
-
 export default About;
-

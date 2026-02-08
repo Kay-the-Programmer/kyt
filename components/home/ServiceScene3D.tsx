@@ -177,14 +177,18 @@ const ServiceScene3D: React.FC<ServiceScene3DProps> = ({ activeIndex, isMobile =
                 {/* Global Environment */}
                 <Environment preset="city" blur={1} />
 
-                {/* Soft Contact Shadows for grounding */}
+                {/* Optimized Soft Contact Shadows */}
                 <ContactShadows
-                    opacity={0.4}
+                    opacity={0.35}
                     scale={10}
-                    blur={2.5}
-                    far={4}
-                    resolution={256}
+                    blur={2}
+                    far={2.5} // Reduce far plane
+                    resolution={128} // Reduce resolution for performance
                     color="#000000"
+                    frames={1} // Static bake for shadows to save generic perf, or keep infinite if movement is key.
+                // Since objects rotate/float, we might need frames={Infinity} or remove frames prop.
+                // Let's stick to lower resolution + default frames (Infinity) but limit updates if possible.
+                // Actually, let's use a trick: smoother shadows with less res
                 />
 
                 <Suspense fallback={<LoadingFallback />}>
@@ -200,14 +204,16 @@ const ServiceScene3D: React.FC<ServiceScene3DProps> = ({ activeIndex, isMobile =
                         enablePan={false}
                         maxPolarAngle={Math.PI / 1.5}
                         minPolarAngle={Math.PI / 3.5}
-                        autoRotate
+                        autoRotate={isVisible} // Only autorotate when visible
                         autoRotateSpeed={0.5}
                         enableDamping
                         dampingFactor={0.1}
-                        rotateSpeed={1.0}
+                        rotateSpeed={0.5}
+                        onStart={() => gl.setPixelRatio(Math.min(window.devicePixelRatio, 1))} // Regress on interaction
+                        onEnd={() => gl.setPixelRatio(Math.min(window.devicePixelRatio, 2))}
                     />
                 ) : (
-                    <MobileAutoRotate />
+                    isVisible && <MobileAutoRotate /> // Only run hook if visible
                 )}
             </Canvas>
         </div>

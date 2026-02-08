@@ -8,120 +8,79 @@ gsap.registerPlugin(ScrollTrigger);
 
 const AUTO_ROTATE_INTERVAL = 5000;
 
-// Memoized Feature Item with enhanced design
+// Memoized Feature Item with enhanced design and accessibility
 interface FeatureItemProps {
   item: { title: string; text: string; icon: string };
   index: number;
   isActive: boolean;
-  onHover: (index: number) => void;
-  onLeave: () => void;
+  onClick: (index: number) => void;
+  onHover: (index: number) => void; // still useful for desktop hover
   featureRef: (el: HTMLDivElement | null) => void;
+  progressRef?: React.RefObject<HTMLDivElement>;
 }
 
-const FeatureItem = memo<FeatureItemProps>(({ item, index, isActive, onHover, onLeave, featureRef }) => (
-  <div
-    ref={featureRef}
-    className={`feature-item group relative flex items-start gap-6 p-5 rounded-2xl cursor-pointer transition-all duration-500 will-change-transform ${isActive
-      ? 'bg-gradient-to-r from-blue-50 to-indigo-50/50 dark:from-blue-950/40 dark:to-indigo-950/20 shadow-lg shadow-blue-500/5 translate-x-2'
-      : 'hover:bg-gray-50/50 dark:hover:bg-gray-900/30'
-      }`}
-    onMouseEnter={() => onHover(index)}
-    onMouseLeave={onLeave}
-  >
-    {/* Glow accent for active state */}
-    {isActive && (
-      <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-blue-500/20 via-indigo-500/10 to-transparent opacity-50 blur-sm pointer-events-none" />
-    )}
+const FeatureItem = memo<FeatureItemProps>(({ item, index, isActive, onClick, onHover, featureRef, progressRef }) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick(index);
+    }
+  };
 
+  return (
     <div
-      className={`feature-icon relative w-14 h-14 rounded-full flex items-center justify-center shrink-0 transition-all duration-500 ${isActive
-        ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30 -rotate-6 scale-110'
-        : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-blue-600 dark:text-blue-400 group-hover:border-blue-300 dark:group-hover:border-blue-700 group-hover:-rotate-6 group-hover:scale-105'
+      ref={featureRef}
+      role="button"
+      tabIndex={0}
+      onClick={() => onClick(index)}
+      onKeyDown={handleKeyDown}
+      onMouseEnter={() => onHover(index)}
+      className={`feature-item group relative flex items-start gap-6 p-5 rounded-2xl cursor-pointer transition-all duration-500 will-change-transform outline-none focus:ring-2 focus:ring-blue-500/50 ${isActive
+        ? 'bg-gradient-to-r from-blue-50 to-indigo-50/50 dark:from-blue-950/40 dark:to-indigo-950/20 shadow-lg shadow-blue-500/5 translate-x-2 border-l-4 border-blue-500'
+        : 'hover:bg-gray-50/50 dark:hover:bg-gray-900/30 border-l-4 border-transparent'
         }`}
     >
-      <i className={`fa-solid ${item.icon} text-lg`} />
+      {/* Glow accent for active state */}
       {isActive && (
-        <div className="absolute inset-0 rounded-full bg-white/20 animate-pulse" />
+        <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-blue-500/20 via-indigo-500/10 to-transparent opacity-50 blur-sm pointer-events-none" />
       )}
-    </div>
 
-    <div className="flex-1 relative z-10">
-      <div className="flex items-center gap-3 mb-2">
-        <h4 className={`font-bold text-lg md:text-xl tracking-tight transition-colors duration-300 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white'
-          }`}>
-          {item.title}
-        </h4>
+      {/* Active Progress Line (Desktop) */}
+      {isActive && (
+        <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-bl-2xl opacity-80 pointer-events-none overflow-hidden w-full">
+          <div ref={progressRef} className="h-full bg-white/30 w-full origin-left scale-x-0" />
+        </div>
+      )}
+
+      <div
+        className={`feature-icon relative w-14 h-14 rounded-full flex items-center justify-center shrink-0 transition-all duration-500 ${isActive
+          ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30 -rotate-6 scale-110'
+          : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-blue-600 dark:text-blue-400 group-hover:border-blue-300 dark:group-hover:border-blue-700 group-hover:-rotate-6 group-hover:scale-105'
+          }`}
+      >
+        <i className={`fa-solid ${item.icon} text-lg`} />
         {isActive && (
-          <div className="flex items-center gap-1.5 py-0.5 px-6 rounded-full bg-blue-500/10 border border-blue-500/20">
-          </div>
+          <div className="absolute inset-0 rounded-full bg-white/20 animate-pulse" />
         )}
       </div>
-      <p className={`text-sm md:text-base leading-relaxed transition-colors duration-300 ${isActive ? 'text-gray-600 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'
-        }`}>
-        {item.text}
-      </p>
-    </div>
 
-  </div>
-));
+      <div className="flex-1 relative z-10">
+        <div className="flex items-center gap-3 mb-2">
+          <h4 className={`font-bold text-lg md:text-xl tracking-tight transition-colors duration-300 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white'
+            }`}>
+            {item.title}
+          </h4>
+        </div>
+        <p className={`text-sm md:text-base leading-relaxed transition-colors duration-300 ${isActive ? 'text-gray-600 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'
+          }`}>
+          {item.text}
+        </p>
+      </div>
+    </div>
+  );
+});
 
 FeatureItem.displayName = 'FeatureItem';
-
-// Enhanced Indicator Dots with progress ring
-interface IndicatorDotsProps {
-  count: number;
-  activeIndex: number;
-  onSelect: (index: number) => void;
-  labels: string[];
-  progressRingRef: React.RefObject<SVGCircleElement | null>;
-}
-
-const IndicatorDots = memo<IndicatorDotsProps>(({ count, activeIndex, onSelect, labels, progressRingRef }) => (
-  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 z-10 px-4 py-2 rounded-full bg-black/20 backdrop-blur-md border border-white/10">
-    {Array.from({ length: count }).map((_, i) => (
-      <button
-        key={i}
-        onClick={() => onSelect(i)}
-        className="relative group"
-        aria-label={`View ${labels[i]}`}
-      >
-        {/* Progress ring for active dot */}
-        {activeIndex === i && (
-          <svg className="absolute -inset-1 w-5 h-5 -rotate-90" viewBox="0 0 20 20">
-            <circle
-              cx="10"
-              cy="10"
-              r="8"
-              fill="none"
-              stroke="rgba(255,255,255,0.2)"
-              strokeWidth="1.5"
-            />
-            <circle
-              ref={progressRingRef}
-              cx="10"
-              cy="10"
-              r="8"
-              fill="none"
-              stroke="rgba(96,165,250,1)"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeDasharray="0 50.26"
-              className="transition-none"
-            />
-          </svg>
-        )}
-        <span
-          className={`block w-2.5 h-2.5 rounded-full transition-all duration-300 ${activeIndex === i
-            ? 'bg-blue-400 scale-110'
-            : 'bg-white/40 hover:bg-white/70 group-hover:scale-110'
-            }`}
-        />
-      </button>
-    ))}
-  </div>
-));
-
-IndicatorDots.displayName = 'IndicatorDots';
 
 const TypewriterText = ({ text }: { text: string }) => {
   const [displayedText, setDisplayedText] = useState('');
@@ -170,12 +129,12 @@ const IdentitySection: React.FC = () => {
   const progressTweenRef = useRef<gsap.core.Tween | null>(null);
   const delayedCallRef = useRef<gsap.core.Tween | null>(null);
   const ctxRef = useRef<gsap.Context | null>(null);
+  const activeFeatureProgressRef = useRef<HTMLDivElement>(null);
 
   const [activeImage, setActiveImage] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const progressRingRef = useRef<SVGCircleElement | null>(null);
 
   // Track last transition time to prevent rapid-fire transitions
   const lastTransitionRef = useRef(0);
@@ -207,9 +166,6 @@ const IdentitySection: React.FC = () => {
       icon: 'fa-microchip'
     }
   ], []);
-
-  // Feature labels for accessibility
-  const featureLabels = useMemo(() => features.map(f => f.title), [features]);
 
   // Enhanced transition animation with dynamic effects
   const animateTransition = useCallback((fromIndex: number, toIndex: number) => {
@@ -255,80 +211,37 @@ const IdentitySection: React.FC = () => {
         });
     }
 
-    // Animate feature cards with stagger effect
+    // Animate feature cards
     if (fromFeature) {
       tl.to(fromFeature, {
-        x: -10,
-        opacity: 0.7,
-        scale: 0.98,
-        duration: 0.2,
-        ease: 'power2.in'
-      }, 0)
-        .to(fromFeature, {
-          x: 0,
-          opacity: 1,
-          scale: 1,
-          duration: 0.3,
-          ease: 'power2.out',
-          clearProps: 'transform,opacity'
-        }, 0.2);
+        x: 0,
+        opacity: 0.7, // dim slightly
+        scale: 1,
+        duration: 0.3,
+        borderColor: 'transparent',
+        ease: 'power2.out'
+      }, 0);
     }
 
     if (toFeature) {
+      // Highlight new one immediately for responsiveness
       const icon = toFeature.querySelector('.feature-icon');
-      tl.fromTo(toFeature,
-        { x: 20, opacity: 0.5 },
-        { x: 0, opacity: 1, duration: 0.4, ease: 'power3.out' },
-        0.1
-      );
-
-      // Icon pop effect
+      // tl.to(toFeature, { ...opacity:1 ...}, 0) is handled by className transition mostly,
+      // but we can add pop effect here
       if (icon) {
         tl.fromTo(icon,
           { scale: 0.8, rotation: -15 },
           { scale: 1.1, rotation: 0, duration: 0.3, ease: 'back.out(2)' },
           0.15
-        )
-          .to(icon, {
-            scale: 1,
-            duration: 0.2,
-            ease: 'power2.out',
-            clearProps: 'transform'
-          }, 0.45);
+        ).to(icon, { scale: 1, duration: 0.2 }, 0.45);
       }
     }
 
-    // Mobile Tabs Animation
+    // Mobile Tabs Animation and Scrolling
     const mobileTabs = mobileTabRefs.current;
-    if (mobileTabs[fromIndex] && mobileTabs[toIndex]) {
-      const fromTab = mobileTabs[fromIndex];
-      const toTab = mobileTabs[toIndex];
-
-      // Animate out previous
-      tl.to(fromTab, {
-        width: 0,
-        padding: 0,
-        opacity: 0,
-        duration: 0.3,
-        ease: 'power2.in',
-        onComplete: () => {
-          gsap.set(fromTab, { display: 'none' });
-        }
-      }, 0);
-
-      // Animate in new
-      tl.set(toTab, { display: 'block' }, 0);
-      tl.fromTo(toTab,
-        { width: 0, padding: 0, opacity: 0 },
-        {
-          width: 'auto',
-          padding: '0.625rem 0.75rem', // Match py-2.5 px-3
-          opacity: 1,
-          duration: 0.3,
-          ease: 'power2.out'
-        },
-        0.1
-      );
+    if (mobileTabs[toIndex]) {
+      // Scroll Active Tab into view
+      mobileTabs[toIndex]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
 
     setActiveImage(toIndex);
@@ -340,9 +253,10 @@ const IdentitySection: React.FC = () => {
       progressTweenRef.current.kill();
     }
 
-    // Reset progress ring immediately
-    if (progressRingRef.current) {
-      progressRingRef.current.setAttribute('stroke-dasharray', '0 50.26');
+    // Reset progress bar (using activeFeatureProgressRef which we attach dynamically or update via query)
+    const progressBar = activeFeatureProgressRef.current;
+    if (progressBar) {
+      gsap.set(progressBar, { scaleX: 0 });
     }
 
     progressTweenRef.current = gsap.to({ value: 0 }, {
@@ -350,10 +264,10 @@ const IdentitySection: React.FC = () => {
       duration: AUTO_ROTATE_INTERVAL / 1000,
       ease: 'none',
       onUpdate: function () {
-        // Direct DOM update bypasses React re-renders
-        if (progressRingRef.current) {
+        if (activeFeatureProgressRef.current) {
           const progress = this.targets()[0].value;
-          progressRingRef.current.setAttribute('stroke-dasharray', `${progress * 50.26} 50.26`);
+          // Invert the masking or just scale the bar
+          activeFeatureProgressRef.current.style.transform = `scaleX(${progress})`;
         }
       }
     });
@@ -388,22 +302,26 @@ const IdentitySection: React.FC = () => {
       progressTweenRef.current.kill();
       progressTweenRef.current = null;
     }
+    // Pause progress bar visual
+    if (activeFeatureProgressRef.current) {
+      // Optionally freeze it or reset it. Let's keep it frozen to show pause
+      // gsap.set(activeFeatureProgressRef.current, { scaleX: 0 }); 
+    }
   }, []);
 
-  // Handle hover interaction
-  const handleFeatureHover = useCallback((index: number) => {
+  // Handle manual interaction (Click or Hover)
+  const handleFeatureInteraction = useCallback((index: number) => {
     setIsPaused(true);
     stopAutoRotate();
     if (index !== activeImage) {
       animateTransition(activeImage, index);
-      // Reset progress ring via DOM
-      if (progressRingRef.current) {
-        progressRingRef.current.setAttribute('stroke-dasharray', '0 50.26');
+      // Reset progress bar
+      if (activeFeatureProgressRef.current) {
+        gsap.set(activeFeatureProgressRef.current, { scaleX: 0 });
       }
     }
   }, [activeImage, animateTransition, stopAutoRotate]);
 
-  // Resume auto-rotate after hover ends
   const handleFeatureLeave = useCallback(() => {
     setIsPaused(false);
   }, []);
@@ -431,6 +349,15 @@ const IdentitySection: React.FC = () => {
       }, (context) => {
         const { isMobile, isReduced } = context.conditions as { isMobile: boolean, isReduced: boolean };
         const durationMult = isMobile ? 0.8 : 1;
+
+        // Background Animation (Continuous Bubble Drift)
+        gsap.to(q('.bg-bubble-1'), {
+          y: -50, x: 30, duration: 8, repeat: -1, yoyo: true, ease: "sine.inOut"
+        });
+        gsap.to(q('.bg-bubble-2'), {
+          y: 40, x: -20, duration: 10, repeat: -1, yoyo: true, ease: "sine.inOut", delay: 1
+        });
+
 
         // Master timeline for coordinated entrance
         const masterTl = gsap.timeline({
@@ -578,39 +505,26 @@ const IdentitySection: React.FC = () => {
     return () => stopAutoRotate();
   }, [isVisible, isPaused, startAutoRotate, stopAutoRotate]);
 
-  // Initialize Mobile Tabs State
-  useLayoutEffect(() => {
-    mobileTabRefs.current.forEach((tab, i) => {
-      if (tab) {
-        if (i === activeImage) {
-          gsap.set(tab, { display: 'block', width: 'auto', opacity: 1, padding: '0.625rem 0.75rem' });
-        } else {
-          gsap.set(tab, { display: 'none', width: 0, opacity: 0, padding: 0 });
-        }
-      }
-    });
-  }, []); // Run once on mount to set initial styles
-
   return (
     <section
       id="who-we-are"
       ref={sectionRef}
       className="relative z-10 py-12 md:py-40 lg:py-56 px-6 border-t border-gray-100 dark:border-gray-900/30 overflow-hidden bg-transparent"
     >
-      {/* Background decorative elements */}
+      {/* Background decorative elements with animation */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
           className="identity-parallax-bg absolute top-0 -left-10 text-[30vw] font-black text-blue-600/[0.03] dark:text-white/[0.02] select-none tracking-tighter leading-none"
         >
           01
         </div>
-        <div className="absolute top-1/4 right-0 w-96 h-96 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 left-0 w-64 h-64 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-3xl" />
+        <div className="bg-bubble-1 absolute top-1/4 right-0 w-96 h-96 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-3xl opacity-60" />
+        <div className="bg-bubble-2 absolute bottom-1/4 left-0 w-64 h-64 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-3xl opacity-60" />
       </div>
 
       <div className="max-w-7xl mx-auto flex flex-col lg:grid lg:grid-cols-2 gap-8 lg:gap-24 items-center relative z-10">
 
-        {/* MOBILE HEADER - Only visible on mobile */}
+        {/* MOBILE HEADER */}
         <div className="lg:hidden w-full text-center mb-6 order-1">
           <div className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-900/50">
             <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">What We Do</span>
@@ -621,20 +535,20 @@ const IdentitySection: React.FC = () => {
           </h3>
         </div>
 
-        {/* MOBILE TABS - Only visible on mobile */}
+        {/* MOBILE TABS */}
         <div className="lg:hidden w-full order-2 mb-8">
-          <div className="flex p-1.5 bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl border border-gray-200/50 dark:border-gray-700/50 overflow-x-auto no-scrollbar gap-1 shadow-inner">
+          <div className="flex p-1.5 bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl border border-gray-200/50 dark:border-gray-700/50 overflow-x-auto no-scrollbar gap-1 shadow-inner scroll-smooth">
             {features.map((item, i) => (
               <button
                 key={i}
                 ref={(el) => { mobileTabRefs.current[i] = el; }}
-                onClick={() => handleFeatureHover(i)}
+                onClick={() => handleFeatureInteraction(i)}
                 className={`flex-1 min-w-[100px] py-2.5 px-3 rounded-lg text-xs font-bold transition-all duration-300 whitespace-nowrap overflow-hidden ${activeImage === i
                   ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm ring-1 ring-black/5 dark:ring-white/5'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-700/50'
                   }`}
               >
-                {item.title.split(' ')[0]} {/* Show first word only for compactness (Web, Mobile, AI) */}
+                {item.title.split(' ')[0]}
               </button>
             ))}
           </div>
@@ -658,22 +572,23 @@ const IdentitySection: React.FC = () => {
             We craft powerfully productive systems that transform ideas into impactful solutions.
           </p>
 
-          <div className="feature-list space-y-4" style={{ perspective: '800px' }}>
+          <div role="list" aria-label="Our Services" className="feature-list space-y-4" style={{ perspective: '800px' }}>
             {features.map((item, i) => (
               <FeatureItem
                 key={i}
                 item={item}
                 index={i}
                 isActive={activeImage === i}
-                onHover={handleFeatureHover}
-                onLeave={handleFeatureLeave}
+                onClick={handleFeatureInteraction}
+                onHover={handleFeatureInteraction} // keep hover behavior on desktop
                 featureRef={setFeatureRef(i)}
+                progressRef={activeImage === i ? activeFeatureProgressRef : undefined}
               />
             ))}
           </div>
         </div>
 
-        {/* RIGHT 3D SCENE - Shared but reordered on mobile */}
+        {/* RIGHT 3D SCENE */}
         <div className="relative w-full order-3 lg:order-none" style={{ perspective: '1200px' }}>
           <div
             className="image-reveal-wrapper relative aspect-square md:aspect-square lg:aspect-[4/5] rounded-[2rem] lg:rounded-[2.5rem] overflow-hidden bg-transparent shadow-2xl shadow-blue-900/10 dark:shadow-blue-900/20"
@@ -699,7 +614,7 @@ const IdentitySection: React.FC = () => {
             </div>
           </div>
 
-          {/* Decorative rings */}
+          {/* Decorative rings - kept as is */}
           <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] aspect-square pointer-events-none">
             <div className="absolute inset-0 border border-blue-200/20 dark:border-blue-500/10 rounded-full animate-pulse" style={{ animationDuration: '4s' }} />
             <div className="absolute inset-8 border border-indigo-200/15 dark:border-indigo-500/10 rounded-full animate-pulse" style={{ animationDuration: '3s', animationDelay: '0.5s' }} />

@@ -226,34 +226,6 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
             }}
             className="horizontal-panel w-full lg:w-screen min-h-screen lg:h-screen flex items-center justify-center px-4 py-12 sm:px-6 sm:py-16 md:p-12 lg:p-24 bg-transparent overflow-visible lg:overflow-hidden relative shrink-0 z-[2] touch-pan-y"
         >
-            {/* Parallax Background Layers */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div
-                    ref={gridLayer3Ref}
-                    className="absolute inset-[-20%] opacity-[0.01] dark:opacity-[0.02] hidden md:block"
-                    style={GRID_LAYER_3_STYLE}
-                />
-                <div
-                    ref={gridLayer2Ref}
-                    className="absolute inset-[-15%] opacity-[0.02] dark:opacity-[0.04] hidden sm:block"
-                    style={GRID_LAYER_2_STYLE}
-                />
-                <div
-                    ref={gridLayer1Ref}
-                    className="absolute inset-[-10%] opacity-[0.04] dark:opacity-[0.08]"
-                    style={GRID_LAYER_1_STYLE}
-                />
-                <div
-                    ref={glowRef}
-                    className="absolute top-1/2 left-1/2 w-[600px] h-[600px] md:w-[900px] md:h-[900px] -translate-x-1/2 -translate-y-1/2 opacity-15 md:opacity-20"
-                    style={GLOW_STYLE}
-                />
-                <div
-                    ref={vignetteRef}
-                    className="absolute inset-[-10%] opacity-20 md:opacity-30 pointer-events-none"
-                    style={VIGNETTE_STYLE}
-                />
-            </div>
 
             {/* Content */}
             <div className="max-w-7xl w-full text-center relative z-10 stats-container">

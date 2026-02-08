@@ -81,339 +81,335 @@ const About: React.FC = () => {
   useLayoutEffect(() => {
     if (!containerRef.current) return;
 
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const ctx = gsap.context((self) => {
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const mm = gsap.matchMedia(containerRef.current!); // Scope to container
 
-    const cleanupFns: (() => void)[] = [];
-    const mm = gsap.matchMedia();
+      mm.add({
+        isDesktop: "(min-width: 769px)",
+        isMobile: "(max-width: 768px)",
+        all: "all"
+      }, (context) => {
+        const { isDesktop } = context.conditions as { isDesktop: boolean };
+        const baseDuration = prefersReducedMotion ? 0.01 : 1;
+        const baseStagger = prefersReducedMotion ? 0 : 0.1;
 
-    mm.add({
-      // Desktop specific animations
-      isDesktop: "(min-width: 769px)",
-      // Mobile specific animations
-      isMobile: "(max-width: 768px)",
-      // Global animations
-      all: "all"
-    }, (context) => {
-      const { isDesktop } = context.conditions as { isDesktop: boolean };
-      const baseDuration = prefersReducedMotion ? 0.01 : 1;
-      const baseStagger = prefersReducedMotion ? 0 : 0.1;
+        const container = containerRef.current;
+        if (!container) return;
 
-      const container = containerRef.current;
-      if (!container) return;
+        // Cache all DOM elements
+        const headerLabel = container.querySelector('.header-label');
+        const headerTitle = container.querySelector('.header-title');
+        const headerDesc = container.querySelector('.header-desc');
+        const missionCard = container.querySelector('.mission-card');
+        const visionCard = container.querySelector('.vision-card');
+        const missionIcon = container.querySelector('.mission-icon');
+        const visionIcon = container.querySelector('.vision-icon');
+        const imgContainer = container.querySelector('.img-reveal');
+        const philosophyHeader = container.querySelector('.philosophy-header');
+        const philosophyTitle = container.querySelector('.philosophy-title');
+        const philosophyDesc = container.querySelector('.philosophy-desc');
+        const philosophyCards = container.querySelectorAll<HTMLElement>('.philosophy-card');
+        const statsHeader = container.querySelector('.stats-header');
+        const statItems = container.querySelectorAll<HTMLElement>('.stat-item');
+        const statNumbers = container.querySelectorAll<HTMLElement>('.stat-number');
+        const decorElements = container.querySelectorAll<HTMLElement>('.decor-element');
 
-      // Cache all DOM elements
-      const headerLabel = container.querySelector('.header-label');
-      const headerTitle = container.querySelector('.header-title');
-      const headerDesc = container.querySelector('.header-desc');
-      const missionCard = container.querySelector('.mission-card');
-      const visionCard = container.querySelector('.vision-card');
-      const missionIcon = container.querySelector('.mission-icon');
-      const visionIcon = container.querySelector('.vision-icon');
-      const imgContainer = container.querySelector('.img-reveal');
-      const philosophyHeader = container.querySelector('.philosophy-header');
-      const philosophyTitle = container.querySelector('.philosophy-title');
-      const philosophyDesc = container.querySelector('.philosophy-desc');
-      const philosophyCards = container.querySelectorAll<HTMLElement>('.philosophy-card');
-      const statsHeader = container.querySelector('.stats-header');
-      const statItems = container.querySelectorAll<HTMLElement>('.stat-item');
-      const statNumbers = container.querySelectorAll<HTMLElement>('.stat-number');
-      const decorElements = container.querySelectorAll<HTMLElement>('.decor-element');
+        // Helper to execute GSAP only if targets exist
+        const safeAnimate = (method: 'set' | 'to' | 'from' | 'fromTo', targets: any, vars: gsap.TweenVars, timeline?: gsap.core.Timeline, position?: string | number, fromVars?: gsap.TweenVars) => {
+          const validTargets = Array.isArray(targets) ? targets.filter(t => t !== null && t !== undefined) : (targets ? [targets] : []);
+          if (validTargets.length === 0) return;
 
-      // Helper to execute GSAP only if targets exist
-      const safeAnimate = (method: 'set' | 'to' | 'from' | 'fromTo', targets: any, vars: gsap.TweenVars, timeline?: gsap.core.Timeline, position?: string | number, fromVars?: gsap.TweenVars) => {
-        const validTargets = Array.isArray(targets) ? targets.filter(t => t !== null && t !== undefined) : (targets ? [targets] : []);
-        if (validTargets.length === 0) return;
+          if (timeline) {
+            if (method === 'to') timeline.to(validTargets, vars, position);
+            else if (method === 'from') timeline.from(validTargets, vars, position);
+            else if (method === 'set') timeline.set(validTargets, vars, position);
+            else if (method === 'fromTo') timeline.fromTo(validTargets, fromVars || {}, vars, position);
+          } else {
+            if (method === 'set') gsap.set(validTargets, vars);
+            else if (method === 'to') gsap.to(validTargets, vars);
+            else if (method === 'from') gsap.from(validTargets, vars);
+            else if (method === 'fromTo') gsap.fromTo(validTargets, fromVars || {}, vars);
+          }
+        };
 
-        if (timeline) {
-          if (method === 'to') timeline.to(validTargets, vars, position);
-          else if (method === 'from') timeline.from(validTargets, vars, position);
-          else if (method === 'set') timeline.set(validTargets, vars, position);
-          else if (method === 'fromTo') timeline.fromTo(validTargets, fromVars || {}, vars, position);
-        } else {
-          if (method === 'set') gsap.set(validTargets, vars);
-          else if (method === 'to') gsap.to(validTargets, vars);
-          else if (method === 'from') gsap.from(validTargets, vars);
-          else if (method === 'fromTo') gsap.fromTo(validTargets, fromVars || {}, vars);
-        }
-      };
+        // ===== SET INITIAL STATES =====
+        safeAnimate('set', [headerLabel, headerTitle, headerDesc], {
+          y: 80,
+          opacity: 0,
+          filter: prefersReducedMotion ? 'none' : 'blur(10px)',
+          rotation: prefersReducedMotion ? 0 : -2
+        });
 
-      // ===== SET INITIAL STATES =====
-      safeAnimate('set', [headerLabel, headerTitle, headerDesc], {
-        y: 80,
-        opacity: 0,
-        filter: prefersReducedMotion ? 'none' : 'blur(10px)',
-        rotation: prefersReducedMotion ? 0 : -2
-      });
+        safeAnimate('set', [missionCard, visionCard], {
+          y: 100,
+          opacity: 0,
+          rotateX: isDesktop ? 15 : 0,
+          scale: 0.95,
+          filter: isDesktop && !prefersReducedMotion ? 'blur(8px)' : 'none'
+        });
 
-      safeAnimate('set', [missionCard, visionCard], {
-        y: 100,
-        opacity: 0,
-        rotateX: isDesktop ? 15 : 0,
-        scale: 0.95,
-        filter: isDesktop && !prefersReducedMotion ? 'blur(8px)' : 'none'
-      });
+        safeAnimate('set', [missionIcon, visionIcon], { scale: 0, rotation: -45, opacity: 0 });
+        safeAnimate('set', imgContainer, { clipPath: 'inset(100% 0% 0% 0%)', scale: 1.1, filter: isDesktop ? 'blur(5px)' : 'none' });
+        safeAnimate('set', [philosophyHeader, philosophyTitle, philosophyDesc], { y: 50, opacity: 0, filter: isDesktop ? 'blur(5px)' : 'none' });
+        safeAnimate('set', Array.from(philosophyCards), { y: 60, opacity: 0, scale: 0.9, filter: isDesktop ? 'blur(5px)' : 'none' });
+        safeAnimate('set', statsHeader, { y: 40, opacity: 0 });
+        safeAnimate('set', Array.from(statItems), { y: 50, opacity: 0, scale: 0.85 });
+        safeAnimate('set', Array.from(decorElements), { scale: 0, opacity: 0, filter: isDesktop ? 'blur(20px)' : 'none' });
 
-      safeAnimate('set', [missionIcon, visionIcon], { scale: 0, rotation: -45, opacity: 0 });
-      safeAnimate('set', imgContainer, { clipPath: 'inset(100% 0% 0% 0%)', scale: 1.1, filter: isDesktop ? 'blur(5px)' : 'none' });
-      safeAnimate('set', [philosophyHeader, philosophyTitle, philosophyDesc], { y: 50, opacity: 0, filter: isDesktop ? 'blur(5px)' : 'none' });
-      safeAnimate('set', Array.from(philosophyCards), { y: 60, opacity: 0, scale: 0.9, filter: isDesktop ? 'blur(5px)' : 'none' });
-      safeAnimate('set', statsHeader, { y: 40, opacity: 0 });
-      safeAnimate('set', Array.from(statItems), { y: 50, opacity: 0, scale: 0.85 });
-      safeAnimate('set', Array.from(decorElements), { scale: 0, opacity: 0, filter: isDesktop ? 'blur(20px)' : 'none' });
-
-      // ===== HERO ENTRANCE TIMELINE =====
-      const heroTl = gsap.timeline({
-        scrollTrigger: {
-          trigger: '.about-header',
-          start: isDesktop ? 'top 85%' : 'top 95%',
-          once: true
-        },
-        defaults: { ease: 'expo.out', force3D: true }
-      });
-
-      safeAnimate('to', headerLabel, { y: 0, opacity: 1, filter: 'blur(0px)', rotation: 0, duration: baseDuration * 1.2 }, heroTl);
-      safeAnimate('to', headerTitle, { y: 0, opacity: 1, filter: 'blur(0px)', rotation: 0, duration: baseDuration * 1.4 }, heroTl, '-=0.9');
-      safeAnimate('to', headerDesc, { y: 0, opacity: 1, filter: 'blur(0px)', rotation: 0, duration: baseDuration * 1.2 }, heroTl, '-=0.8');
-
-      // ===== CARDS REVEAL =====
-
-      [missionCard, visionCard].forEach((card, i) => {
-        if (!card) return;
-        const icon = card.querySelector('.mission-icon, .vision-icon');
-        const label = card.querySelector('.mission-label, .vision-label');
-        const title = card.querySelector('.mission-title, .vision-title');
-        const text = card.querySelector('.mission-text, .vision-text');
-
-        const tl = gsap.timeline({
+        // ===== HERO ENTRANCE TIMELINE =====
+        const heroTl = gsap.timeline({
           scrollTrigger: {
-            trigger: card,
-            start: isDesktop ? 'top 80%' : 'top 90%',
+            trigger: '.about-header',
+            start: isDesktop ? 'top 85%' : 'top 95%',
             once: true
+          },
+          defaults: { ease: 'expo.out', force3D: true }
+        });
+
+        safeAnimate('to', headerLabel, { y: 0, opacity: 1, filter: 'blur(0px)', rotation: 0, duration: baseDuration * 1.2 }, heroTl);
+        safeAnimate('to', headerTitle, { y: 0, opacity: 1, filter: 'blur(0px)', rotation: 0, duration: baseDuration * 1.4 }, heroTl, '-=0.9');
+        safeAnimate('to', headerDesc, { y: 0, opacity: 1, filter: 'blur(0px)', rotation: 0, duration: baseDuration * 1.2 }, heroTl, '-=0.8');
+
+        // ===== CARDS REVEAL =====
+        [missionCard, visionCard].forEach((card, i) => {
+          if (!card) return;
+          const icon = card.querySelector('.mission-icon, .vision-icon');
+          const label = card.querySelector('.mission-label, .vision-label');
+          const title = card.querySelector('.mission-title, .vision-title');
+          const text = card.querySelector('.mission-text, .vision-text');
+
+          const tl = gsap.timeline({
+            scrollTrigger: {
+              trigger: card,
+              start: isDesktop ? 'top 80%' : 'top 90%',
+              once: true
+            }
+          });
+
+          safeAnimate('to', card, {
+            y: 0,
+            opacity: 1,
+            rotateX: 0,
+            scale: 1,
+            filter: 'blur(0px)',
+            duration: baseDuration * 1.4,
+            ease: 'power3.out',
+          }, tl, isDesktop ? i * 0.15 : 0);
+
+          safeAnimate('to', icon, {
+            scale: 1,
+            rotation: 0,
+            opacity: 1,
+            duration: baseDuration * 0.8,
+            ease: 'back.out(2)'
+          }, tl, '-=0.6');
+          safeAnimate('to', label, { x: 0, opacity: 1, duration: baseDuration * 0.6 }, tl, '-=0.6');
+          safeAnimate('to', title, { y: 0, opacity: 1, duration: baseDuration * 0.8 }, tl, '-=0.4');
+          safeAnimate('to', text, { y: 0, opacity: 1, duration: baseDuration * 0.8 }, tl, '-=0.5');
+
+          // Desktop Only Interactions
+          if (isDesktop && !prefersReducedMotion) {
+            const xTo = gsap.quickTo(card, "rotateY", { duration: 0.3, ease: "power2.out" });
+            const yTo = gsap.quickTo(card, "rotateX", { duration: 0.3, ease: "power2.out" });
+
+            let rect: DOMRect | null = null;
+            const updateRect = () => { rect = card.getBoundingClientRect(); };
+
+            const handleMouseEnter = () => {
+              updateRect();
+              gsap.to(card, { scale: 1.02, duration: 0.4, ease: 'power2.out' });
+              const inner = card.querySelector('.card-inner');
+              if (inner) gsap.to(inner, { y: -5, duration: 0.4, ease: 'power2.out' });
+            };
+
+            const handleMouseLeave = () => {
+              gsap.to(card, { scale: 1, duration: 0.5, ease: 'power2.out' });
+              xTo(0);
+              yTo(0);
+              const inner = card.querySelector('.card-inner');
+              if (inner) gsap.to(inner, { y: 0, duration: 0.4, ease: 'power2.out' });
+              rect = null;
+            };
+
+            const handleMouseMove = (e: MouseEvent) => {
+              if (!rect) return;
+              const x = e.clientX - rect.left;
+              const y = e.clientY - rect.top;
+              const centerX = rect.width / 2;
+              const centerY = rect.height / 2;
+
+              const rotateX = (y - centerY) / 25;
+              const rotateY = (centerX - x) / 25;
+
+              yTo(rotateX);
+              xTo(rotateY);
+            };
+
+            card.addEventListener('mouseenter', handleMouseEnter, { passive: true });
+            card.addEventListener('mouseleave', handleMouseLeave, { passive: true });
+            card.addEventListener('mousemove', handleMouseMove as EventListener, { passive: true });
+            window.addEventListener('scroll', updateRect, { passive: true });
+
+            self.add(() => {
+              card.removeEventListener('mouseenter', handleMouseEnter);
+              card.removeEventListener('mouseleave', handleMouseLeave);
+              card.removeEventListener('mousemove', handleMouseMove as EventListener);
+              window.removeEventListener('scroll', updateRect);
+            });
           }
         });
 
-        safeAnimate('to', card, {
-          y: 0,
-          opacity: 1,
-          rotateX: 0,
+        // ===== IMAGE REVEAL =====
+        gsap.to(imgContainer, {
+          clipPath: 'inset(0% 0% 0% 0%)',
           scale: 1,
           filter: 'blur(0px)',
-          duration: baseDuration * 1.4,
-          ease: 'power3.out',
-        }, tl, isDesktop ? i * 0.15 : 0);
-
-        safeAnimate('to', icon, {
-          scale: 1,
-          rotation: 0,
-          opacity: 1,
-          duration: baseDuration * 0.8,
-          ease: 'back.out(2)'
-        }, tl, '-=0.6');
-        safeAnimate('to', label, { x: 0, opacity: 1, duration: baseDuration * 0.6 }, tl, '-=0.6');
-        safeAnimate('to', title, { y: 0, opacity: 1, duration: baseDuration * 0.8 }, tl, '-=0.4');
-        safeAnimate('to', text, { y: 0, opacity: 1, duration: baseDuration * 0.8 }, tl, '-=0.5');
-
-        // Desktop Only Interactions
-        if (isDesktop && !prefersReducedMotion) {
-          const xTo = gsap.quickTo(card, "rotateY", { duration: 0.3, ease: "power2.out" });
-          const yTo = gsap.quickTo(card, "rotateX", { duration: 0.3, ease: "power2.out" });
-
-          let rect: DOMRect | null = null;
-          const updateRect = () => { rect = card.getBoundingClientRect(); };
-
-          const handleMouseEnter = () => {
-            updateRect();
-            gsap.to(card, { scale: 1.02, duration: 0.4, ease: 'power2.out' });
-            const inner = card.querySelector('.card-inner');
-            if (inner) gsap.to(inner, { y: -5, duration: 0.4, ease: 'power2.out' });
-          };
-
-          const handleMouseLeave = () => {
-            gsap.to(card, { scale: 1, duration: 0.5, ease: 'power2.out' });
-            xTo(0);
-            yTo(0);
-            const inner = card.querySelector('.card-inner');
-            if (inner) gsap.to(inner, { y: 0, duration: 0.4, ease: 'power2.out' });
-            rect = null;
-          };
-
-          const handleMouseMove = (e: MouseEvent) => {
-            if (!rect) return;
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-
-            const rotateX = (y - centerY) / 25;
-            const rotateY = (centerX - x) / 25;
-
-            yTo(rotateX);
-            xTo(rotateY);
-          };
-
-          card.addEventListener('mouseenter', handleMouseEnter, { passive: true });
-          card.addEventListener('mouseleave', handleMouseLeave, { passive: true });
-          card.addEventListener('mousemove', handleMouseMove as EventListener, { passive: true });
-          window.addEventListener('scroll', updateRect, { passive: true });
-
-          cleanupFns.push(() => {
-            card.removeEventListener('mouseenter', handleMouseEnter);
-            card.removeEventListener('mouseleave', handleMouseLeave);
-            card.removeEventListener('mousemove', handleMouseMove as EventListener);
-            window.removeEventListener('scroll', updateRect);
-          });
-        }
-      });
-
-      // ===== IMAGE REVEAL =====
-      gsap.to(imgContainer, {
-        clipPath: 'inset(0% 0% 0% 0%)',
-        scale: 1,
-        filter: 'blur(0px)',
-        duration: baseDuration * 2,
-        ease: 'power4.inOut',
-        scrollTrigger: {
-          trigger: imgContainer,
-          start: isDesktop ? 'top 80%' : 'top 95%',
-          once: true
-        }
-      });
-
-      // ===== PHILOSOPHY SECTION =====
-      const philoTl = gsap.timeline({
-        scrollTrigger: {
-          trigger: philosophyHeader,
-          start: isDesktop ? 'top 85%' : 'top 95%',
-          once: true
-        }
-      });
-      safeAnimate('to', philosophyHeader, { y: 0, opacity: 1, filter: 'blur(0px)', duration: baseDuration }, philoTl);
-      safeAnimate('to', philosophyTitle, { y: 0, opacity: 1, filter: 'blur(0px)', duration: baseDuration }, philoTl, '-=0.7');
-      safeAnimate('to', philosophyDesc, { y: 0, opacity: 1, filter: 'blur(0px)', duration: baseDuration }, philoTl, '-=0.6');
-
-      philosophyCards.forEach((card, i) => {
-        const icon = card.querySelector('.philosophy-icon');
-        const title = card.querySelector('h4');
-        const desc = card.querySelector('p');
-
-        const cardTl = gsap.timeline({
-          scrollTrigger: {
-            trigger: card,
-            start: isDesktop ? 'top 88%' : 'top 95%',
-            once: true
-          }
-        });
-
-        safeAnimate('to', card, {
-          y: 0,
-          opacity: 1,
-          scale: 1,
-          filter: 'blur(0px)',
-          duration: baseDuration * 1.1,
-          ease: 'power3.out'
-        }, cardTl, isDesktop ? i * baseStagger * 1.5 : 0);
-
-        safeAnimate('from', icon, { scale: 0, rotation: -30, duration: baseDuration * 0.6, ease: 'back.out(2)' }, cardTl, '-=0.7');
-        safeAnimate('from', title, { y: 20, opacity: 0, duration: baseDuration * 0.5 }, cardTl, '-=0.4');
-        safeAnimate('from', desc, { y: 15, opacity: 0, duration: baseDuration * 0.5 }, cardTl, '-=0.3');
-
-        if (isDesktop && !prefersReducedMotion) {
-          const handleMouseEnter = () => {
-            gsap.to(card, { y: -8, scale: 1.03, duration: 0.3, ease: 'power2.out' });
-            if (icon) gsap.to(icon, { scale: 1.2, backgroundColor: 'rgb(59, 130, 246)', color: 'white', duration: 0.3 });
-          };
-
-          const handleMouseLeave = () => {
-            gsap.to(card, { y: 0, scale: 1, duration: 0.3, ease: 'power2.out' });
-            if (icon) gsap.to(icon, { scale: 1, clearProps: 'backgroundColor,color', duration: 0.3 });
-          };
-
-          card.addEventListener('mouseenter', handleMouseEnter);
-          card.addEventListener('mouseleave', handleMouseLeave);
-
-          cleanupFns.push(() => {
-            card.removeEventListener('mouseenter', handleMouseEnter);
-            card.removeEventListener('mouseleave', handleMouseLeave);
-          });
-        }
-      });
-
-      // ===== STATS SECTION =====
-      const statsTl = gsap.timeline({
-        scrollTrigger: {
-          trigger: statsHeader,
-          start: isDesktop ? 'top 85%' : 'top 95%',
-          once: true
-        }
-      });
-      statsTl.to(statsHeader, { y: 0, opacity: 1, duration: baseDuration });
-
-      statItems.forEach((item, i) => {
-        const itemTl = gsap.timeline({
-          scrollTrigger: {
-            trigger: item,
-            start: isDesktop ? 'top 90%' : 'top 98%',
-            once: true
-          }
-        });
-
-        safeAnimate('to', item, {
-          y: 0,
-          opacity: 1,
-          scale: 1,
-          duration: baseDuration,
-          ease: 'power3.out'
-        }, itemTl, isDesktop ? i * baseStagger * 1.2 : 0);
-
-        if (isDesktop && !prefersReducedMotion) {
-          const handleMouseEnter = () => gsap.to(item, { scale: 1.08, duration: 0.3, ease: 'power2.out' });
-          const handleMouseLeave = () => gsap.to(item, { scale: 1, duration: 0.3, ease: 'power2.out' });
-
-          item.addEventListener('mouseenter', handleMouseEnter);
-          item.addEventListener('mouseleave', handleMouseLeave);
-
-          cleanupFns.push(() => {
-            item.removeEventListener('mouseenter', handleMouseEnter);
-            item.removeEventListener('mouseleave', handleMouseLeave);
-          });
-        }
-      });
-
-      // Counter animation
-      statNumbers.forEach((stat) => {
-        const value = parseInt(stat.getAttribute('data-value') || '0', 10);
-        safeAnimate('fromTo', stat, {
-          innerText: value,
-          duration: prefersReducedMotion ? 0.1 : 3,
-          snap: { innerText: 1 },
-          ease: 'expo.out',
-          scrollTrigger: {
-            trigger: stat,
-            start: isDesktop ? 'top 90%' : 'top 98%',
-            once: true
-          }
-        }, undefined, undefined, { innerText: 0 });
-      });
-
-      // Decorative elements
-      decorElements.forEach((el) => {
-        safeAnimate('to', el, {
-          scale: 1,
-          opacity: 1,
-          filter: 'blur(40px)',
           duration: baseDuration * 2,
-          ease: 'power2.out',
-          scrollTrigger: { trigger: el, start: 'top 95%', once: true }
+          ease: 'power4.inOut',
+          scrollTrigger: {
+            trigger: imgContainer,
+            start: isDesktop ? 'top 80%' : 'top 95%',
+            once: true
+          }
+        });
+
+        // ===== PHILOSOPHY SECTION =====
+        const philoTl = gsap.timeline({
+          scrollTrigger: {
+            trigger: philosophyHeader,
+            start: isDesktop ? 'top 85%' : 'top 95%',
+            once: true
+          }
+        });
+        safeAnimate('to', philosophyHeader, { y: 0, opacity: 1, filter: 'blur(0px)', duration: baseDuration }, philoTl);
+        safeAnimate('to', philosophyTitle, { y: 0, opacity: 1, filter: 'blur(0px)', duration: baseDuration }, philoTl, '-=0.7');
+        safeAnimate('to', philosophyDesc, { y: 0, opacity: 1, filter: 'blur(0px)', duration: baseDuration }, philoTl, '-=0.6');
+
+        philosophyCards.forEach((card, i) => {
+          const icon = card.querySelector('.philosophy-icon');
+          const title = card.querySelector('h4');
+          const desc = card.querySelector('p');
+
+          const cardTl = gsap.timeline({
+            scrollTrigger: {
+              trigger: card,
+              start: isDesktop ? 'top 88%' : 'top 95%',
+              once: true
+            }
+          });
+
+          safeAnimate('to', card, {
+            y: 0,
+            opacity: 1,
+            scale: 1,
+            filter: 'blur(0px)',
+            duration: baseDuration * 1.1,
+            ease: 'power3.out'
+          }, cardTl, isDesktop ? i * baseStagger * 1.5 : 0);
+
+          safeAnimate('from', icon, { scale: 0, rotation: -30, duration: baseDuration * 0.6, ease: 'back.out(2)' }, cardTl, '-=0.7');
+          safeAnimate('from', title, { y: 20, opacity: 0, duration: baseDuration * 0.5 }, cardTl, '-=0.4');
+          safeAnimate('from', desc, { y: 15, opacity: 0, duration: baseDuration * 0.5 }, cardTl, '-=0.3');
+
+          if (isDesktop && !prefersReducedMotion) {
+            const handleMouseEnter = () => {
+              gsap.to(card, { y: -8, scale: 1.03, duration: 0.3, ease: 'power2.out' });
+              if (icon) gsap.to(icon, { scale: 1.2, backgroundColor: 'rgb(59, 130, 246)', color: 'white', duration: 0.3 });
+            };
+
+            const handleMouseLeave = () => {
+              gsap.to(card, { y: 0, scale: 1, duration: 0.3, ease: 'power2.out' });
+              if (icon) gsap.to(icon, { scale: 1, clearProps: 'backgroundColor,color', duration: 0.3 });
+            };
+
+            card.addEventListener('mouseenter', handleMouseEnter);
+            card.addEventListener('mouseleave', handleMouseLeave);
+
+            self.add(() => {
+              card.removeEventListener('mouseenter', handleMouseEnter);
+              card.removeEventListener('mouseleave', handleMouseLeave);
+            });
+          }
+        });
+
+        // ===== STATS SECTION =====
+        const statsTl = gsap.timeline({
+          scrollTrigger: {
+            trigger: statsHeader,
+            start: isDesktop ? 'top 85%' : 'top 95%',
+            once: true
+          }
+        });
+        statsTl.to(statsHeader, { y: 0, opacity: 1, duration: baseDuration });
+
+        statItems.forEach((item, i) => {
+          const itemTl = gsap.timeline({
+            scrollTrigger: {
+              trigger: item,
+              start: isDesktop ? 'top 90%' : 'top 98%',
+              once: true
+            }
+          });
+
+          safeAnimate('to', item, {
+            y: 0,
+            opacity: 1,
+            scale: 1,
+            duration: baseDuration,
+            ease: 'power3.out'
+          }, itemTl, isDesktop ? i * baseStagger * 1.2 : 0);
+
+          if (isDesktop && !prefersReducedMotion) {
+            const handleMouseEnter = () => gsap.to(item, { scale: 1.08, duration: 0.3, ease: 'power2.out' });
+            const handleMouseLeave = () => gsap.to(item, { scale: 1, duration: 0.3, ease: 'power2.out' });
+
+            item.addEventListener('mouseenter', handleMouseEnter);
+            item.addEventListener('mouseleave', handleMouseLeave);
+
+            self.add(() => {
+              item.removeEventListener('mouseenter', handleMouseEnter);
+              item.removeEventListener('mouseleave', handleMouseLeave);
+            });
+          }
+        });
+
+        // Counter animation
+        statNumbers.forEach((stat) => {
+          const value = parseInt(stat.getAttribute('data-value') || '0', 10);
+          safeAnimate('fromTo', stat, {
+            innerText: value,
+            duration: prefersReducedMotion ? 0.1 : 3,
+            snap: { innerText: 1 },
+            ease: 'expo.out',
+            scrollTrigger: {
+              trigger: stat,
+              start: isDesktop ? 'top 90%' : 'top 98%',
+              once: true
+            }
+          }, undefined, undefined, { innerText: 0 });
+        });
+
+        // Decorative elements
+        decorElements.forEach((el) => {
+          safeAnimate('to', el, {
+            scale: 1,
+            opacity: 1,
+            filter: 'blur(40px)',
+            duration: baseDuration * 2,
+            ease: 'power2.out',
+            scrollTrigger: { trigger: el, start: 'top 95%', once: true }
+          });
         });
       });
-    });
+    }, containerRef); // Scope cleanup to containerRef
 
-    const refreshId = setInterval(() => ScrollTrigger.refresh(), 2000);
+    // Force a refresh after a small delay to catch late-loading layout changes
+    const timerId = setTimeout(() => ScrollTrigger.refresh(), 500);
 
     return () => {
-      mm.revert();
-      clearInterval(refreshId);
-      cleanupFns.forEach(fn => fn());
+      ctx.revert();
+      clearTimeout(timerId);
     };
   }, []);
 

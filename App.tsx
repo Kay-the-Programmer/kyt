@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useRef, useLayoutEffect, Suspense } from 'react';
 import { TransitionContext, TransitionProvider, useTransition } from './TransitionContext';
-import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import AiAssistant from './components/AiAssistant';
 import ScrollToTopButton from './components/ScrollToTopButton';

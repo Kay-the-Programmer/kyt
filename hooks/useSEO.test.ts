@@ -32,11 +32,11 @@ describe('useSEO Hook', () => {
         const ogDesc = document.querySelector('meta[property="og:description"]') as HTMLMetaElement;
         const twitterDesc = document.querySelector('meta[name="twitter:description"]') as HTMLMetaElement;
 
-        expect(metaDesc).toBeInTheDocument();
+        expect(metaDesc).not.toBeNull();
         expect(metaDesc.content).toBe(description);
-        expect(ogDesc).toBeInTheDocument();
+        expect(ogDesc).not.toBeNull();
         expect(ogDesc.content).toBe(description);
-        expect(twitterDesc).toBeInTheDocument();
+        expect(twitterDesc).not.toBeNull();
         expect(twitterDesc.content).toBe(description);
     });
 
@@ -45,7 +45,7 @@ describe('useSEO Hook', () => {
         renderHook(() => useSEO({ title: 'Test', keywords }));
 
         const metaKeywords = document.querySelector('meta[name="keywords"]') as HTMLMetaElement;
-        expect(metaKeywords).toBeInTheDocument();
+        expect(metaKeywords).not.toBeNull();
         expect(metaKeywords.content).toBe(keywords);
     });
 
@@ -56,9 +56,9 @@ describe('useSEO Hook', () => {
         const ogImage = document.querySelector('meta[property="og:image"]') as HTMLMetaElement;
         const twitterImage = document.querySelector('meta[name="twitter:image"]') as HTMLMetaElement;
 
-        expect(ogImage).toBeInTheDocument();
+        expect(ogImage).not.toBeNull();
         expect(ogImage.content).toBe(image);
-        expect(twitterImage).toBeInTheDocument();
+        expect(twitterImage).not.toBeNull();
         expect(twitterImage.content).toBe(image);
     });
 
@@ -77,12 +77,12 @@ describe('useSEO Hook', () => {
         const twitterUrl = document.querySelector('meta[name="twitter:url"]') as HTMLMetaElement;
         const canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
 
-        expect(ogUrl).toBeInTheDocument();
+        expect(ogUrl).not.toBeNull();
         expect(ogUrl.content).toBe(url);
-        expect(twitterUrl).toBeInTheDocument();
+        expect(twitterUrl).not.toBeNull();
         expect(twitterUrl.content).toBe(url);
 
-        expect(canonical).toBeInTheDocument();
+        expect(canonical).not.toBeNull();
         expect(canonical.href).toBe(url);
     });
 
@@ -90,7 +90,7 @@ describe('useSEO Hook', () => {
         renderHook(() => useSEO({ title: 'Test' }));
 
         const ogType = document.querySelector('meta[property="og:type"]') as HTMLMetaElement;
-        expect(ogType).toBeInTheDocument();
+        expect(ogType).not.toBeNull();
         expect(ogType.content).toBe('website');
     });
 
@@ -98,7 +98,7 @@ describe('useSEO Hook', () => {
         renderHook(() => useSEO({ title: 'Test', type: 'article' }));
 
         const ogType = document.querySelector('meta[property="og:type"]') as HTMLMetaElement;
-        expect(ogType).toBeInTheDocument();
+        expect(ogType).not.toBeNull();
         expect(ogType.content).toBe('article');
     });
 

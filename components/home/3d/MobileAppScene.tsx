@@ -3,50 +3,52 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { Float, RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
 
-// Shared colors for app icons
-const appColors = ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16', '#6366f1'];
-
-const APP_GRID_POSITIONS = [
-    [-0.22, 0.55], [0, 0.55], [0.22, 0.55],
-    [-0.22, 0.3], [0, 0.3], [0.22, 0.3],
-    [-0.22, 0.05], [0, 0.05], [0.22, 0.05],
-];
-
-// Minimalist materials
-const bodyMaterial = new THREE.MeshStandardMaterial({
-    color: "#1e293b",
-    metalness: 0.7,
-    roughness: 0.2
+// Minimalist monochrome materials
+const frameMaterial = new THREE.MeshStandardMaterial({
+    color: "#18181b",
+    metalness: 0.9,
+    roughness: 0.1
 });
 
 const screenMaterial = new THREE.MeshStandardMaterial({
-    color: "#0f172a",
-    metalness: 0.2,
-    roughness: 0.1,
-    emissive: "#1e40af",
-    emissiveIntensity: 0.1
+    color: "#09090b",
+    metalness: 0.1,
+    roughness: 0.05,
+    emissive: "#3b82f6",
+    emissiveIntensity: 0.03
 });
 
-// Instanced grid icons - minimal animation
-const GridIcons = memo(() => {
+// Minimal UI elements - just 4 simple blocks
+const UI_ELEMENTS = [
+    { pos: [0, 0.5, 0.06] as const, size: [0.6, 0.08, 0.005] as const, color: '#3b82f6' },
+    { pos: [0, 0.35, 0.06] as const, size: [0.5, 0.06, 0.005] as const, color: '#6366f1' },
+    { pos: [0, 0.1, 0.06] as const, size: [0.55, 0.15, 0.005] as const, color: '#1e293b' },
+    { pos: [0, -0.2, 0.06] as const, size: [0.55, 0.15, 0.005] as const, color: '#1e293b' },
+];
+
+// Static UI bars
+const UIElements = memo(() => {
     const meshRef = useRef<THREE.InstancedMesh>(null);
     const tempObj = useMemo(() => new THREE.Object3D(), []);
     const colorObj = useMemo(() => new THREE.Color(), []);
+    const geometry = useMemo(() => new THREE.BoxGeometry(1, 1, 1), []);
 
-    const geometry = useMemo(() => new THREE.BoxGeometry(0.12, 0.12, 0.01), []);
     const material = useMemo(() => new THREE.MeshStandardMaterial({
         color: '#ffffff',
         emissive: '#ffffff',
-        emissiveIntensity: 0.1
+        emissiveIntensity: 0.1,
+        transparent: true,
+        opacity: 0.9
     }), []);
 
     React.useLayoutEffect(() => {
         if (!meshRef.current) return;
-        APP_GRID_POSITIONS.forEach((pos, i) => {
-            tempObj.position.set(pos[0], pos[1], 0.07);
+        UI_ELEMENTS.forEach((el, i) => {
+            tempObj.position.set(el.pos[0], el.pos[1], el.pos[2]);
+            tempObj.scale.set(el.size[0], el.size[1], el.size[2]);
             tempObj.updateMatrix();
             meshRef.current?.setMatrixAt(i, tempObj.matrix);
-            colorObj.set(appColors[i]);
+            colorObj.set(el.color);
             meshRef.current?.setColorAt(i, colorObj);
         });
         meshRef.current.instanceMatrix.needsUpdate = true;
@@ -55,105 +57,83 @@ const GridIcons = memo(() => {
         }
     }, [tempObj, colorObj]);
 
-    // Subtle breathing animation - less frequent updates
-    useFrame(({ clock }) => {
-        if (!meshRef.current) return;
-        const t = clock.getElapsedTime();
-        // Only update every few frames for performance
-        if (Math.floor(t * 30) % 2 !== 0) return;
-
-        APP_GRID_POSITIONS.forEach((pos, i) => {
-            const pulse = Math.sin(t * 2 + i * 0.3) * 0.01;
-            tempObj.position.set(pos[0], pos[1], 0.07 + pulse);
-            tempObj.updateMatrix();
-            meshRef.current?.setMatrixAt(i, tempObj.matrix);
-        });
-        meshRef.current.instanceMatrix.needsUpdate = true;
-    });
-
-    return <instancedMesh ref={meshRef} args={[geometry, material, APP_GRID_POSITIONS.length]} />;
+    return <instancedMesh ref={meshRef} args={[geometry, material, UI_ELEMENTS.length]} />;
 });
-GridIcons.displayName = 'GridIcons';
+UIElements.displayName = 'UIElements';
 
-// Clean phone device
+// Clean minimal phone
 const PhoneDevice = memo(React.forwardRef<THREE.Group>((_, ref) => {
     return (
         <group ref={ref}>
-            {/* Phone body */}
-            <RoundedBox args={[0.9, 1.9, 0.08]} radius={0.1} smoothness={3}>
-                <primitive object={bodyMaterial} attach="material" />
+            {/* Frame */}
+            <RoundedBox args={[0.85, 1.75, 0.07]} radius={0.08} smoothness={4}>
+                <primitive object={frameMaterial} attach="material" />
             </RoundedBox>
 
             {/* Screen */}
-            <RoundedBox args={[0.82, 1.8, 0.02]} radius={0.06} smoothness={2} position={[0, 0, 0.045]}>
+            <RoundedBox args={[0.78, 1.68, 0.01]} radius={0.05} smoothness={3} position={[0, 0, 0.035]}>
                 <primitive object={screenMaterial} attach="material" />
             </RoundedBox>
 
-            {/* Notch */}
-            <mesh position={[0, 0.85, 0.05]}>
-                <capsuleGeometry args={[0.06, 0.15, 4, 6]} />
+            {/* Dynamic island - minimal */}
+            <mesh position={[0, 0.75, 0.042]}>
+                <boxGeometry args={[0.2, 0.05, 0.005]} />
                 <meshBasicMaterial color="#000000" />
             </mesh>
 
-            {/* App Icons */}
-            <GridIcons />
+            {/* UI Elements */}
+            <UIElements />
+
+            {/* Bottom bar */}
+            <mesh position={[0, -0.75, 0.042]}>
+                <boxGeometry args={[0.25, 0.015, 0.005]} />
+                <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.3} />
+            </mesh>
         </group>
     );
 }));
 PhoneDevice.displayName = 'PhoneDevice';
 
-// Reduced floating icons - just 3 for minimalism
-const floatingIconsData: { position: [number, number, number]; color: string }[] = [
-    { position: [-0.75, 0.6, 0.3], color: '#3b82f6' },
-    { position: [0.7, 0.4, 0.35], color: '#8b5cf6' },
-    { position: [-0.65, -0.5, 0.25], color: '#10b981' },
-];
-
-const InstancedFloatingIcons = memo(() => {
+// Minimal floating dots - just subtle ambient particles
+const FloatingDots = memo(() => {
     const meshRef = useRef<THREE.InstancedMesh>(null);
     const tempObj = useMemo(() => new THREE.Object3D(), []);
-    const colorObj = useMemo(() => new THREE.Color(), []);
 
-    const geometry = useMemo(() => new THREE.BoxGeometry(0.15, 0.15, 0.03), []);
+    const positions = useMemo(() => [
+        [-0.8, 0.5, 0.2],
+        [0.75, 0.3, 0.25],
+        [-0.7, -0.4, 0.15],
+    ] as [number, number, number][], []);
+
+    const geometry = useMemo(() => new THREE.SphereGeometry(0.03, 8, 8), []);
     const material = useMemo(() => new THREE.MeshStandardMaterial({
-        color: '#ffffff',
-        emissive: '#ffffff',
-        emissiveIntensity: 0.2,
-        roughness: 0.4,
-        metalness: 0.2
+        color: '#6366f1',
+        emissive: '#6366f1',
+        emissiveIntensity: 0.5,
+        transparent: true,
+        opacity: 0.6
     }), []);
-
-    React.useLayoutEffect(() => {
-        if (!meshRef.current) return;
-        floatingIconsData.forEach((icon, i) => {
-            colorObj.set(icon.color);
-            meshRef.current?.setColorAt(i, colorObj);
-        });
-        if (meshRef.current.instanceColor) {
-            meshRef.current.instanceColor.needsUpdate = true;
-        }
-    }, [colorObj]);
 
     useFrame(({ clock }) => {
         if (!meshRef.current) return;
         const t = clock.getElapsedTime();
-        floatingIconsData.forEach((icon, i) => {
-            const delay = i * 0.8;
+        positions.forEach((pos, i) => {
+            const delay = i * 1.2;
             tempObj.position.set(
-                icon.position[0] + Math.cos(t * 0.3 + delay) * 0.1,
-                icon.position[1] + Math.sin(t * 0.5 + delay) * 0.15,
-                icon.position[2]
+                pos[0] + Math.sin(t * 0.4 + delay) * 0.08,
+                pos[1] + Math.cos(t * 0.3 + delay) * 0.1,
+                pos[2]
             );
-            tempObj.rotation.set(t * 0.15 + delay, t * 0.2 + delay, 0);
+            tempObj.scale.setScalar(0.8 + Math.sin(t * 0.5 + delay) * 0.2);
             tempObj.updateMatrix();
             meshRef.current?.setMatrixAt(i, tempObj.matrix);
         });
         meshRef.current.instanceMatrix.needsUpdate = true;
     });
 
-    return <instancedMesh ref={meshRef} args={[geometry, material, floatingIconsData.length]} />;
+    return <instancedMesh ref={meshRef} args={[geometry, material, positions.length]} />;
 });
-InstancedFloatingIcons.displayName = 'InstancedFloatingIcons';
+FloatingDots.displayName = 'FloatingDots';
 
 const MobileAppScene: React.FC = () => {
     const phoneRef = useRef<THREE.Group>(null);
@@ -164,28 +144,28 @@ const MobileAppScene: React.FC = () => {
         const t = state.clock.getElapsedTime();
 
         if (groupRef.current) {
-            groupRef.current.position.y = Math.sin(t * 0.5) * 0.04;
+            groupRef.current.position.y = Math.sin(t * 0.4) * 0.03;
         }
 
         if (phoneRef.current) {
-            const autoRotX = Math.cos(t * 0.2) * 0.04;
-            const autoRotY = Math.sin(t * 0.3) * 0.06;
-            const mouseRotX = -(pointer.y * viewport.height / 2) * 0.02;
-            const mouseRotY = (pointer.x * viewport.width / 2) * 0.02;
+            const autoRotX = Math.cos(t * 0.15) * 0.03;
+            const autoRotY = Math.sin(t * 0.25) * 0.05;
+            const mouseRotX = -(pointer.y * viewport.height / 2) * 0.015;
+            const mouseRotY = (pointer.x * viewport.width / 2) * 0.015;
 
-            phoneRef.current.rotation.x = THREE.MathUtils.lerp(phoneRef.current.rotation.x, autoRotX + mouseRotX, 0.08);
-            phoneRef.current.rotation.y = THREE.MathUtils.lerp(phoneRef.current.rotation.y, autoRotY + mouseRotY, 0.08);
+            phoneRef.current.rotation.x = THREE.MathUtils.lerp(phoneRef.current.rotation.x, autoRotX + mouseRotX, 0.06);
+            phoneRef.current.rotation.y = THREE.MathUtils.lerp(phoneRef.current.rotation.y, autoRotY + mouseRotY, 0.06);
         }
     });
 
     return (
         <group ref={groupRef}>
-            <Float speed={1.2} rotationIntensity={0.1} floatIntensity={0.25}>
-                <group scale={1.15}>
+            <Float speed={1} rotationIntensity={0.05} floatIntensity={0.15}>
+                <group scale={1.2}>
                     {/* @ts-ignore */}
                     <PhoneDevice ref={phoneRef} />
-                    <InstancedFloatingIcons />
-                    <pointLight position={[0, 0, 1.2]} intensity={0.6} color="#8b5cf6" />
+                    <FloatingDots />
+                    <pointLight position={[0, 0, 1]} intensity={0.4} color="#6366f1" />
                 </group>
             </Float>
         </group>

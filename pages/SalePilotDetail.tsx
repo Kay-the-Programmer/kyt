@@ -70,6 +70,7 @@ const SalePilotDetail: React.FC = () => {
         const heroSection = container.querySelector('.detail-header');
         const heroTitleChars = container.querySelectorAll('.detail-header .letter-reveal');
         const heroDesc = container.querySelector('.header-desc');
+        const heroActions = container.querySelector('.header-actions');
         const heroBadge = container.querySelector('.header-badge');
         const backBtn = container.querySelector('.back-btn');
         const decorOrbs = container.querySelectorAll('.decor-orb');
@@ -87,6 +88,7 @@ const SalePilotDetail: React.FC = () => {
           });
         }
         if (heroDesc) gsap.set(heroDesc, { y: 50, opacity: 0, filter: isDesktop ? 'blur(12px)' : 'blur(6px)' });
+        if (heroActions) gsap.set(heroActions, { y: 40, opacity: 0 });
         if (backBtn) gsap.set(backBtn, { x: -40, opacity: 0 });
         if (decorOrbs.length > 0) gsap.set(decorOrbs, { scale: 0, opacity: 0 });
 
@@ -128,6 +130,15 @@ const SalePilotDetail: React.FC = () => {
             duration: baseDuration * 1.2,
             ease: 'power3.out'
           }, '-=0.8');
+        }
+
+        if (heroActions) {
+          heroTl.to(heroActions, {
+            y: 0,
+            opacity: 1,
+            duration: baseDuration * 1,
+            ease: 'power3.out'
+          }, '-=1.0');
         }
 
         // Decorative orbs animation
@@ -559,6 +570,18 @@ const SalePilotDetail: React.FC = () => {
           <p className="header-desc text-2xl md:text-4xl text-gray-500 dark:text-gray-400 font-light leading-relaxed max-w-5xl">
             Designing a central nervous system for retail. SalePilot bridges the gap between hardware precision and neural business intelligence.
           </p>
+
+          <div className="header-actions mt-12 flex flex-wrap gap-4">
+            <a
+              href="https://www.salepilot.space"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center space-x-3 px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-full font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-blue-600/10"
+            >
+              <span>Visit Live Platform</span>
+              <i className="fa-solid fa-arrow-up-right-from-square text-sm group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"></i>
+            </a>
+          </div>
         </header>
 
         {/* Hero Section with Floating UI */}

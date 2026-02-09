@@ -12,28 +12,27 @@ interface ServiceScene3DProps {
     isVisible?: boolean;
 }
 
-// Simple loading fallback
+// Minimal loading fallback
 const LoadingFallback = memo(() => {
     const meshRef = useRef<THREE.Mesh>(null);
+    const geometry = useMemo(() => new THREE.IcosahedronGeometry(0.4, 1), []);
 
     useFrame(({ clock }) => {
         if (meshRef.current) {
-            meshRef.current.rotation.y = clock.getElapsedTime() * 0.5;
+            meshRef.current.rotation.y = clock.getElapsedTime() * 0.4;
         }
     });
 
-    const geometry = useMemo(() => new THREE.IcosahedronGeometry(0.5, 1), []);
-
     return (
         <mesh ref={meshRef} geometry={geometry}>
-            <meshStandardMaterial color="#3b82f6" wireframe emissive="#1d4ed8" emissiveIntensity={0.5} />
+            <meshStandardMaterial color="#3b82f6" wireframe emissive="#1d4ed8" emissiveIntensity={0.4} />
         </mesh>
     );
 });
 
 LoadingFallback.displayName = 'LoadingFallback';
 
-// Smooth transition wrapper - no bounce, just linear fade
+// Transition wrapper with scale
 interface TransitionWrapperProps {
     isActive: boolean;
     children: React.ReactNode;
@@ -50,17 +49,15 @@ const TransitionWrapper = memo<TransitionWrapperProps>(({ isActive, children }) 
             targetScale.current = 1;
         } else {
             targetScale.current = 0;
-            const timer = setTimeout(() => setMounted(false), 500);
+            const timer = setTimeout(() => setMounted(false), 250);
             return () => clearTimeout(timer);
         }
     }, [isActive]);
 
     useFrame((_, delta) => {
         if (!groupRef.current) return;
-
-        // Simple smooth lerp - no bounce
         const currentScale = groupRef.current.scale.x;
-        const newScale = THREE.MathUtils.lerp(currentScale, targetScale.current, delta * 4);
+        const newScale = THREE.MathUtils.lerp(currentScale, targetScale.current, delta * 10);
         groupRef.current.scale.setScalar(Math.max(0.001, newScale));
     });
 
@@ -79,10 +76,15 @@ TransitionWrapper.displayName = 'TransitionWrapper';
 const SceneContent = memo<{ activeIndex: number }>(({ activeIndex }) => {
     return (
         <>
-            {/* Lighting - reduced intensity to balance with Environment */}
-            <ambientLight intensity={0.2} />
-            <directionalLight position={[5, 5, 5]} intensity={0.5} castShadow />
-            <directionalLight position={[-3, -3, 3]} intensity={0.2} color="#60a5fa" />
+            {/* Optimized lighting */}
+            <ambientLight intensity={0.5} />
+            <directionalLight
+                position={[8, 8, 8]}
+                intensity={0.9}
+                castShadow
+                shadow-mapSize={[512, 512]}
+            />
+            <pointLight position={[0, -1.5, 1.5]} intensity={0.4} color="#3b82f6" />
 
             {/* Scenes */}
             <TransitionWrapper isActive={activeIndex === 0}>
@@ -100,28 +102,27 @@ const SceneContent = memo<{ activeIndex: number }>(({ activeIndex }) => {
 
 SceneContent.displayName = 'SceneContent';
 
-// Smooth camera - no bounce
+// Camera with smooth transitions
 const AnimatedCamera = memo<{ activeIndex: number }>(({ activeIndex }) => {
     const cameraRef = useRef<THREE.PerspectiveCamera>(null);
     const targetPosition = useRef(new THREE.Vector3(0, 0, 4));
 
     useEffect(() => {
         const positions = [
-            new THREE.Vector3(0.1, 0.05, 4),
-            new THREE.Vector3(-0.05, 0.08, 3.9),
-            new THREE.Vector3(0.05, -0.05, 4.1),
+            new THREE.Vector3(0, 0, 4),
+            new THREE.Vector3(0, 0, 3.6),
+            new THREE.Vector3(0, 0, 4.2),
         ];
         targetPosition.current = positions[activeIndex] || positions[0];
     }, [activeIndex]);
 
     useFrame((_, delta) => {
         if (cameraRef.current) {
-            // Simple smooth lerp
-            cameraRef.current.position.lerp(targetPosition.current, delta * 3);
+            cameraRef.current.position.lerp(targetPosition.current, delta * 4);
         }
     });
 
-    return <PerspectiveCamera ref={cameraRef} makeDefault position={[0, 0, 4]} fov={45} />;
+    return <PerspectiveCamera ref={cameraRef} makeDefault position={[0, 0, 4.5]} fov={45} />;
 });
 
 AnimatedCamera.displayName = 'AnimatedCamera';
@@ -131,19 +132,20 @@ const RendererOptimizer: React.FC = () => {
     const { gl } = useThree();
 
     useEffect(() => {
-        gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        gl.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+        gl.shadowMap.enabled = true;
+        gl.shadowMap.type = THREE.PCFSoftShadowMap;
     }, [gl]);
 
     return null;
 };
 
-// Mobile auto-rotate optimized
+// Mobile auto-rotate
 const MobileAutoRotate = memo(() => {
     useFrame((state) => {
         const time = state.clock.getElapsedTime();
-        const radius = 4;
-        const speed = 0.2;
-        // Gentle rotation around Y axis
+        const radius = 3.8;
+        const speed = 0.15;
         state.camera.position.x = Math.sin(time * speed) * radius;
         state.camera.position.z = Math.cos(time * speed) * radius;
         state.camera.lookAt(0, 0, 0);
@@ -155,16 +157,16 @@ MobileAutoRotate.displayName = 'MobileAutoRotate';
 
 const ServiceScene3D: React.FC<ServiceScene3DProps> = ({ activeIndex, isMobile = false, isVisible = true }) => {
     return (
-        <div className="w-full h-full" style={{ minHeight: isMobile ? '300px' : '400px' }}>
+        <div className="w-full h-full" style={{ minHeight: isMobile ? '280px' : '450px' }}>
             <Canvas
-                dpr={[1, 2]}
+                dpr={[1, 1.5]}
                 gl={{
                     antialias: true,
                     alpha: true,
                     powerPreference: 'high-performance',
                     preserveDrawingBuffer: false,
                     toneMapping: THREE.ACESFilmicToneMapping,
-                    toneMappingExposure: 0.9
+                    toneMappingExposure: 1.1
                 }}
                 style={{ background: 'transparent' }}
                 frameloop={isVisible ? "always" : "never"}
@@ -174,21 +176,18 @@ const ServiceScene3D: React.FC<ServiceScene3DProps> = ({ activeIndex, isMobile =
                 <RendererOptimizer />
                 <AnimatedCamera activeIndex={activeIndex} />
 
-                {/* Global Environment */}
-                <Environment preset="city" blur={1} />
+                {/* Environment */}
+                <Environment preset="city" />
 
-                {/* Optimized Soft Contact Shadows */}
+                {/* Optimized Contact Shadows */}
                 <ContactShadows
                     opacity={0.35}
-                    scale={10}
-                    blur={2}
-                    far={2.5} // Reduce far plane
-                    resolution={128} // Reduce resolution for performance
+                    scale={8}
+                    blur={1.5}
+                    far={1.5}
+                    resolution={128}
                     color="#000000"
-                    frames={1} // Static bake for shadows to save generic perf, or keep infinite if movement is key.
-                // Since objects rotate/float, we might need frames={Infinity} or remove frames prop.
-                // Let's stick to lower resolution + default frames (Infinity) but limit updates if possible.
-                // Actually, let's use a trick: smoother shadows with less res
+                    frames={1}
                 />
 
                 <Suspense fallback={<LoadingFallback />}>
@@ -198,26 +197,25 @@ const ServiceScene3D: React.FC<ServiceScene3DProps> = ({ activeIndex, isMobile =
                 {!isMobile ? (
                     <OrbitControls
                         makeDefault
-                        enableZoom={true}
-                        minDistance={2.5}
-                        maxDistance={8}
+                        enableZoom={false}
+                        minDistance={3}
+                        maxDistance={5.5}
                         enablePan={false}
-                        maxPolarAngle={Math.PI / 1.5}
-                        minPolarAngle={Math.PI / 3.5}
-                        autoRotate={isVisible} // Only autorotate when visible
-                        autoRotateSpeed={0.5}
+                        maxPolarAngle={Math.PI / 1.8}
+                        minPolarAngle={Math.PI / 2.6}
+                        autoRotate={isVisible}
+                        autoRotateSpeed={0.35}
                         enableDamping
-                        dampingFactor={0.1}
-                        rotateSpeed={0.5}
-                        onStart={() => gl.setPixelRatio(Math.min(window.devicePixelRatio, 1))} // Regress on interaction
-                        onEnd={() => gl.setPixelRatio(Math.min(window.devicePixelRatio, 2))}
+                        dampingFactor={0.04}
+                        rotateSpeed={0.4}
                     />
                 ) : (
-                    isVisible && <MobileAutoRotate /> // Only run hook if visible
+                    isVisible && <MobileAutoRotate />
                 )}
             </Canvas>
         </div>
     );
 };
+
 
 export default memo(ServiceScene3D);

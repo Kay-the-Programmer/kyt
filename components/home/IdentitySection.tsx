@@ -8,13 +8,13 @@ gsap.registerPlugin(ScrollTrigger);
 
 const AUTO_ROTATE_INTERVAL = 5000;
 
-// Memoized Feature Item with enhanced design and accessibility
+// Premium Feature Card with glass morphism
 interface FeatureItemProps {
   item: { title: string; text: string; icon: string };
   index: number;
   isActive: boolean;
   onClick: (index: number) => void;
-  onHover: (index: number) => void; // still useful for desktop hover
+  onHover: (index: number) => void;
   featureRef: (el: HTMLDivElement | null) => void;
   progressRef?: React.RefObject<HTMLDivElement>;
 }
@@ -35,46 +35,64 @@ const FeatureItem = memo<FeatureItemProps>(({ item, index, isActive, onClick, on
       onClick={() => onClick(index)}
       onKeyDown={handleKeyDown}
       onMouseEnter={() => onHover(index)}
-      className={`feature-item group relative flex items-start gap-6 p-5 rounded-2xl cursor-pointer transition-all duration-500 will-change-transform outline-none focus:ring-2 focus:ring-blue-500/50 ${isActive
-        ? 'bg-gradient-to-r from-blue-50 to-indigo-50/50 dark:from-blue-950/40 dark:to-indigo-950/20 shadow-lg shadow-blue-500/5 translate-x-2 border-l-4 border-blue-500'
-        : 'hover:bg-gray-50/50 dark:hover:bg-gray-900/30 border-l-4 border-transparent'
+      className={`feature-item group relative flex items-start gap-5 p-6 rounded-2xl cursor-pointer transition-all duration-300 will-change-transform outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900 ${isActive
+        ? 'bg-gradient-to-br from-white/80 via-blue-50/60 to-indigo-50/40 dark:from-gray-800/80 dark:via-blue-950/40 dark:to-indigo-950/30 shadow-xl shadow-blue-500/10 dark:shadow-blue-500/5 scale-[1.02] border border-blue-200/50 dark:border-blue-700/30'
+        : 'bg-white/40 dark:bg-gray-800/20 hover:bg-white/70 dark:hover:bg-gray-800/40 border border-gray-100/50 dark:border-gray-700/20 hover:border-gray-200/70 dark:hover:border-gray-600/30 hover:shadow-lg hover:shadow-gray-500/5'
         }`}
+      style={{ backdropFilter: 'blur(12px)' }}
     >
-      {/* Glow accent for active state */}
+      {/* Animated gradient border for active */}
       {isActive && (
-        <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-blue-500/20 via-indigo-500/10 to-transparent opacity-50 blur-sm pointer-events-none" />
-      )}
-
-      {/* Active Progress Line (Desktop) */}
-      {isActive && (
-        <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-bl-2xl opacity-80 pointer-events-none overflow-hidden w-full">
-          <div ref={progressRef} className="h-full bg-white/30 w-full origin-left scale-x-0" />
+        <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-indigo-500/15 to-purple-500/10 animate-pulse" style={{ animationDuration: '3s' }} />
         </div>
       )}
 
+      {/* Progress indicator */}
+      {isActive && (
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-100 dark:bg-gray-700/50 rounded-b-2xl overflow-hidden">
+          <div ref={progressRef} className="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 origin-left scale-x-0" />
+        </div>
+      )}
+
+      {/* Icon */}
       <div
-        className={`feature-icon relative w-14 h-14 rounded-full flex items-center justify-center shrink-0 transition-all duration-500 ${isActive
-          ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30 -rotate-6 scale-110'
-          : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-blue-600 dark:text-blue-400 group-hover:border-blue-300 dark:group-hover:border-blue-700 group-hover:-rotate-6 group-hover:scale-105'
+        className={`feature-icon relative w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-300 ${isActive
+          ? 'bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 text-white shadow-lg shadow-blue-500/30 rotate-3'
+          : 'bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 text-gray-600 dark:text-gray-300 group-hover:from-blue-50 group-hover:to-indigo-50 dark:group-hover:from-blue-900/30 dark:group-hover:to-indigo-900/20 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:rotate-3'
           }`}
       >
-        <i className={`fa-solid ${item.icon} text-lg`} />
+        <i className={`fa-solid ${item.icon} text-xl`} />
         {isActive && (
-          <div className="absolute inset-0 rounded-full bg-white/20 animate-pulse" />
+          <div className="absolute inset-0 rounded-2xl bg-white/20 animate-ping opacity-30" style={{ animationDuration: '2s' }} />
         )}
       </div>
 
-      <div className="flex-1 relative z-10">
-        <div className="flex items-center gap-3 mb-2">
-          <h4 className={`font-bold text-lg md:text-xl tracking-tight transition-colors duration-300 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white'
+      {/* Content */}
+      <div className="flex-1 min-w-0 relative z-10">
+        <div className="flex items-center gap-2 mb-2">
+          <h4 className={`font-semibold text-lg tracking-tight transition-colors duration-200 ${isActive ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-200'
             }`}>
             {item.title}
           </h4>
+          {isActive && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400">
+              Active
+            </span>
+          )}
         </div>
-        <p className={`text-sm md:text-base leading-relaxed transition-colors duration-300 ${isActive ? 'text-gray-600 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'
+        <p className={`text-sm leading-relaxed transition-colors duration-200 ${isActive ? 'text-gray-600 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'
           }`}>
           {item.text}
         </p>
+      </div>
+
+      {/* Arrow indicator */}
+      <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${isActive
+        ? 'bg-blue-500 text-white'
+        : 'bg-gray-100 dark:bg-gray-700/50 text-gray-400 dark:text-gray-500 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 group-hover:text-blue-500'
+        }`}>
+        <i className={`fa-solid fa-arrow-right text-xs transition-transform duration-300 ${isActive ? 'translate-x-0.5' : 'group-hover:translate-x-0.5'}`} />
       </div>
     </div>
   );
@@ -82,6 +100,7 @@ const FeatureItem = memo<FeatureItemProps>(({ item, index, isActive, onClick, on
 
 FeatureItem.displayName = 'FeatureItem';
 
+// Smooth text reveal for mobile
 const TypewriterText = ({ text }: { text: string }) => {
   const [displayedText, setDisplayedText] = useState('');
 
@@ -92,28 +111,28 @@ const TypewriterText = ({ text }: { text: string }) => {
       setDisplayedText(text.substring(0, i + 1));
       i++;
       if (i === text.length) clearInterval(timer);
-    }, 30); // Speed of typing
+    }, 25);
     return () => clearInterval(timer);
   }, [text]);
 
   return <span>{displayedText}</span>;
 };
 
-// Optimized Mobile Title Component
+// Mobile title with animation
 const MobileTitle = memo(({ title }: { title: string }) => {
   const elRef = useRef<HTMLHeadingElement>(null);
 
   useLayoutEffect(() => {
     if (elRef.current) {
       gsap.fromTo(elRef.current,
-        { y: 15, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" }
+        { y: 12, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.35, ease: "power2.out" }
       );
     }
   }, [title]);
 
   return (
-    <h4 ref={elRef} className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
+    <h4 ref={elRef} className="text-xl font-semibold mb-3 text-gray-900 dark:text-white">
       <SplitText text={title} />
     </h4>
   );
@@ -136,11 +155,9 @@ const IdentitySection: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Track last transition time to prevent rapid-fire transitions
   const lastTransitionRef = useRef(0);
-  const TRANSITION_DEBOUNCE = 200;
+  const TRANSITION_DEBOUNCE = 150;
 
-  // Handle mobile detection safely
   useLayoutEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -148,36 +165,32 @@ const IdentitySection: React.FC = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Memoize features to prevent re-creation
   const features = useMemo(() => [
     {
-      title: 'Web/Desktop Applications',
-      text: 'Crafting performant web and desktop experiences that scale with your business needs.',
-      icon: 'fa-globe'
+      title: 'Web & Desktop Apps',
+      text: 'High-performance web and desktop experiences built to scale with your business.',
+      icon: 'fa-laptop-code'
     },
     {
       title: 'Mobile Applications',
-      text: 'Building native and cross-platform mobile apps that users love to engage with.',
-      icon: 'fa-mobile-screen'
+      text: 'Native and cross-platform mobile apps designed for engagement and retention.',
+      icon: 'fa-mobile-screen-button'
     },
     {
       title: 'AI Integration',
-      text: 'Embedding intelligent AI capabilities to automate workflows and enhance user experience.',
-      icon: 'fa-microchip'
+      text: 'Intelligent AI capabilities that automate workflows and elevate user experience.',
+      icon: 'fa-brain'
     }
   ], []);
 
-  // Enhanced transition animation with dynamic effects
   const animateTransition = useCallback((fromIndex: number, toIndex: number) => {
     const now = performance.now();
     if (now - lastTransitionRef.current < TRANSITION_DEBOUNCE) return;
     lastTransitionRef.current = now;
 
     const container = sceneContainerRef.current;
-    const fromFeature = featureRefs.current[fromIndex];
     const toFeature = featureRefs.current[toIndex];
 
-    // Use context if available to track these tweens
     const addTween = <T extends gsap.core.Tween | gsap.core.Timeline>(tween: T): T => {
       if (ctxRef.current && ctxRef.current.add) {
         ctxRef.current.add(() => tween);
@@ -189,71 +202,43 @@ const IdentitySection: React.FC = () => {
       defaults: { overwrite: 'auto' }
     }));
 
-    // Container glow pulse and scale effect
     if (container) {
       tl.to(container, {
-        scale: 0.95,
-        filter: 'brightness(1.3) blur(2px)',
-        duration: 0.15,
+        scale: 0.98,
+        duration: 0.08,
         ease: 'power2.in'
       })
         .to(container, {
-          scale: 1.02,
-          filter: 'brightness(1.1) blur(0px)',
-          duration: 0.25,
-          ease: 'elastic.out(1, 0.5)'
-        })
-        .to(container, {
           scale: 1,
-          filter: 'brightness(1) blur(0px)',
-          duration: 0.3,
+          duration: 0.12,
           ease: 'power2.out'
         });
     }
 
-    // Animate feature cards
-    if (fromFeature) {
-      tl.to(fromFeature, {
-        x: 0,
-        opacity: 0.7, // dim slightly
-        scale: 1,
-        duration: 0.3,
-        borderColor: 'transparent',
-        ease: 'power2.out'
-      }, 0);
-    }
-
     if (toFeature) {
-      // Highlight new one immediately for responsiveness
       const icon = toFeature.querySelector('.feature-icon');
-      // tl.to(toFeature, { ...opacity:1 ...}, 0) is handled by className transition mostly,
-      // but we can add pop effect here
       if (icon) {
         tl.fromTo(icon,
-          { scale: 0.8, rotation: -15 },
-          { scale: 1.1, rotation: 0, duration: 0.3, ease: 'back.out(2)' },
-          0.15
-        ).to(icon, { scale: 1, duration: 0.2 }, 0.45);
+          { scale: 0.85, rotation: -10 },
+          { scale: 1, rotation: 3, duration: 0.25, ease: 'back.out(1.5)' },
+          0.1
+        );
       }
     }
 
-    // Mobile Tabs Animation and Scrolling
     const mobileTabs = mobileTabRefs.current;
     if (mobileTabs[toIndex]) {
-      // Scroll Active Tab into view
       mobileTabs[toIndex]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
 
     setActiveImage(toIndex);
   }, []);
 
-  // Progress animation with DOM-only updates (no React state for performance)
   const startProgressAnimation = useCallback(() => {
     if (progressTweenRef.current) {
       progressTweenRef.current.kill();
     }
 
-    // Reset progress bar (using activeFeatureProgressRef which we attach dynamically or update via query)
     const progressBar = activeFeatureProgressRef.current;
     if (progressBar) {
       gsap.set(progressBar, { scaleX: 0 });
@@ -266,21 +251,18 @@ const IdentitySection: React.FC = () => {
       onUpdate: function () {
         if (activeFeatureProgressRef.current) {
           const progress = this.targets()[0].value;
-          // Invert the masking or just scale the bar
           activeFeatureProgressRef.current.style.transform = `scaleX(${progress})`;
         }
       }
     });
   }, []);
 
-  // Auto-rotation logic with cleanup - uses stable tick pattern
   const startAutoRotate = useCallback(() => {
     if (delayedCallRef.current) delayedCallRef.current.kill();
 
     startProgressAnimation();
 
     const tick = () => {
-      // Get current index outside of state setter for clarity
       const current = activeImage;
       const next = (current + 1) % features.length;
 
@@ -302,20 +284,13 @@ const IdentitySection: React.FC = () => {
       progressTweenRef.current.kill();
       progressTweenRef.current = null;
     }
-    // Pause progress bar visual
-    if (activeFeatureProgressRef.current) {
-      // Optionally freeze it or reset it. Let's keep it frozen to show pause
-      // gsap.set(activeFeatureProgressRef.current, { scaleX: 0 }); 
-    }
   }, []);
 
-  // Handle manual interaction (Click or Hover)
   const handleFeatureInteraction = useCallback((index: number) => {
     setIsPaused(true);
     stopAutoRotate();
     if (index !== activeImage) {
       animateTransition(activeImage, index);
-      // Reset progress bar
       if (activeFeatureProgressRef.current) {
         gsap.set(activeFeatureProgressRef.current, { scaleX: 0 });
       }
@@ -326,17 +301,14 @@ const IdentitySection: React.FC = () => {
     setIsPaused(false);
   }, []);
 
-  // Stable ref callback factory
   const setFeatureRef = useCallback((index: number) => (el: HTMLDivElement | null) => {
     featureRefs.current[index] = el;
   }, []);
 
-  // Main animation setup
   useLayoutEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
 
-    // Use GSAP's selector utility for efficient querying scoped to this component
     const q = gsap.utils.selector(section);
 
     ctxRef.current = gsap.context(() => {
@@ -350,109 +322,86 @@ const IdentitySection: React.FC = () => {
         const { isMobile, isReduced } = context.conditions as { isMobile: boolean, isReduced: boolean };
         const durationMult = isMobile ? 0.8 : 1;
 
-        // Background Animation (Continuous Bubble Drift)
-        gsap.to(q('.bg-bubble-1'), {
-          y: -50, x: 30, duration: 8, repeat: -1, yoyo: true, ease: "sine.inOut"
+        // Floating background orbs
+        gsap.to(q('.bg-orb-1'), {
+          y: -60, x: 40, rotation: 10, duration: 12, repeat: -1, yoyo: true, ease: "sine.inOut"
         });
-        gsap.to(q('.bg-bubble-2'), {
-          y: 40, x: -20, duration: 10, repeat: -1, yoyo: true, ease: "sine.inOut", delay: 1
+        gsap.to(q('.bg-orb-2'), {
+          y: 50, x: -30, rotation: -5, duration: 15, repeat: -1, yoyo: true, ease: "sine.inOut", delay: 2
+        });
+        gsap.to(q('.bg-orb-3'), {
+          y: -40, x: 25, duration: 10, repeat: -1, yoyo: true, ease: "sine.inOut", delay: 1
         });
 
-
-        // Master timeline for coordinated entrance
         const masterTl = gsap.timeline({
           scrollTrigger: {
             trigger: section,
-            start: isMobile ? 'top 70%' : 'top 80%', // Triggers earlier on mobile
+            start: isMobile ? 'top 75%' : 'top 80%',
             end: 'bottom 20%',
             toggleActions: 'play none none reverse',
           }
         });
 
-        // 0. Set Initial states (Hardware Acceleration)
-        gsap.set([q('.feature-item'), q('.image-reveal-wrapper'), badgeRef.current], {
+        gsap.set([q('.feature-item'), q('.scene-container'), badgeRef.current], {
           willChange: 'transform, opacity'
         });
 
-        // 1. Initial Badge Pop
-        masterTl.fromTo(q('.identity-intro-badge'),
+        masterTl.fromTo(q('.section-badge'),
           { opacity: 0, y: 20, scale: 0.9 },
-          { opacity: 1, y: 0, scale: 1, duration: 0.6 * durationMult, ease: 'back.out(1.7)' }
+          { opacity: 1, y: 0, scale: 1, duration: 0.5 * durationMult, ease: 'back.out(1.5)' }
         )
-
-          // 2. Title Stagger (Letters)
-          .fromTo(q('.identity-title .letter-reveal'),
-            { y: '120%', opacity: 0, rotateX: -60 },
+          .fromTo(q('.section-title .letter-reveal'),
+            { y: '100%', opacity: 0, rotateX: -45 },
             {
               y: '0%',
               opacity: 1,
               rotateX: 0,
-              stagger: isReduced ? 0 : (isMobile ? 0.015 : 0.03),
-              duration: 0.8 * durationMult,
+              stagger: isReduced ? 0 : (isMobile ? 0.012 : 0.025),
+              duration: 0.7 * durationMult,
               ease: 'power3.out'
             },
-            '-=0.4' // Overlap with badge
+            '-=0.3'
           )
-
-          // 3. Description Fade Up
-          .fromTo(q('.identity-description'),
-            { opacity: 0, y: 30 },
-            { opacity: 1, y: 0, duration: 0.8 * durationMult, ease: 'power2.out' },
-            '-=0.6'
+          .fromTo(q('.section-description'),
+            { opacity: 0, y: 25 },
+            { opacity: 1, y: 0, duration: 0.6 * durationMult, ease: 'power2.out' },
+            '-=0.5'
           )
-
-          // 4. Features Stagger
           .fromTo(q('.feature-item'),
-            { opacity: 0, x: -40 },
+            { opacity: 0, x: -30, y: 10 },
             {
               opacity: 1,
               x: 0,
-              stagger: isReduced ? 0 : (isMobile ? 0.08 : 0.12),
-              duration: 0.8 * durationMult,
+              y: 0,
+              stagger: isReduced ? 0 : (isMobile ? 0.06 : 0.1),
+              duration: 0.6 * durationMult,
               ease: 'power2.out',
-              clearProps: 'transform' // Clear transform after animation to avoid conflict with hover effects
+              clearProps: 'transform'
             },
-            '-=0.6'
+            '-=0.4'
           )
-
-          // 5. Image Reveal (Simultaneous with features)
-          .fromTo(q('.image-reveal-wrapper'),
+          .fromTo(q('.scene-container'),
             {
-              clipPath: 'inset(20% 0 20% 0 round 3rem)', // Vertical reveal feel
+              clipPath: 'inset(15% 0 15% 0 round 2rem)',
               opacity: 0,
-              scale: 0.95,
-              y: 40
+              scale: 0.96,
+              y: 30
             },
             {
-              clipPath: 'inset(0% 0% 0% 0% round 3rem)',
+              clipPath: 'inset(0% 0% 0% 0% round 2rem)',
               opacity: 1,
               scale: 1,
               y: 0,
-              duration: 1.2 * durationMult,
+              duration: 1 * durationMult,
               ease: 'expo.out'
             },
-            '<+=0.2' // Start slightly after features start
-          )
-
-          // 6. Stats Badge Pop
-          .fromTo(badgeRef.current,
-            { opacity: 0, scale: 0.5, rotation: -10 },
-            {
-              opacity: 1,
-              scale: 1,
-              rotation: 0,
-              duration: 0.8 * durationMult,
-              ease: 'elastic.out(1, 0.6)'
-            },
-            '-=0.8'
+            '<+=0.15'
           );
       });
 
-      // Parallax effects (separate scroll-bound triggers)
       mm.add("(min-width: 768px)", () => {
-        // Background Number Parallax
-        gsap.to(q('.identity-parallax-bg'), {
-          y: -150,
+        gsap.to(q('.parallax-text'), {
+          y: -120,
           ease: 'none',
           scrollTrigger: {
             trigger: section,
@@ -461,20 +410,6 @@ const IdentitySection: React.FC = () => {
             scrub: true
           }
         });
-
-        // Floating badge continuous hover effect (after entrance)
-        if (badgeRef.current) {
-          gsap.to(badgeRef.current, {
-            y: -15,
-            x: 5,
-            rotation: 2,
-            duration: 5,
-            repeat: -1,
-            yoyo: true,
-            ease: 'sine.inOut',
-            delay: 2 // Wait for entrance to finish
-          });
-        }
       });
 
     }, section);
@@ -482,20 +417,18 @@ const IdentitySection: React.FC = () => {
     return () => ctxRef.current?.revert();
   }, []);
 
-  // Intersection Observer for visibility
   useLayoutEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => setIsVisible(entry.isIntersecting),
-      { threshold: 0.15, rootMargin: '50px' }
+      { threshold: 0.1, rootMargin: '50px' }
     );
     observer.observe(section);
     return () => observer.disconnect();
   }, []);
 
-  // Rotation control effect
   useLayoutEffect(() => {
     if (isVisible && !isPaused) {
       startAutoRotate();
@@ -509,43 +442,52 @@ const IdentitySection: React.FC = () => {
     <section
       id="who-we-are"
       ref={sectionRef}
-      className="relative z-10 py-12 md:py-40 lg:py-56 px-6 border-t border-gray-100 dark:border-gray-900/30 overflow-hidden bg-transparent"
+      className="relative z-10 py-16 md:py-32 lg:py-40 px-6 overflow-hidden bg-gradient-to-b from-gray-50/50 via-white to-gray-50/30 dark:from-gray-900/50 dark:via-gray-950 dark:to-gray-900/30"
     >
-      {/* Background decorative elements with animation */}
+      {/* Premium background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div
-          className="identity-parallax-bg absolute top-0 -left-10 text-[30vw] font-black text-blue-600/[0.03] dark:text-white/[0.02] select-none tracking-tighter leading-none"
-        >
+        {/* Large parallax text */}
+        <div className="parallax-text absolute -top-20 -left-10 text-[25vw] font-black text-gray-900/[0.02] dark:text-white/[0.015] select-none tracking-tighter leading-none">
           01
         </div>
-        <div className="bg-bubble-1 absolute top-1/4 right-0 w-96 h-96 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-3xl opacity-60" />
-        <div className="bg-bubble-2 absolute bottom-1/4 left-0 w-64 h-64 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-3xl opacity-60" />
+
+        {/* Animated gradient orbs */}
+        <div className="bg-orb-1 absolute top-1/4 right-[10%] w-[500px] h-[500px] rounded-full blur-[100px] opacity-40 bg-gradient-to-br from-blue-400/30 via-indigo-400/20 to-purple-400/10 dark:from-blue-500/20 dark:via-indigo-500/15 dark:to-purple-500/10" />
+        <div className="bg-orb-2 absolute bottom-1/3 left-[5%] w-[400px] h-[400px] rounded-full blur-[80px] opacity-35 bg-gradient-to-tr from-indigo-400/25 via-purple-400/15 to-pink-400/10 dark:from-indigo-500/15 dark:via-purple-500/10 dark:to-pink-500/5" />
+        <div className="bg-orb-3 absolute top-2/3 right-1/4 w-[300px] h-[300px] rounded-full blur-[60px] opacity-30 bg-gradient-to-bl from-cyan-400/20 to-blue-400/15 dark:from-cyan-500/10 dark:to-blue-500/10" />
+
+        {/* Subtle grid pattern */}
+        <div className="absolute inset-0 opacity-[0.015] dark:opacity-[0.02]" style={{
+          backgroundImage: `linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)`,
+          backgroundSize: '60px 60px'
+        }} />
       </div>
 
-      <div className="max-w-7xl mx-auto flex flex-col lg:grid lg:grid-cols-2 gap-8 lg:gap-24 items-center relative z-10">
+      <div className="max-w-7xl mx-auto flex flex-col lg:grid lg:grid-cols-2 gap-10 lg:gap-20 items-center relative z-10">
 
         {/* MOBILE HEADER */}
-        <div className="lg:hidden w-full text-center mb-6 order-1">
-          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-900/50">
-            <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">What We Do</span>
+        <div className="lg:hidden w-full text-center mb-4 order-1">
+          <div className="section-badge inline-flex items-center gap-2 mb-5 px-4 py-2 rounded-full bg-white/80 dark:bg-gray-800/80 border border-gray-200/50 dark:border-gray-700/50 shadow-sm backdrop-blur-sm">
+            <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 animate-pulse" />
+            <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Our Services</span>
           </div>
-          <h3 className="text-4xl font-heading font-bold text-gray-900 dark:text-white leading-tight">
+          <h3 className="section-title text-4xl font-heading font-bold text-gray-900 dark:text-white leading-tight" style={{ perspective: '800px' }}>
             <SplitText text="Architecting" className="block" /> <br />
-            <SplitText isGradient={true} text="Solutions" />
+            <SplitText isGradient={true} text="Digital Solutions" />
           </h3>
         </div>
 
         {/* MOBILE TABS */}
-        <div className="lg:hidden w-full order-2 mb-8">
-          <div className="flex p-1.5 bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl border border-gray-200/50 dark:border-gray-700/50 overflow-x-auto no-scrollbar gap-1 shadow-inner scroll-smooth">
+        <div className="lg:hidden w-full order-2 mb-6">
+          <div className="flex p-1.5 bg-white/60 dark:bg-gray-800/60 backdrop-blur-md rounded-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-x-auto no-scrollbar gap-1.5 shadow-lg shadow-gray-500/5">
             {features.map((item, i) => (
               <button
                 key={i}
                 ref={(el) => { mobileTabRefs.current[i] = el; }}
                 onClick={() => handleFeatureInteraction(i)}
-                className={`flex-1 min-w-[100px] py-2.5 px-3 rounded-lg text-xs font-bold transition-all duration-300 whitespace-nowrap overflow-hidden ${activeImage === i
-                  ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm ring-1 ring-black/5 dark:ring-white/5'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-700/50'
+                className={`flex-1 min-w-[90px] py-3 px-4 rounded-xl text-xs font-semibold transition-all duration-200 whitespace-nowrap ${activeImage === i
+                  ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md shadow-blue-500/25'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100/50 dark:hover:bg-gray-700/30'
                   }`}
               >
                 {item.title.split(' ')[0]}
@@ -554,25 +496,26 @@ const IdentitySection: React.FC = () => {
           </div>
         </div>
 
-        {/* LEFT CONTENT - Desktop Only */}
+        {/* LEFT CONTENT - Desktop */}
         <div className="hidden lg:block">
-          <div ref={badgeRef} className="identity-intro-badge inline-flex items-center gap-3 mb-8 px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-900/50">
-            <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">What We Do</span>
+          <div ref={badgeRef} className="section-badge inline-flex items-center gap-3 mb-8 px-5 py-2.5 rounded-full bg-white/80 dark:bg-gray-800/80 border border-gray-200/50 dark:border-gray-700/50 shadow-lg shadow-gray-500/5 backdrop-blur-sm">
+            <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 animate-pulse" />
+            <span className="text-sm font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Our Services</span>
           </div>
 
           <h3
-            className="identity-title text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-heading font-bold mb-8 leading-[0.9] text-gray-900 dark:text-white tracking-tight"
+            className="section-title text-5xl md:text-6xl lg:text-7xl font-heading font-bold mb-6 leading-[0.95] text-gray-900 dark:text-white tracking-tight"
             style={{ perspective: '1000px' }}
           >
             <SplitText text="Architecting" className="block" /> <br />
-            <SplitText isGradient={true} text="Solutions" />
+            <SplitText isGradient={true} text="Digital Solutions" />
           </h3>
 
-          <p className="identity-description text-gray-600 dark:text-gray-400 text-lg lg:text-xl leading-relaxed mb-12 max-w-lg">
-            We craft powerfully productive systems that transform ideas into impactful solutions.
+          <p className="section-description text-gray-500 dark:text-gray-400 text-lg lg:text-xl leading-relaxed mb-10 max-w-lg">
+            We transform ambitious ideas into powerful digital products that drive growth and delight users.
           </p>
 
-          <div role="list" aria-label="Our Services" className="feature-list space-y-4" style={{ perspective: '800px' }}>
+          <div role="list" aria-label="Our Services" className="feature-list space-y-3">
             {features.map((item, i) => (
               <FeatureItem
                 key={i}
@@ -580,7 +523,7 @@ const IdentitySection: React.FC = () => {
                 index={i}
                 isActive={activeImage === i}
                 onClick={handleFeatureInteraction}
-                onHover={handleFeatureInteraction} // keep hover behavior on desktop
+                onHover={handleFeatureInteraction}
                 featureRef={setFeatureRef(i)}
                 progressRef={activeImage === i ? activeFeatureProgressRef : undefined}
               />
@@ -589,13 +532,11 @@ const IdentitySection: React.FC = () => {
         </div>
 
         {/* RIGHT 3D SCENE */}
-        <div className="relative w-full order-3 lg:order-none" style={{ perspective: '1200px' }}>
-          <div
-            className="image-reveal-wrapper relative aspect-square md:aspect-square lg:aspect-[4/5] rounded-[2rem] lg:rounded-[2.5rem] overflow-hidden bg-transparent shadow-2xl shadow-blue-900/10 dark:shadow-blue-900/20"
-          >
+        <div className="relative w-full order-3 lg:order-none">
+          <div className="scene-container relative aspect-square md:aspect-[4/4] lg:aspect-[4/5] rounded-3xl overflow-hidden bg-gradient-to-br from-gray-100/50 to-gray-50/30 dark:from-gray-800/50 dark:to-gray-900/30 shadow-2xl shadow-gray-900/10 dark:shadow-black/30 border border-gray-200/30 dark:border-gray-700/20">
             <div
               ref={sceneContainerRef}
-              className="w-full h-full overflow-hidden rounded-[2rem] lg:rounded-[2.5rem] relative cursor-grab active:cursor-grabbing touch-none"
+              className="w-full h-full overflow-hidden rounded-3xl relative cursor-grab active:cursor-grabbing touch-none"
               onMouseEnter={() => setIsPaused(true)}
               onMouseLeave={() => setIsPaused(false)}
               onTouchStart={() => setIsPaused(true)}
@@ -604,20 +545,31 @@ const IdentitySection: React.FC = () => {
               <ServiceScene3D activeIndex={activeImage} isMobile={isMobile} isVisible={isVisible} />
             </div>
 
-            {/* Mobile Description Overlay */}
-            <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-white/95 via-white/90 to-transparent dark:from-gray-950/95 dark:via-gray-900/90 pt-24 lg:hidden flex flex-col items-center text-center z-10 backdrop-blur-[2px]">
+            {/* Mobile info overlay */}
+            <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-white via-white/95 to-transparent dark:from-gray-950 dark:via-gray-950/95 pt-20 lg:hidden flex flex-col items-center text-center z-10">
               <MobileTitle title={features[activeImage].title} />
-              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed max-w-[280px] mx-auto min-h-[3rem] font-medium">
+              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed max-w-[260px] mx-auto min-h-[2.5rem]">
                 <TypewriterText text={features[activeImage].text} />
               </p>
-              <div className="mt-4 w-16 h-1 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 opacity-80"></div>
+              <div className="mt-5 flex gap-2">
+                {features.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleFeatureInteraction(i)}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${activeImage === i
+                      ? 'w-6 bg-gradient-to-r from-blue-500 to-indigo-500'
+                      : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
+                      }`}
+                  />
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Decorative rings - kept as is */}
-          <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] aspect-square pointer-events-none">
-            <div className="absolute inset-0 border border-blue-200/20 dark:border-blue-500/10 rounded-full animate-pulse" style={{ animationDuration: '4s' }} />
-            <div className="absolute inset-8 border border-indigo-200/15 dark:border-indigo-500/10 rounded-full animate-pulse" style={{ animationDuration: '3s', animationDelay: '0.5s' }} />
+          {/* Decorative elements */}
+          <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[115%] aspect-square pointer-events-none">
+            <div className="absolute inset-0 border border-gray-200/30 dark:border-gray-700/20 rounded-full" />
+            <div className="absolute inset-6 border border-gray-200/20 dark:border-gray-700/15 rounded-full" />
           </div>
         </div>
 

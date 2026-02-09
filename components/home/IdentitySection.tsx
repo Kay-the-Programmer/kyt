@@ -20,6 +20,42 @@ interface FeatureItemProps {
 }
 
 const FeatureItem = memo<FeatureItemProps>(({ item, index, isActive, onClick, onHover, featureRef, progressRef }) => {
+  const innerRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const card = innerRef.current;
+    if (!card || window.innerWidth < 1024) return;
+
+    const xTo = gsap.quickTo(card, "rotateY", { duration: 0.4, ease: "power2.out" });
+    const yTo = gsap.quickTo(card, "rotateX", { duration: 0.4, ease: "power2.out" });
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const xPercent = (x / rect.width - 0.5) * 2;
+      const yPercent = (y / rect.height - 0.5) * 2;
+
+      xTo(xPercent * 5); // Subtle 5deg tilt
+      yTo(-yPercent * 5);
+    };
+
+    const handleMouseLeave = () => {
+      xTo(0);
+      yTo(0);
+    };
+
+    card.addEventListener('mousemove', handleMouseMove, { passive: true });
+    card.addEventListener('mouseleave', handleMouseLeave, { passive: true });
+
+    return () => {
+      card.removeEventListener('mousemove', handleMouseMove);
+      card.removeEventListener('mouseleave', handleMouseLeave);
+      // Ensure it resets on unmount if it was in the middle of a tween
+      gsap.set(card, { rotateX: 0, rotateY: 0 });
+    };
+  }, []);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
@@ -29,7 +65,10 @@ const FeatureItem = memo<FeatureItemProps>(({ item, index, isActive, onClick, on
 
   return (
     <div
-      ref={featureRef}
+      ref={(el) => {
+        (innerRef as any).current = el;
+        featureRef(el);
+      }}
       role="button"
       tabIndex={0}
       onClick={() => onClick(index)}
@@ -39,7 +78,7 @@ const FeatureItem = memo<FeatureItemProps>(({ item, index, isActive, onClick, on
         ? 'bg-gradient-to-br from-white/80 via-blue-50/60 to-indigo-50/40 dark:from-gray-800/80 dark:via-blue-950/40 dark:to-indigo-950/30 shadow-xl shadow-blue-500/10 dark:shadow-blue-500/5 scale-[1.02] border border-blue-200/50 dark:border-blue-700/30'
         : 'bg-white/40 dark:bg-gray-800/20 hover:bg-white/70 dark:hover:bg-gray-800/40 border border-gray-100/50 dark:border-gray-700/20 hover:border-gray-200/70 dark:hover:border-gray-600/30 hover:shadow-lg hover:shadow-gray-500/5'
         }`}
-      style={{ backdropFilter: 'blur(12px)' }}
+      style={{ backdropFilter: 'blur(12px)', transformStyle: 'preserve-3d' }}
     >
       {/* Animated gradient border for active */}
       {isActive && (

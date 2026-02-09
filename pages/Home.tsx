@@ -9,6 +9,7 @@ import { useLazyRender } from '../hooks/useLazyRender';
 // Modular Components
 import InteractiveHeroBackground from '../components/home/InteractiveHeroBackground';
 import HeroSection from '../components/home/HeroSection';
+import StorytellingOverlay from '../components/home/StorytellingOverlay';
 // Lazy load non-critical sections
 const IdentitySection = React.lazy(() => import('../components/home/IdentitySection'));
 const PortfolioScroll = React.lazy(() => import('../components/home/PortfolioScroll'));
@@ -26,15 +27,20 @@ interface LazySectionProps {
   rootMargin?: string;
 }
 
-const LazySection: React.FC<LazySectionProps> = ({
+interface LazySectionInternalProps extends LazySectionProps {
+  id?: string;
+}
+
+const LazySection: React.FC<LazySectionInternalProps> = ({
   children,
   minHeight = 'min-h-screen',
-  rootMargin = '200px'
+  rootMargin = '200px',
+  id
 }) => {
   const { ref, shouldRender } = useLazyRender(rootMargin);
 
   return (
-    <div ref={ref} className={`section-reveal ${!shouldRender ? minHeight : ''}`}>
+    <div ref={ref} id={id} className={`section-reveal ${!shouldRender ? minHeight : ''}`}>
       {shouldRender ? (
         <React.Suspense fallback={
           <div className={`${minHeight} flex items-center justify-center`}>
@@ -203,27 +209,30 @@ const Home: React.FC = () => {
   return (
     <div ref={containerRef} className="relative bg-white dark:bg-brand-dark text-gray-900 dark:text-white transition-colors duration-500">
       <InteractiveHeroBackground />
+      <StorytellingOverlay />
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="hero-bg-glow absolute -top-[20%] -right-[10%] w-[100vw] h-[100vw] bg-blue-600/5 dark:bg-blue-500/10 rounded-full blur-[120px] opacity-0"></div>
         <div className="hero-bg-glow absolute -bottom-[30%] -left-[10%] w-[100vw] h-[100vw] bg-purple-600/5 dark:bg-purple-500/10 rounded-full blur-[150px] opacity-0"></div>
       </div>
 
       {/* Hero Section handles its own entrance */}
-      <HeroSection />
+      <div id="hero">
+        <HeroSection />
+      </div>
 
-      <LazySection minHeight="min-h-screen">
+      <LazySection id="identity" minHeight="min-h-screen">
         <IdentitySection />
       </LazySection>
 
-      <LazySection minHeight="min-h-screen">
+      <LazySection id="portfolio" minHeight="min-h-screen">
         <PortfolioScroll />
       </LazySection>
 
-      <LazySection minHeight="min-h-[50vh]">
+      <LazySection id="cta" minHeight="min-h-[50vh]">
         <CTASection />
       </LazySection>
 
-      <LazySection minHeight="min-h-[40vh]">
+      <LazySection id="footer" minHeight="min-h-[40vh]">
         <Footer />
       </LazySection>
     </div>

@@ -763,7 +763,7 @@ const SalePilotDetail: React.FC = () => {
         <section className="cta-section case-section mb-48 text-center" style={{ transformStyle: 'preserve-3d' }}>
           <h2 className="text-5xl md:text-[8rem] lg:text-[9rem] font-heading font-black mb-16 tracking-tighter text-gray-900 dark:text-white leading-[0.85]">
             <SplitText text="Let's Build your" className="block" /> <br />
-            <span className="gradient-text"><SplitText text="Masterpiece." /></span>
+            <SplitText isGradient={true} text="Masterpiece." />
           </h2>
           <Link
             ref={ctaButtonRef}

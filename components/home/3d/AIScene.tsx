@@ -1,214 +1,234 @@
 import React, { memo, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Float, Capsule } from "@react-three/drei";
+import { Float } from "@react-three/drei";
 import * as THREE from "three";
 
 // Minimalist materials
-const techMaterial = new THREE.MeshStandardMaterial({
-    color: "#cbd5e1",
-    metalness: 0.7,
-    roughness: 0.3,
+const coreMaterial = new THREE.MeshStandardMaterial({
+    color: "#18181b",
+    metalness: 0.9,
+    roughness: 0.1,
+    emissive: "#3b82f6",
+    emissiveIntensity: 0.15
 });
 
-const deviceBodyMaterial = new THREE.MeshStandardMaterial({
-    color: "#334155",
-    metalness: 0.5,
-    roughness: 0.4,
-});
-
-const screenMaterial = new THREE.MeshStandardMaterial({
-    color: "#0f172a",
-    emissive: "#1d4ed8",
-    emissiveIntensity: 0.15,
+const ringMaterial = new THREE.MeshStandardMaterial({
+    color: "#27272a",
+    metalness: 0.8,
     roughness: 0.2,
+    transparent: true,
+    opacity: 0.6
 });
 
-// Robot head - simplified for performance
-const RobotHead = memo(() => {
+// Central AI Core - minimalist brain/processor representation
+const AICore = memo(() => {
     const groupRef = useRef<THREE.Group>(null);
-    const eyesRef = useRef<THREE.Group>(null);
-    const coreRef = useRef<THREE.Mesh>(null);
+    const innerRef = useRef<THREE.Mesh>(null);
+    const pulseRef = useRef<THREE.Mesh>(null);
     const { pointer, viewport } = useThree();
 
     useFrame((state) => {
         const t = state.clock.getElapsedTime();
 
-        // Head follows mouse
         if (groupRef.current) {
-            const x = (pointer.x * viewport.width) / 4;
-            const y = (pointer.y * viewport.height) / 4;
-            groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, x * 0.15, 0.08);
-            groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, -y * 0.15, 0.08);
-            groupRef.current.position.y = Math.sin(t * 0.4) * 0.03;
+            const x = (pointer.x * viewport.width) / 5;
+            const y = (pointer.y * viewport.height) / 5;
+            groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, x * 0.12, 0.05);
+            groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, -y * 0.12, 0.05);
         }
 
-        // Blink effect
-        if (eyesRef.current) {
-            const blink = Math.random() > 0.985 ? 0.1 : 1;
-            eyesRef.current.scale.y = THREE.MathUtils.lerp(eyesRef.current.scale.y, blink, 0.25);
+        if (innerRef.current) {
+            innerRef.current.rotation.y = t * 0.3;
+            innerRef.current.rotation.z = t * 0.2;
         }
 
-        // Core rotation
-        if (coreRef.current) {
-            coreRef.current.rotation.y = t * 0.4;
+        if (pulseRef.current) {
+            const pulse = 1 + Math.sin(t * 2) * 0.05;
+            pulseRef.current.scale.setScalar(pulse);
         }
     });
 
     return (
         <group ref={groupRef}>
-            {/* Outer shell - simplified material */}
-            <Capsule args={[0.35, 0.45, 6, 24]}>
-                <meshStandardMaterial
-                    color="#e2e8f0"
-                    metalness={0.3}
-                    roughness={0.1}
-                    transparent
-                    opacity={0.85}
-                />
-            </Capsule>
+            {/* Outer ring */}
+            <mesh rotation={[Math.PI / 2, 0, 0]}>
+                <torusGeometry args={[0.5, 0.02, 16, 64]} />
+                <primitive object={ringMaterial} attach="material" />
+            </mesh>
 
-            {/* Core */}
-            <mesh ref={coreRef}>
-                <sphereGeometry args={[0.22, 24, 24]} />
+            {/* Inner rotating ring */}
+            <mesh ref={innerRef} rotation={[Math.PI / 3, 0, 0]}>
+                <torusGeometry args={[0.38, 0.015, 12, 48]} />
                 <meshStandardMaterial
-                    color="#1e293b"
-                    metalness={0.8}
-                    roughness={0.2}
+                    color="#3b82f6"
                     emissive="#3b82f6"
-                    emissiveIntensity={0.2}
+                    emissiveIntensity={0.4}
+                    transparent
+                    opacity={0.8}
                 />
             </mesh>
 
-            {/* Eyes */}
-            <group position={[0, 0.08, 0.28]} ref={eyesRef}>
-                <mesh position={[-0.1, 0, 0]}>
-                    <capsuleGeometry args={[0.035, 0.1, 4, 6]} />
-                    <meshBasicMaterial color="#06b6d4" />
-                </mesh>
-                <mesh position={[0.1, 0, 0]}>
-                    <capsuleGeometry args={[0.035, 0.1, 4, 6]} />
-                    <meshBasicMaterial color="#06b6d4" />
-                </mesh>
-            </group>
-
-            {/* Antennae */}
-            <mesh position={[0.38, 0.08, 0]} rotation={[0, 0, -0.35]}>
-                <cylinderGeometry args={[0.008, 0.04, 0.2]} />
-                <primitive object={techMaterial} attach="material" />
+            {/* Core sphere */}
+            <mesh ref={pulseRef}>
+                <icosahedronGeometry args={[0.22, 1]} />
+                <meshStandardMaterial
+                    color="#09090b"
+                    metalness={1}
+                    roughness={0.1}
+                    emissive="#6366f1"
+                    emissiveIntensity={0.3}
+                />
             </mesh>
-            <mesh position={[-0.38, 0.08, 0]} rotation={[0, 0, 0.35]}>
-                <cylinderGeometry args={[0.008, 0.04, 0.2]} />
-                <primitive object={techMaterial} attach="material" />
+
+            {/* Center glow */}
+            <mesh>
+                <sphereGeometry args={[0.1, 16, 16]} />
+                <meshBasicMaterial color="#60a5fa" transparent opacity={0.8} />
             </mesh>
         </group>
     );
 });
-RobotHead.displayName = "RobotHead";
+AICore.displayName = "AICore";
 
-// Device layout - reduced to 5 for minimalism
-type DeviceType = 'phone' | 'tablet';
-const deviceLayout: { type: DeviceType; pos: [number, number, number] }[] = [
-    { type: 'phone', pos: [-0.75, 0.35, 0.35] },
-    { type: 'phone', pos: [0.75, 0.35, 0.35] },
-    { type: 'tablet', pos: [-0.8, -0.3, 0.15] },
-    { type: 'tablet', pos: [0.8, -0.3, 0.15] },
-    { type: 'phone', pos: [0, -0.7, 0.3] },
+// Orbiting nodes - representing data/integration points
+const ORBIT_NODES = [
+    { radius: 0.85, speed: 0.4, offset: 0, size: 0.06 },
+    { radius: 0.85, speed: 0.4, offset: Math.PI * 0.66, size: 0.05 },
+    { radius: 0.85, speed: 0.4, offset: Math.PI * 1.33, size: 0.055 },
 ];
 
-// Instanced devices
-const InstancedDevices = memo(() => {
-    const phoneRef = useRef<THREE.InstancedMesh>(null);
-    const tabletRef = useRef<THREE.InstancedMesh>(null);
+const OrbitingNodes = memo(() => {
+    const meshRef = useRef<THREE.InstancedMesh>(null);
     const tempObj = useMemo(() => new THREE.Object3D(), []);
+    const geometry = useMemo(() => new THREE.SphereGeometry(1, 12, 12), []);
 
-    const phoneData = useMemo(() => deviceLayout.filter(d => d.type === 'phone'), []);
-    const tabletData = useMemo(() => deviceLayout.filter(d => d.type === 'tablet'), []);
-
-    const phoneGeometry = useMemo(() => new THREE.BoxGeometry(0.18, 0.35, 0.02), []);
-    const tabletGeometry = useMemo(() => new THREE.BoxGeometry(0.4, 0.28, 0.02), []);
+    const material = useMemo(() => new THREE.MeshStandardMaterial({
+        color: '#6366f1',
+        emissive: '#6366f1',
+        emissiveIntensity: 0.5,
+        metalness: 0.5,
+        roughness: 0.3
+    }), []);
 
     useFrame(({ clock }) => {
+        if (!meshRef.current) return;
         const t = clock.getElapsedTime();
 
-        if (phoneRef.current) {
-            phoneData.forEach((d, i) => {
-                tempObj.position.set(d.pos[0], d.pos[1] + Math.sin(t * 0.8 + i) * 0.03, d.pos[2]);
-                tempObj.rotation.y = t * 0.15 + i * 0.5;
-                tempObj.scale.setScalar(0.55);
-                tempObj.updateMatrix();
-                phoneRef.current?.setMatrixAt(i, tempObj.matrix);
-            });
-            phoneRef.current.instanceMatrix.needsUpdate = true;
-        }
+        ORBIT_NODES.forEach((node, i) => {
+            const angle = t * node.speed + node.offset;
+            tempObj.position.set(
+                Math.cos(angle) * node.radius,
+                Math.sin(t * 0.3 + i) * 0.1,
+                Math.sin(angle) * node.radius
+            );
+            tempObj.scale.setScalar(node.size);
+            tempObj.updateMatrix();
+            meshRef.current?.setMatrixAt(i, tempObj.matrix);
+        });
+        meshRef.current.instanceMatrix.needsUpdate = true;
+    });
 
-        if (tabletRef.current) {
-            tabletData.forEach((d, i) => {
-                tempObj.position.set(d.pos[0], d.pos[1] + Math.sin(t * 0.6 + i * 0.5) * 0.025, d.pos[2]);
-                tempObj.rotation.y = t * 0.1 + i * 0.4;
-                tempObj.scale.setScalar(0.55);
-                tempObj.updateMatrix();
-                tabletRef.current?.setMatrixAt(i, tempObj.matrix);
-            });
-            tabletRef.current.instanceMatrix.needsUpdate = true;
-        }
+    return <instancedMesh ref={meshRef} args={[geometry, material, ORBIT_NODES.length]} />;
+});
+OrbitingNodes.displayName = "OrbitingNodes";
+
+// Connection lines from core to orbiting nodes
+const ConnectionLines = memo(() => {
+    const meshRef = useRef<THREE.InstancedMesh>(null);
+    const tempObj = useMemo(() => new THREE.Object3D(), []);
+
+    const geometry = useMemo(() => {
+        const geo = new THREE.CylinderGeometry(0.003, 0.003, 1, 4);
+        geo.rotateX(Math.PI / 2);
+        geo.translate(0, 0, 0.5);
+        return geo;
+    }, []);
+
+    useFrame(({ clock }) => {
+        if (!meshRef.current) return;
+        const t = clock.getElapsedTime();
+
+        ORBIT_NODES.forEach((node, i) => {
+            const angle = t * node.speed + node.offset;
+            const endPos = new THREE.Vector3(
+                Math.cos(angle) * node.radius,
+                Math.sin(t * 0.3 + i) * 0.1,
+                Math.sin(angle) * node.radius
+            );
+
+            const dist = endPos.length();
+            tempObj.position.set(0, 0, 0);
+            tempObj.lookAt(endPos);
+            tempObj.scale.set(1, 1, dist);
+            tempObj.updateMatrix();
+            meshRef.current?.setMatrixAt(i, tempObj.matrix);
+        });
+        meshRef.current.instanceMatrix.needsUpdate = true;
     });
 
     return (
-        <>
-            <instancedMesh ref={phoneRef} args={[phoneGeometry, deviceBodyMaterial, phoneData.length]} />
-            <instancedMesh ref={tabletRef} args={[tabletGeometry, deviceBodyMaterial, tabletData.length]} />
-        </>
-    );
-});
-InstancedDevices.displayName = "InstancedDevices";
-
-// Static connections - no animation for performance
-const connectionGeometry = new THREE.CylinderGeometry(0.004, 0.004, 1, 6);
-connectionGeometry.rotateX(Math.PI / 2);
-connectionGeometry.translate(0, 0, 0.5);
-
-const Connections = memo(() => {
-    const meshRef = useRef<THREE.InstancedMesh>(null);
-    const temp = useMemo(() => new THREE.Object3D(), []);
-
-    const connections = useMemo(() =>
-        deviceLayout.map(d => ({
-            start: new THREE.Vector3(0, 0, 0),
-            end: new THREE.Vector3(...d.pos)
-        })),
-        []);
-
-    React.useLayoutEffect(() => {
-        if (!meshRef.current) return;
-        connections.forEach((conn, i) => {
-            const dist = conn.start.distanceTo(conn.end);
-            temp.position.copy(conn.start);
-            temp.lookAt(conn.end);
-            temp.scale.set(1, 1, dist);
-            temp.updateMatrix();
-            meshRef.current!.setMatrixAt(i, temp.matrix);
-        });
-        meshRef.current.instanceMatrix.needsUpdate = true;
-    }, [connections, temp]);
-
-    return (
-        <instancedMesh ref={meshRef} args={[connectionGeometry, undefined, connections.length]}>
-            <meshBasicMaterial color="#3b82f6" transparent opacity={0.25} depthWrite={false} />
+        <instancedMesh ref={meshRef} args={[geometry, undefined, ORBIT_NODES.length]}>
+            <meshBasicMaterial color="#3b82f6" transparent opacity={0.3} />
         </instancedMesh>
     );
 });
-Connections.displayName = "Connections";
+ConnectionLines.displayName = "ConnectionLines";
+
+// Subtle background particles
+const BackgroundParticles = memo(() => {
+    const meshRef = useRef<THREE.InstancedMesh>(null);
+    const tempObj = useMemo(() => new THREE.Object3D(), []);
+
+    const positions = useMemo(() => {
+        const pos: [number, number, number][] = [];
+        for (let i = 0; i < 8; i++) {
+            const theta = (i / 8) * Math.PI * 2;
+            const r = 1.1 + Math.random() * 0.3;
+            pos.push([Math.cos(theta) * r, (Math.random() - 0.5) * 0.6, Math.sin(theta) * r]);
+        }
+        return pos;
+    }, []);
+
+    const geometry = useMemo(() => new THREE.SphereGeometry(0.015, 6, 6), []);
+    const material = useMemo(() => new THREE.MeshBasicMaterial({
+        color: '#60a5fa',
+        transparent: true,
+        opacity: 0.4
+    }), []);
+
+    useFrame(({ clock }) => {
+        if (!meshRef.current) return;
+        const t = clock.getElapsedTime();
+
+        positions.forEach((pos, i) => {
+            tempObj.position.set(
+                pos[0] + Math.sin(t * 0.2 + i) * 0.05,
+                pos[1] + Math.cos(t * 0.3 + i * 0.5) * 0.08,
+                pos[2] + Math.sin(t * 0.25 + i * 0.3) * 0.05
+            );
+            const pulse = 0.8 + Math.sin(t * 0.5 + i) * 0.2;
+            tempObj.scale.setScalar(pulse);
+            tempObj.updateMatrix();
+            meshRef.current?.setMatrixAt(i, tempObj.matrix);
+        });
+        meshRef.current.instanceMatrix.needsUpdate = true;
+    });
+
+    return <instancedMesh ref={meshRef} args={[geometry, material, positions.length]} />;
+});
+BackgroundParticles.displayName = "BackgroundParticles";
 
 // Main scene
 const AIScene: React.FC = () => {
     return (
-        <Float speed={1.3} rotationIntensity={0.15} floatIntensity={0.3}>
-            <group scale={1.05}>
-                <RobotHead />
-                <InstancedDevices />
-                <Connections />
-                <pointLight position={[0, 0, 1.5]} intensity={1} color="#3b82f6" />
-                <pointLight position={[-1.5, 0.8, 0.8]} intensity={0.4} color="#a78bfa" />
+        <Float speed={1} rotationIntensity={0.08} floatIntensity={0.2}>
+            <group scale={1.1}>
+                <AICore />
+                <OrbitingNodes />
+                <ConnectionLines />
+                <BackgroundParticles />
+                <pointLight position={[0, 0, 1.5]} intensity={0.8} color="#3b82f6" />
+                <pointLight position={[1, 1, 0]} intensity={0.3} color="#8b5cf6" />
             </group>
         </Float>
     );

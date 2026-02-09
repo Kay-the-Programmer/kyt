@@ -27,6 +27,7 @@ const HeroSection = () => {
   const contentRef = useRef<HTMLDivElement>(null);
   const bgLayer1Ref = useRef<HTMLDivElement>(null);
   const bgLayer2Ref = useRef<HTMLDivElement>(null);
+  const scrollCueRef = useRef<HTMLDivElement>(null);
 
   // State refs to avoid frequent callback recreation
   const frameCountRef = useRef(0);
@@ -225,6 +226,44 @@ const HeroSection = () => {
           opacity: 1, y: 0, duration: 1.0 * durationMult, ease: 'back.out(1.7)'
         }, "-=0.6");
 
+      // Scroll cue entrance and pulse
+      const scrollCue = scrollCueRef.current;
+      if (scrollCue) {
+        tl.fromTo(scrollCue,
+          { opacity: 0, y: -20 },
+          { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' },
+          "-=0.3"
+        );
+
+        // Continuous pulse animation
+        gsap.to(scrollCue, {
+          y: 12,
+          opacity: 0.6,
+          duration: 1.2,
+          repeat: -1,
+          yoyo: true,
+          ease: 'sine.inOut'
+        });
+      }
+
+      // Scroll-linked exit animation - GPU-accelerated transforms only (no blur for performance)
+      if (content && !isMobile) {
+        gsap.to(content, {
+          y: -80,
+          opacity: 0,
+          scale: 0.95,
+          ease: 'none',
+          force3D: true,
+          scrollTrigger: {
+            trigger: section,
+            start: 'top top',
+            end: 'bottom 60%',
+            scrub: 0.8,
+            invalidateOnRefresh: true
+          }
+        });
+      }
+
     }, sectionRef); // Scope to section
 
     return () => mm.revert();
@@ -239,21 +278,41 @@ const HeroSection = () => {
     // Toggle class for CSS transforms
     title.classList.toggle("hover-active", isEnter);
 
-    // GSAP animation for letters
-    // Use cached refs if available, otherwise query
+    // GSAP animation for letters - wave effect
     const letters = letterRefs.current;
 
     if (letters && letters.length > 0) {
-      gsap.to(letters, {
-        rotateX: isEnter ? 360 : 0,
-        duration: 0.8,
-        ease: "power2.out",
-        stagger: {
-          each: 0.02,
-          from: "random"
-        },
-        overwrite: 'auto'
-      });
+      if (isEnter) {
+        // Wave animation - stagger creates flowing motion
+        gsap.to(letters, {
+          y: (i) => Math.sin(i * 0.5) * 15,
+          rotateX: 360,
+          scale: 1.05,
+          color: (i) => i % 2 === 0 ? '#2563eb' : undefined,
+          duration: 0.8,
+          ease: "power2.out",
+          stagger: {
+            each: 0.03,
+            from: "start"
+          },
+          overwrite: 'auto'
+        });
+      } else {
+        // Return to normal
+        gsap.to(letters, {
+          y: 0,
+          rotateX: 0,
+          scale: 1,
+          clearProps: 'color',
+          duration: 0.6,
+          ease: "power2.out",
+          stagger: {
+            each: 0.02,
+            from: "end"
+          },
+          overwrite: 'auto'
+        });
+      }
     }
   }, []);
 
@@ -318,6 +377,22 @@ const HeroSection = () => {
           >
             Explore More
           </button>
+        </div>
+
+        {/* Scroll Cue */}
+        <div
+          ref={scrollCueRef}
+          className="scroll-cue absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-0 cursor-pointer"
+          onClick={handleExploreClick}
+          role="button"
+          aria-label="Scroll to explore"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && handleExploreClick()}
+        >
+          <span className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">Scroll</span>
+          <div className="w-6 h-10 border-2 border-gray-300/50 dark:border-gray-600/50 rounded-full flex justify-center pt-2">
+            <div className="w-1.5 h-3 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full" />
+          </div>
         </div>
       </div>
     </section>

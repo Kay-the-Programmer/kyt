@@ -32,8 +32,10 @@
 
   /* Hide scrollbar for IE, Edge and Firefox */
   .no-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
   }
 
   /* Progress ring for stats */
@@ -57,6 +59,27 @@
   /* Magnetic hover effect */
   .magnetic-hover {
     transition: transform 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+  }
+
+  /* Scroll cue indicator */
+  .scroll-cue {
+    will-change: transform, opacity;
+    transition: opacity 0.3s ease;
+  }
+
+  .scroll-cue:hover {
+    opacity: 1 !important;
+  }
+
+  /* Storytelling overlay smooth transitions */
+  .storytelling-overlay {
+    will-change: transform, opacity;
+  }
+
+  /* Section dot glow on active */
+  .section-dot[aria-current="true"] {
+    box-shadow: 0 0 12px 2px rgba(37, 99, 235, 0.5);
+    background: linear-gradient(135deg, #2563eb, #7c3aed) !important;
   }
 }
 

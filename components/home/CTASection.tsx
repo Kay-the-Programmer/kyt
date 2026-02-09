@@ -220,7 +220,12 @@ const CTASection: React.FC = () => {
                   <stop offset="50%" stopColor="#2563eb" stopOpacity="0.5" />
                   <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
                 </linearGradient>
+                <radialGradient id="nodeGrad">
+                  <stop offset="0%" stopColor="#2563eb" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
+                </radialGradient>
               </defs>
+              {/* Data Stream Paths */}
               {[1, 2, 3, 4, 5].map((i) => {
                 const yPos = 100 + i * 80;
                 return (
@@ -235,6 +240,34 @@ const CTASection: React.FC = () => {
                   />
                 );
               })}
+              {/* Pulsing Node Network */}
+              {[
+                { cx: '15%', cy: '25%', r: 4 },
+                { cx: '30%', cy: '60%', r: 6 },
+                { cx: '45%', cy: '35%', r: 5 },
+                { cx: '60%', cy: '70%', r: 4 },
+                { cx: '75%', cy: '40%', r: 7 },
+                { cx: '85%', cy: '20%', r: 5 },
+                { cx: '20%', cy: '80%', r: 4 },
+                { cx: '70%', cy: '85%', r: 6 }
+              ].map((node, i) => (
+                <circle
+                  key={`node-${i}`}
+                  className="cta-node"
+                  cx={node.cx}
+                  cy={node.cy}
+                  r={node.r}
+                  fill="url(#nodeGrad)"
+                  style={{ animation: `pulse ${2 + i * 0.3}s ease-in-out infinite alternate` }}
+                />
+              ))}
+              {/* Connection Lines */}
+              <line x1="15%" y1="25%" x2="30%" y2="60%" stroke="#2563eb" strokeWidth="0.5" opacity="0.3" />
+              <line x1="30%" y1="60%" x2="45%" y2="35%" stroke="#2563eb" strokeWidth="0.5" opacity="0.3" />
+              <line x1="45%" y1="35%" x2="60%" y2="70%" stroke="#2563eb" strokeWidth="0.5" opacity="0.3" />
+              <line x1="60%" y1="70%" x2="75%" y2="40%" stroke="#2563eb" strokeWidth="0.5" opacity="0.3" />
+              <line x1="75%" y1="40%" x2="85%" y2="20%" stroke="#2563eb" strokeWidth="0.5" opacity="0.3" />
+              <line x1="20%" y1="80%" x2="70%" y2="85%" stroke="#2563eb" strokeWidth="0.5" opacity="0.3" />
             </svg>
             <div className="absolute inset-[-20%] bg-[radial-gradient(circle_at_center,#2563eb_1px,transparent_1px)] [background-size:60px_60px] opacity-20" />
             <div className="cta-orb absolute top-0 left-0 w-[60vw] h-[60vw] bg-blue-600/5 rounded-full blur-[150px]" />
@@ -277,11 +310,27 @@ const CTASection: React.FC = () => {
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-10 md:gap-14">
-                  <div className="cta-btn-wrap group/btn">
+                  <div className="cta-btn-wrap group/btn relative">
                     <Link
                       to="/contact"
-                      className="magnetic-area inline-flex px-16 py-8 bg-blue-600 text-white rounded-full font-black text-2xl shadow-4xl shadow-blue-600/30 transition-all duration-300 hover:scale-105 active:scale-95 flex items-center space-x-4 overflow-hidden"
+                      className="magnetic-area relative inline-flex px-16 py-8 bg-blue-600 text-white rounded-full font-black text-2xl shadow-4xl shadow-blue-600/30 transition-all duration-300 hover:scale-105 hover:shadow-blue-600/50 active:scale-95 flex items-center space-x-4 overflow-hidden"
+                      onClick={(e) => {
+                        // Create ripple effect
+                        const button = e.currentTarget;
+                        const rect = button.getBoundingClientRect();
+                        const ripple = document.createElement('span');
+                        ripple.className = 'absolute rounded-full bg-white/30 animate-ping';
+                        ripple.style.left = `${e.clientX - rect.left}px`;
+                        ripple.style.top = `${e.clientY - rect.top}px`;
+                        ripple.style.width = '20px';
+                        ripple.style.height = '20px';
+                        ripple.style.transform = 'translate(-50%, -50%)';
+                        button.appendChild(ripple);
+                        setTimeout(() => ripple.remove(), 600);
+                      }}
                     >
+                      {/* Glow ring on hover */}
+                      <span className="absolute inset-0 rounded-full border-2 border-white/0 group-hover/btn:border-white/20 transition-all duration-500" />
                       <span className="relative z-10">Initiate Project</span>
                       <i className="fa-solid fa-bolt-lightning text-lg group-hover/btn:translate-x-2 group-hover/btn:-translate-y-2 transition-transform duration-300" />
                     </Link>

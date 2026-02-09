@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useContext, useState } from 'react';
+import React, { useEffect, useRef, useContext, useState, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { TransitionContext, useTransition } from '../TransitionContext';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -64,6 +64,10 @@ const Home: React.FC = () => {
   const glowXTo = useRef<gsap.QuickToFunc | null>(null);
   const glowYTo = useRef<gsap.QuickToFunc | null>(null);
   useSharedMousePos();
+
+  // Scroll progress state for storytelling
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [activeSection, setActiveSection] = useState('Home');
 
   // SEO Configuration
   useSEO({
@@ -193,6 +197,35 @@ const Home: React.FC = () => {
         });
       }
 
+      // Global scroll progress tracker
+      ScrollTrigger.create({
+        trigger: container,
+        start: 'top top',
+        end: 'bottom bottom',
+        onUpdate: (self) => setScrollProgress(self.progress)
+      });
+
+      // Section tracking for active labels
+      const sectionMap = [
+        { id: 'hero', label: 'Home' },
+        { id: 'identity', label: 'What We Do' },
+        { id: 'portfolio', label: 'Portfolio' },
+        { id: 'cta', label: 'Contact' }
+      ];
+
+      sectionMap.forEach(({ id, label }) => {
+        const section = document.getElementById(id);
+        if (section) {
+          ScrollTrigger.create({
+            trigger: section,
+            start: 'top 50%',
+            end: 'bottom 50%',
+            onEnter: () => setActiveSection(label),
+            onEnterBack: () => setActiveSection(label)
+          });
+        }
+      });
+
       return () => {
         gsap.ticker.remove(updateGlow);
         window.removeEventListener('resize', handleResize);
@@ -213,6 +246,25 @@ const Home: React.FC = () => {
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="hero-bg-glow absolute -top-[20%] -right-[10%] w-[100vw] h-[100vw] bg-blue-600/5 dark:bg-blue-500/10 rounded-full blur-[120px] opacity-0"></div>
         <div className="hero-bg-glow absolute -bottom-[30%] -left-[10%] w-[100vw] h-[100vw] bg-purple-600/5 dark:bg-purple-500/10 rounded-full blur-[150px] opacity-0"></div>
+      </div>
+
+      {/* Scroll Progress Indicators */}
+      <div className="fixed top-0 left-0 right-0 h-[2px] z-50 pointer-events-none">
+        <div
+          className="h-full bg-gradient-to-r from-blue-600 to-purple-600 origin-left"
+          style={{ transform: `scaleX(${scrollProgress})` }}
+        />
+      </div>
+      <div className="fixed left-6 top-1/2 -translate-y-1/2 z-50 hidden lg:flex flex-col items-start gap-4">
+        <div className="relative h-32 w-[2px] bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
+          <div
+            className="absolute bottom-0 w-full bg-gradient-to-t from-blue-600 to-purple-600 rounded-full transition-all duration-300"
+            style={{ height: `${scrollProgress * 100}%` }}
+          />
+        </div>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 whitespace-nowrap">
+          {activeSection}
+        </span>
       </div>
 
       {/* Hero Section handles its own entrance */}

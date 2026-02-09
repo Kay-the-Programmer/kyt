@@ -116,19 +116,22 @@ const HeroSection = () => {
       // Logic checks using refs to avoid closure staleness
       if (isMobileRef.current) return;
 
-      // Frame skip
+      // Frame skip - run every 2nd frame for 30fps update on 60fps screens
+      // This significantly reduces GPU load while keeping motion smooth enough
       frameCountRef.current++;
       if (frameCountRef.current % 2 !== 0) return;
 
       if (!globalMousePos.active || !isInViewRef.current || isReducedMotionRef.current) return;
 
-      // Safety check for 0 division, though unlikely standard window
+      // Safety check for 0 division
       if (centerX === 0 || centerY === 0) return;
 
       const xRel = (globalMousePos.x - centerX) / centerX;
       const yRel = (globalMousePos.y - centerY) / centerY;
 
       const refs = quickToRefs.current;
+
+      // Batch updates
       refs.contentX?.(xRel * 12);
       refs.contentY?.(yRel * 12);
       refs.bg1X?.(-xRel * 35);

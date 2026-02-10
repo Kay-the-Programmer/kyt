@@ -19,7 +19,7 @@ const AnalyticsTracker = () => {
             ReactGA.initialize(trackingId);
             setInitialized(true);
             if (import.meta.env.DEV) {
-                console.log("✅ GA initialized with ID:", trackingId);
+                // Debug logging removed as per request
             }
         } else {
             console.warn("GA Measurement ID not found in environment variables.");

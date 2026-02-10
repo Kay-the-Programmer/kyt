@@ -19,7 +19,7 @@ export const trackEvent = (params: AnalyticsEventParams) => {
     try {
         ReactGA.event(params);
         if (import.meta.env.DEV) {
-            console.log("📊 [GA Event]:", params);
+            // Debug logging removed as per request
         }
     } catch (error) {
         console.error("Analytics Error:", error);

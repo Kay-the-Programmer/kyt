@@ -100,10 +100,11 @@ const Home: React.FC = () => {
   useSharedMousePos();
 
   // SEO Configuration
-  useSEO({
+  const { HelmetElement } = useSEO({
     title: 'Kytriq Technologies | Bringing Digital Ideas to Life',
     description: 'Kytriq Technologies is a software development company specializing in AI integration, web application development, mobile apps, and strategic digital design. We bring your digital ideas to life.',
     keywords: 'Kytriq, software development, AI integration, web development, digital transformation',
+    url: 'https://kytriq.com/'
   });
 
   useEffect(() => {
@@ -271,6 +272,7 @@ const Home: React.FC = () => {
 
   return (
     <div ref={containerRef} className="relative bg-white dark:bg-brand-dark text-gray-900 dark:text-white transition-colors duration-500">
+      {HelmetElement}
       <InteractiveHeroBackground />
       <AmbientParticles />
 

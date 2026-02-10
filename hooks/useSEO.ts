@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
+import React from 'react';
 
 interface SEOConfig {
     title: string;
@@ -10,8 +11,8 @@ interface SEOConfig {
 }
 
 /**
- * Custom hook to dynamically update SEO meta tags for each page.
- * Updates the document title and relevant meta tags when the component mounts.
+ * Custom hook to dynamically update SEO meta tags for each page using react-helmet-async.
+ * Returns a Helmet component to be rendered in the page.
  */
 export const useSEO = ({
     title,
@@ -21,67 +22,30 @@ export const useSEO = ({
     url,
     type = 'website'
 }: SEOConfig) => {
-    useEffect(() => {
-        // Update document title
-        const fullTitle = title.includes('Kytriq')
-            ? title
-            : `${title} | Kytriq Technologies`;
-        document.title = fullTitle;
+    const fullTitle = title.includes('Kytriq')
+        ? title
+        : `${title} | Kytriq Technologies`;
 
-        // Helper function to update or create meta tags
-        const updateMeta = (name: string, content: string, isProperty = false) => {
-            const attribute = isProperty ? 'property' : 'name';
-            let meta = document.querySelector(`meta[${attribute}="${name}"]`) as HTMLMetaElement;
-
-            if (meta) {
-                meta.content = content;
-            } else {
-                meta = document.createElement('meta');
-                meta.setAttribute(attribute, name);
-                meta.content = content;
-                document.head.appendChild(meta);
-            }
-        };
-
-        // Update title meta tags
-        updateMeta('title', fullTitle);
-        updateMeta('og:title', fullTitle, true);
-        updateMeta('twitter:title', fullTitle);
-
-        // Update description if provided
-        if (description) {
-            updateMeta('description', description);
-            updateMeta('og:description', description, true);
-            updateMeta('twitter:description', description);
-        }
-
-        // Update keywords if provided
-        if (keywords) {
-            updateMeta('keywords', keywords);
-        }
-
-        // Update image if provided
-        if (image) {
-            updateMeta('og:image', image, true);
-            updateMeta('twitter:image', image);
-        }
-
-        // Update URL if provided
-        if (url) {
-            updateMeta('og:url', url, true);
-            updateMeta('twitter:url', url);
-
-            // Update canonical link
-            let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
-            if (canonical) {
-                canonical.href = url;
-            }
-        }
-
-        // Update type
-        updateMeta('og:type', type, true);
-
-    }, [title, description, keywords, image, url, type]);
+    // We return a Helmet component instead of using useEffect
+    // This allows for better SSR and concurrent mode compatibility
+    return {
+        HelmetElement: React.createElement(Helmet, {}, [
+            React.createElement('title', { key: 'title' }, fullTitle),
+            React.createElement('meta', { key: 'meta-title', name: 'title', content: fullTitle }),
+            React.createElement('meta', { key: 'og-title', property: 'og:title', content: fullTitle }),
+            React.createElement('meta', { key: 'twitter-title', name: 'twitter:title', content: fullTitle }),
+            description && React.createElement('meta', { key: 'description', name: 'description', content: description }),
+            description && React.createElement('meta', { key: 'og-description', property: 'og:description', content: description }),
+            description && React.createElement('meta', { key: 'twitter-description', name: 'twitter:description', content: description }),
+            keywords && React.createElement('meta', { key: 'keywords', name: 'keywords', content: keywords }),
+            image && React.createElement('meta', { key: 'og-image', property: 'og:image', content: image }),
+            image && React.createElement('meta', { key: 'twitter-image', name: 'twitter:image', content: image }),
+            url && React.createElement('meta', { key: 'og-url', property: 'og:url', content: url }),
+            url && React.createElement('meta', { key: 'twitter-url', name: 'twitter:url', content: url }),
+            url && React.createElement('link', { key: 'canonical', rel: 'canonical', href: url }),
+            React.createElement('meta', { key: 'og-type', property: 'og:type', content: type }),
+        ].filter(Boolean))
+    };
 };
 
 export default useSEO;

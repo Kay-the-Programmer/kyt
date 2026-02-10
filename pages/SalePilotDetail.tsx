@@ -29,10 +29,11 @@ const problemItems = [
 ];
 
 const SalePilotDetail: React.FC = () => {
-  useSEO({
+  const { HelmetElement } = useSEO({
     title: 'SalePilot POS | Kytriq Technologies',
     description: 'SalePilot - our flagship intelligent POS system that bridges hardware precision and neural business intelligence. 40% throughput increase, 100% inventory accuracy.',
     keywords: 'SalePilot, POS system, retail management, inventory management, AI POS',
+    url: 'https://kytriq.com/projects/salepilot'
   });
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -536,6 +537,7 @@ const SalePilotDetail: React.FC = () => {
       className="min-h-screen pt-32 md:pt-48 bg-white dark:bg-brand-dark transition-colors duration-500 overflow-x-hidden"
       style={{ perspective: '2000px' }}
     >
+      {HelmetElement}
       {/* Parallax Grid Background */}
       <div
         className="parallax-grid fixed inset-0 opacity-[0.03] dark:opacity-[0.06] pointer-events-none z-0"

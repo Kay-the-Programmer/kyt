@@ -45,11 +45,12 @@ const Projects: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  useSEO({
+  const { HelmetElement } = useSEO({
     title: 'Projects | Kytriq Technologies',
     description:
       'Explore our selected work and flagship intelligent systems. We specialize in software designed for absolute stability and sub-millisecond precision.',
     keywords: 'software projects, case studies, SalePilot, POS system, portfolio',
+    url: 'https://kytriq.com/projects'
   });
 
   const prefersReducedMotion = useMemo(() => {
@@ -331,6 +332,7 @@ const Projects: React.FC = () => {
       ref={containerRef}
       className="min-h-screen pt-24 sm:pt-28 md:pt-44 pb-24 md:pb-32 px-5 sm:px-6 bg-white dark:bg-[#020202] transition-colors duration-500 overflow-x-hidden relative text-gray-900 dark:text-white"
     >
+      {HelmetElement}
       {/* Dynamic Background */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.22] -z-10 overflow-hidden">
         <div className="bg-node absolute top-[8%] left-[2%] w-[22rem] h-[22rem] sm:w-[28rem] sm:h-[28rem] border border-emerald-500/20 rounded-full blur-[110px] mix-blend-screen" />

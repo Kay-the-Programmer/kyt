@@ -197,10 +197,11 @@ const Services: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
 
   // SEO Configuration
-  useSEO({
+  const { HelmetElement } = useSEO({
     title: 'Services | Kytriq Technologies',
     description: 'Explore our elite software services: AI Integration, Web & Mobile Apps, Software Development, Strategic Design, Native Performance, and Security Core.',
     keywords: 'software services, AI integration, web development, mobile apps, UI/UX design, cybersecurity',
+    url: 'https://kytriq.com/services'
   });
 
   // Detect mobile on mount and resize
@@ -697,6 +698,7 @@ const Services: React.FC = () => {
 
   return (
     <div ref={containerRef} className="services-page min-h-screen pt-24 sm:pt-32 md:pt-40 lg:pt-48 pb-20 sm:pb-32 px-4 sm:px-6 bg-white dark:bg-brand-dark transition-colors duration-500 overflow-x-hidden relative">
+      {HelmetElement}
       {/* Cursor Glow */}
       <CursorGlow glowRef={cursorGlowRef} />
 

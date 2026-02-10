@@ -77,10 +77,11 @@ const About: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLElement>(null);
 
-  useSEO({
+  const { HelmetElement } = useSEO({
     title: 'About Us | Kytriq Technologies',
     description: 'Learn about Kytriq Technologies - a software development company with the heart of a pioneer and precision of a master engineer. We architect digital life.',
     keywords: 'about Kytriq, software company, AI solutions, digital innovation, tech startup',
+    url: 'https://kytriq.com/about'
   });
 
   // Memoized styles for parallax layers
@@ -451,6 +452,7 @@ const About: React.FC = () => {
       className="min-h-screen bg-white dark:bg-brand-dark transition-colors duration-300 overflow-x-hidden no-scrollbar"
       style={{ perspective: '2000px' }}
     >
+      {HelmetElement}
       {/* Parallax Background */}
       <div
         className="parallax-bg fixed inset-0 opacity-[0.03] dark:opacity-[0.08] pointer-events-none z-0"
@@ -538,7 +540,7 @@ const About: React.FC = () => {
                   </div>
 
                   <h3 className="card-title text-2xl md:text-4xl lg:text-5xl font-heading font-bold text-gray-900 dark:text-white mb-6 leading-tight">
-                    <SplitText text="Technology For" className="block" /> <br/>
+                    <SplitText text="Technology For" className="block" /> <br />
                     <span className="gradient-text"><SplitText text="Everyone" isGradient={true} /></span>
                   </h3>
 

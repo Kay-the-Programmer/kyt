@@ -598,7 +598,6 @@ const IdentitySection: React.FC = () => {
       <div className="max-w-7xl mx-auto flex flex-col lg:grid lg:grid-cols-2 gap-10 lg:gap-20 items-center relative z-10">
         <div className="lg:hidden w-full text-center mb-4 order-1">
           <div className="section-badge inline-flex items-center gap-2 mb-5 px-4 py-2 rounded-full bg-white/80 dark:bg-gray-800/80 border border-gray-200/50 dark:border-gray-700/50 shadow-sm backdrop-blur-sm">
-            <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 animate-pulse" />
             <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Our Services</span>
           </div>
           <h3 className="section-title text-4xl font-heading font-bold text-gray-900 dark:text-white leading-tight" style={{ perspective: '800px' }}>

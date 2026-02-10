@@ -1,7 +1,8 @@
 
 import React, { useEffect, useState, useRef, useLayoutEffect, Suspense } from 'react';
 import { TransitionContext, TransitionProvider, useTransition } from './TransitionContext';
-import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import Navbar from './components/Navbar';
 import AiAssistant from './components/AiAssistant';
 import ScrollToTopButton from './components/ScrollToTopButton';
@@ -160,12 +161,14 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <Router>
-      <TransitionProvider>
-        <AnalyticsTracker />
-        <AppContent />
-      </TransitionProvider>
-    </Router>
+    <HelmetProvider>
+      <Router>
+        <TransitionProvider>
+          <AnalyticsTracker />
+          <AppContent />
+        </TransitionProvider>
+      </Router>
+    </HelmetProvider>
   );
 };
 

@@ -367,6 +367,7 @@ const HeroSection = () => {
         <div className="hero-btns mt-8 sm:mt-10 md:mt-16 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-0 sm:space-x-8 px-4 sm:px-0">
           <Link
             to="/contact"
+            data-analytics="hero_build_cta"
             className="group relative overflow-hidden inline-block w-full sm:w-auto px-8 sm:px-12 py-4 sm:py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-bold transition-all duration-700 text-center shadow-3xl shadow-blue-500/30 hover:scale-105 active:scale-95"
           >
             <span className="relative z-10 text-base sm:text-lg flex items-center justify-center space-x-2">
@@ -377,6 +378,7 @@ const HeroSection = () => {
           <button
             className="group w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-transparent border border-gray-300/50 dark:border-gray-800 text-gray-700 dark:text-gray-300 rounded-full font-semibold transition-all duration-500 hover:border-blue-500 hover:text-blue-500 text-base sm:text-base"
             onClick={handleExploreClick}
+            data-analytics="hero_explore_more"
           >
             Explore More
           </button>

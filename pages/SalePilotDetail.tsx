@@ -6,6 +6,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Footer from '../components/Footer';
 import SplitText from '../components/SplitText';
 import { useSEO } from '../hooks/useSEO';
+import { trackOutboundLink } from '../utils/analytics';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -550,7 +551,7 @@ const SalePilotDetail: React.FC = () => {
         <div className="decor-orb absolute top-[60vh] left-1/4 w-64 h-64 bg-pink-500/8 rounded-full blur-[80px] -z-10" aria-hidden="true" />
 
         {/* Back Link */}
-        <Link to="/projects" className="back-btn group inline-flex items-center space-x-3 text-gray-400 hover:text-blue-600 mb-16 transition-all duration-300">
+        <Link to="/projects" data-analytics="back_to_projects" className="back-btn group inline-flex items-center space-x-3 text-gray-400 hover:text-blue-600 mb-16 transition-all duration-300">
           <div className="w-12 h-12 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center group-hover:border-blue-600 group-hover:-translate-x-2 group-hover:bg-blue-600/5 transition-all duration-300">
             <i className="fa-solid fa-arrow-left text-lg"></i>
           </div>
@@ -576,6 +577,8 @@ const SalePilotDetail: React.FC = () => {
               href="https://www.salepilot.space"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackOutboundLink('https://www.salepilot.space')}
+              data-analytics="visit_salepilot_live"
               className="group inline-flex items-center space-x-3 px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-full font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-blue-600/10"
             >
               <span>Visit Live Platform</span>
@@ -676,6 +679,7 @@ const SalePilotDetail: React.FC = () => {
                 <div
                   key={i}
                   ref={el => { if (el) featureCardsRef.current[i] = el; }}
+                  data-analytics={`feature_card_${feat.title.toLowerCase().replace(/\s+/g, '_')}`}
                   className="feature-card group p-10 bg-white dark:bg-gray-950/80 border border-gray-100 dark:border-gray-800 rounded-[2.5rem] transition-all duration-500 cursor-default"
                   style={{ transformStyle: 'preserve-3d' }}
                 >

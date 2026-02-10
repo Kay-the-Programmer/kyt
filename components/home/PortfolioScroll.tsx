@@ -5,6 +5,7 @@ import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
 import SalePilotPanel from './portfolio/SalePilotPanel';
 import { CursorGlow, ScrollDirectionIndicator, PortfolioProgressBar } from './portfolio/ScrollComponents';
 import { useSharedMousePos, globalMousePos } from '../../hooks/useSharedMousePos';
+import { trackScrollMilestone } from '../../utils/analytics';
 
 // Lazy load non-initial panels for viewport-based rendering
 const StatsPanel = React.lazy(() => import('./portfolio/StatsPanel'));
@@ -330,7 +331,8 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
               scrollTrigger: {
                 trigger: container,
                 start: "top 60%", // Triggers when top of container is 60% down viewport
-                toggleActions: "play none none reverse"
+                toggleActions: "play none none reverse",
+                onEnter: () => trackScrollMilestone('portfolio_start')
               }
             });
 
@@ -387,7 +389,8 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
                 start: 'left left', // When panel left edge hits viewport left
                 end: 'right left', // When panel right edge hits viewport left
                 scrub: true,
-                invalidateOnRefresh: true
+                invalidateOnRefresh: true,
+                onEnter: () => trackScrollMilestone('portfolio_salepilot')
               }
             });
 
@@ -421,7 +424,8 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
                 start: "left 70%",
                 end: "left 40%",
                 scrub: 1,
-                invalidateOnRefresh: true
+                invalidateOnRefresh: true,
+                onEnter: () => trackScrollMilestone(`portfolio_panel_${i}`)
               }
             }
           );

@@ -5,6 +5,7 @@ import { TransitionContext, useTransition } from '../TransitionContext';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useSEO } from '../hooks/useSEO';
 import { useLazyRender } from '../hooks/useLazyRender';
+import { trackScrollMilestone } from '../utils/analytics';
 
 // Modular Components
 import InteractiveHeroBackground from '../components/home/InteractiveHeroBackground';
@@ -213,6 +214,8 @@ const Home: React.FC = () => {
         { id: 'cta', label: 'Contact' }
       ];
 
+      const trackedSections = new Set<string>();
+
       sectionMap.forEach(({ id, label }) => {
         const section = document.getElementById(id);
         if (section) {
@@ -220,7 +223,15 @@ const Home: React.FC = () => {
             trigger: section,
             start: 'top 50%',
             end: 'bottom 50%',
-            onEnter: () => setActiveSection(label),
+            onEnter: () => {
+              setActiveSection(label);
+              // Track milestone when entering a section (only once)
+              const sectionSlug = label.toLowerCase().replace(/\s+/g, '_');
+              if (!trackedSections.has(sectionSlug)) {
+                trackedSections.add(sectionSlug);
+                trackScrollMilestone(sectionSlug);
+              }
+            },
             onEnterBack: () => setActiveSection(label)
           });
         }

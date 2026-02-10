@@ -389,6 +389,7 @@ const Navbar: React.FC<NavbarProps> = ({ onAiToggle, isAiOpen }) => {
             >
               <Link
                 to={link.path}
+                data-analytics={`nav_${link.name.toLowerCase()}`}
                 className={`dock-link group relative flex items-center justify-center w-full h-full rounded-2xl transition-all duration-300 ${isActive(link.path)
                   ? `bg-gradient-to-br ${link.gradient} shadow-lg ring-2 ring-white/20`
                   : 'bg-white/60 dark:bg-gray-800/60 hover:bg-white/90 dark:hover:bg-gray-700/80'
@@ -427,6 +428,7 @@ const Navbar: React.FC<NavbarProps> = ({ onAiToggle, isAiOpen }) => {
               {action.isAction ? (
                 <button
                   onClick={action.onClick}
+                  data-analytics={`dock_action_${action.name.toLowerCase().replace(/\s+/g, '_')}`}
                   className={`dock-link group relative flex items-center justify-center w-full h-full rounded-2xl bg-gradient-to-br ${action.gradient} text-white shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group-active:scale-95`}
                   aria-label={action.name}
                 >
@@ -442,6 +444,7 @@ const Navbar: React.FC<NavbarProps> = ({ onAiToggle, isAiOpen }) => {
                   href={action.href}
                   target={action.external ? '_blank' : undefined}
                   rel={action.external ? 'noopener noreferrer' : undefined}
+                  data-analytics={`dock_external_${action.name.toLowerCase().replace(/\s+/g, '_')}`}
                   className={`dock-link group relative flex items-center justify-center w-full h-full rounded-2xl bg-gradient-to-br ${action.gradient} text-white shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group-active:scale-95`}
                   aria-label={action.name}
                 >

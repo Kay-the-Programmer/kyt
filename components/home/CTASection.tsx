@@ -313,6 +313,7 @@ const CTASection: React.FC = () => {
                   <div className="cta-btn-wrap group/btn relative">
                     <Link
                       to="/contact"
+                      data-analytics="home_cta_initiate"
                       className="magnetic-area relative inline-flex px-16 py-8 bg-blue-600 text-white rounded-full font-black text-2xl shadow-4xl shadow-blue-600/30 transition-all duration-300 hover:scale-105 hover:shadow-blue-600/50 active:scale-95 flex items-center space-x-4 overflow-hidden"
                       onClick={(e) => {
                         // Create ripple effect

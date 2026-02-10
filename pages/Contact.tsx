@@ -20,6 +20,7 @@ const ContactCard: React.FC<{
   const content = (
     <div
       ref={cardRef}
+      data-analytics={`contact_method_${value.toLowerCase().replace(/\s+/g, '_')}`}
       className="contact-card relative p-8 md:p-10 rounded-[2.5rem] bg-gray-50/50 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-800 backdrop-blur-xl group transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10 dark:hover:shadow-blue-500/5 cursor-pointer overflow-hidden"
     >
       {/* HUD Decorative Elements */}

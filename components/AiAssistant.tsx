@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 // GoogleGenAI will be imported dynamically
 import { gsap } from 'gsap';
+import { trackEvent, trackInteraction, trackFormInteraction } from '../utils/analytics';
 
 interface AiAssistantProps {
   isOpen: boolean;
@@ -20,6 +21,9 @@ const AiAssistant: React.FC<AiAssistantProps> = ({ isOpen, onToggle }) => {
   useEffect(() => {
     if (isOpen) {
       gsap.fromTo(chatRef.current, { scale: 0.8, opacity: 0, y: 20 }, { scale: 1, opacity: 1, y: 0, duration: 0.4, ease: 'back.out(1.7)' });
+      trackInteraction('ai_assistant', 'open');
+    } else {
+      trackInteraction('ai_assistant', 'close');
     }
   }, [isOpen]);
 
@@ -27,13 +31,20 @@ const AiAssistant: React.FC<AiAssistantProps> = ({ isOpen, onToggle }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const sendMessage = async () => {
+  const sendMessage = async (method: 'click' | 'enter' = 'click') => {
     if (!input.trim() || isTyping) return;
 
     const userMsg = input.trim();
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setInput('');
     setIsTyping(true);
+
+    trackEvent({
+      category: 'ai_assistant',
+      action: 'message_sent',
+      label: userMsg.slice(0, 50),
+      method: method
+    });
 
     try {
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
@@ -60,10 +71,22 @@ const AiAssistant: React.FC<AiAssistantProps> = ({ isOpen, onToggle }) => {
 
       const aiText = response.text || "I'm sorry, I couldn't process that. Can you try again?";
       setMessages(prev => [...prev, { role: 'model', text: aiText }]);
+
+      trackEvent({
+        category: 'ai_assistant',
+        action: 'message_success',
+        label: 'response_received'
+      });
     } catch (error: any) {
       console.error(error);
       let errorMessage = "Service is temporarily unavailable. Please contact us directly!";
       setMessages(prev => [...prev, { role: 'model', text: errorMessage }]);
+
+      trackEvent({
+        category: 'ai_assistant',
+        action: 'message_error',
+        label: error.message || 'unknown_error'
+      });
     } finally {
       setIsTyping(false);
     }
@@ -80,7 +103,7 @@ const AiAssistant: React.FC<AiAssistantProps> = ({ isOpen, onToggle }) => {
               </div>
               <span className="font-heading font-bold dark:text-white">Kytriq AI</span>
             </div>
-            <button onClick={onToggle} className="text-gray-400 hover:text-gray-600 dark:hover:text-white">
+            <button onClick={onToggle} className="text-gray-400 hover:text-gray-600 dark:hover:text-white" data-analytics="close_ai_assistant">
               <i className="fa-solid fa-xmark"></i>
             </button>
           </div>
@@ -115,13 +138,15 @@ const AiAssistant: React.FC<AiAssistantProps> = ({ isOpen, onToggle }) => {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+              onKeyDown={(e) => e.key === 'Enter' && sendMessage('enter')}
+              onFocus={() => trackFormInteraction('ai_assistant_input', 'focus')}
               placeholder="Ask me anything..."
               className="flex-grow bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-full px-4 py-2 text-sm outline-none focus:border-blue-500 dark:text-white"
             />
             <button
-              onClick={sendMessage}
+              onClick={() => sendMessage('click')}
               disabled={isTyping}
+              data-analytics="send_message"
               className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-blue-500/20 active:scale-95 transition-transform"
             >
               <i className="fa-solid fa-paper-plane text-xs"></i>

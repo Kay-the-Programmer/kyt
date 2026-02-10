@@ -369,6 +369,8 @@ const Projects: React.FC = () => {
 
               <div
                 onClick={() => navigate(`/projects/${project.slug}`)}
+                data-analytics={`view_project_${project.slug}`}
+                data-analytics-category="project_card"
                 className="relative flex flex-col w-full
                            h-[560px] sm:h-[620px] md:h-[820px] lg:h-[920px]
                            bg-gray-50 dark:bg-zinc-950/40
@@ -437,7 +439,7 @@ const Projects: React.FC = () => {
                         ))}
                       </div>
 
-                      <div className="reveal-item flex items-center group/btn pointer-events-auto">
+                      <div className="reveal-item flex items-center group/btn pointer-events-auto" data-analytics={`view_project_btn_${project.slug}`}>
                         <div
                           className="px-7 sm:px-10 md:px-12 py-4 sm:py-5 md:py-6 bg-emerald-600 text-white rounded-full font-black
                                      text-base sm:text-lg md:text-xl shadow-[0_18px_40px_-12px_rgba(5,150,105,0.45)]
@@ -487,6 +489,7 @@ const Projects: React.FC = () => {
           </h2>
           <button
             onClick={() => navigate('/contact')}
+            data-analytics="projects_contact_cta"
             className="magnetic-area px-10 sm:px-14 md:px-20 py-4 sm:py-5 md:py-7 bg-emerald-600 text-white rounded-full font-black
                        text-base sm:text-lg md:text-2xl shadow-[0_25px_60px_-20px_rgba(5,150,105,0.55)]
                        hover:scale-[1.03] transition-all active:scale-95"

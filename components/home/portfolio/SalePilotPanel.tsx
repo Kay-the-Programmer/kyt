@@ -184,7 +184,7 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
                         Retail Management System
                     </h3>
                     <p className="text-gray-500 dark:text-gray-400 text-base sm:text-lg md:text-xl font-light leading-relaxed max-w-xl mb-8 sm:mb-12 reveal-target">
-                        The <span className="text-blue-600 font-bold">Next generation</span> retail management system designed to streamline operations and provide actionable insights for business owners.
+                        A <span className="text-blue-600 font-bold">Next generation</span> retail management system designed to streamline operations and provide actionable insights for business owners.
                     </p>
                     <div className="reveal-target">
                         <Link to="/projects/salepilot" className="magnetic-area inline-flex items-center space-x-4 sm:space-x-6 group">
@@ -215,7 +215,7 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
                     >
                         <i className="fa-solid fa-brain text-blue-500 text-2xl sm:text-3xl lg:text-5xl mb-3 sm:mb-4 lg:mb-6 lg:group-hover:scale-105 transition-transform" />
                         <span className="text-[7px] sm:text-[8px] lg:text-xs font-black uppercase tracking-[0.3em] sm:tracking-[0.4em] text-center text-white dark:text-gray-900 leading-relaxed">
-                            Intelligent <br /> POS
+                            All in one <br /> POS
                         </span>
                     </div>
                 </div>

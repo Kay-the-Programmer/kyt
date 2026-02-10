@@ -110,13 +110,14 @@ const Home: React.FC = () => {
     const container = containerRef.current;
     if (!container) return;
 
-    // Track visibility for performance optimization
+    // Track visibility for Hero specifically for performance optimization
     let isGlowVisible = true;
+    const heroElement = document.getElementById('hero');
     const visibilityObserver = new IntersectionObserver(
       ([entry]) => { isGlowVisible = entry.isIntersecting; },
       { threshold: 0.1, rootMargin: '100px' }
     );
-    visibilityObserver.observe(container);
+    if (heroElement) visibilityObserver.observe(heroElement);
 
     const ctx = gsap.context(() => {
       const glows = document.querySelectorAll('.hero-bg-glow');
@@ -165,11 +166,10 @@ const Home: React.FC = () => {
       const tl = gsap.timeline({ delay: isPageTransition ? 0.6 : 0.02 });
 
       tl.fromTo('.hero-bg-glow',
-        { opacity: 0, scale: 0.85, filter: 'blur(160px)' },
+        { opacity: 0, scale: 0.85 },
         {
           opacity: (i) => i === 0 ? 0.35 : 0.18,
           scale: 1,
-          filter: 'blur(120px)',
           duration: 1.8,
           stagger: 0.2,
           ease: 'power2.out'
@@ -272,11 +272,6 @@ const Home: React.FC = () => {
   return (
     <div ref={containerRef} className="relative bg-white dark:bg-brand-dark text-gray-900 dark:text-white transition-colors duration-500">
       <InteractiveHeroBackground />
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="hero-bg-glow absolute -top-[20%] -right-[10%] w-[100vw] h-[100vw] bg-blue-600/5 dark:bg-blue-500/10 rounded-full blur-[120px] opacity-0"></div>
-        <div className="hero-bg-glow absolute -bottom-[30%] -left-[10%] w-[100vw] h-[100vw] bg-purple-600/5 dark:bg-purple-500/10 rounded-full blur-[150px] opacity-0"></div>
-      </div>
-
       <AmbientParticles />
 
       {/* Hero Section handles its own entrance */}

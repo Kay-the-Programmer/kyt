@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback, useMemo, memo } from 'react';
+import React, { useEffect, useRef, useCallback, useMemo, memo, useState } from 'react';
 import { useSharedMousePos, globalMousePos } from '../../hooks/useSharedMousePos';
 
 interface Particle {
@@ -43,6 +43,7 @@ const InteractiveHeroBackground: React.FC = memo(() => {
   const rafRef = useRef<number>(0);
   const lastFrameTimeRef = useRef(0);
   const isVisibleRef = useRef(true);
+  const [isVisible, setIsVisible] = useState(true);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const dimensionsRef = useRef({ width: 0, height: 0 });
@@ -207,6 +208,7 @@ const InteractiveHeroBackground: React.FC = memo(() => {
     observerRef.current = new IntersectionObserver(
       ([entry]) => {
         isVisibleRef.current = entry.isIntersecting;
+        setIsVisible(entry.isIntersecting);
       },
       { threshold: 0 }
     );
@@ -358,15 +360,15 @@ const InteractiveHeroBackground: React.FC = memo(() => {
   }, [createParticles, drawShape]);
 
   return (
-    <>
+    <div className={!isVisible ? 'bg-paused' : ''}>
       <canvas
         ref={canvasRef}
         className="fixed inset-0 z-0 pointer-events-none"
         aria-hidden="true"
       />
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        <div className="orb-1 absolute w-[100vw] h-[100vw] rounded-full blur-[120px] opacity-20 dark:opacity-10 bg-blue-600/10 top-[-20%] right-[-10%]" />
-        <div className="orb-2 absolute w-[100vw] h-[100vw] rounded-full blur-[150px] opacity-20 dark:opacity-10 bg-purple-600/10 bottom-[-30%] left-[-10%]" />
+        <div className="orb-1 hero-bg-glow absolute w-[100vw] h-[100vw] rounded-full blur-[120px] opacity-0 bg-blue-600/10 top-[-20%] right-[-10%]" />
+        <div className="orb-2 hero-bg-glow absolute w-[100vw] h-[100vw] rounded-full blur-[150px] opacity-0 bg-purple-600/10 bottom-[-30%] left-[-10%]" />
       </div>
       <style>{`
         .orb-1 {
@@ -385,8 +387,11 @@ const InteractiveHeroBackground: React.FC = memo(() => {
           0%, 100% { transform: translate3d(0, 0, 0) scale(1.1); }
           50% { transform: translate3d(40px, -30px, 0) scale(1); }
         }
+        .bg-paused .orb-1, .bg-paused .orb-2 {
+          animation-play-state: paused;
+        }
       `}</style>
-    </>
+    </div>
   );
 });
 

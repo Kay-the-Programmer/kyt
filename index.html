@@ -52,6 +52,17 @@
       "url": "https://kytriq.com"
     }
     </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome - deferred loading to prevent render blocking -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    </noscript>
+    <!-- Google Fonts with font-display=swap for faster text rendering -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <script>
         // Immediate theme detection to prevent flash
         (function () {
@@ -62,6 +73,26 @@
                 document.documentElement.classList.add('dark');
             }
         })();
+
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            blue: '#2563eb',
+                            dark: '#030712'
+                        }
+                    },
+                    boxShadow: {
+                        '3xl': '0 35px 60px -15px rgba(0, 0, 0, 0.3)',
+                    },
+                    screens: {
+                        'xs': '375px',
+                    }
+                }
+            }
+        }
     </script>
     <style>
         /* Targeted transitions instead of global * trigger */

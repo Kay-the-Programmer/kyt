@@ -3,13 +3,9 @@
 /* stylelint-disable-next-line at-rule-no-unknown */
 @theme {
   --font-sans: "Inter", sans-serif;
-  --font-heading: "Space Grotesk", sans-serif;
-  --color-brand-dark: #030712;
-  --color-brand-blue: #2563eb;
-
-  --shadow-3xl: 0 35px 60px -15px rgba(0, 0, 0, 0.3);
-
-  --breakpoint-xs: 375px;
+  --font-heading: "Outfit", sans-serif;
+  --color-brand-dark: #0a0a0a;
+  --color-brand-primary: #2563eb;
 }
 
 @layer utilities {

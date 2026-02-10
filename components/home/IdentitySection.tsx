@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState, useCallback, useMemo, memo } from 'react';
+import React, { useLayoutEffect, useRef, useState, useCallback, useMemo, memo, useEffect } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import SplitText from '../SplitText';
@@ -51,7 +51,6 @@ const FeatureItem = memo<FeatureItemProps>(({ item, index, isActive, onClick, on
     return () => {
       card.removeEventListener('mousemove', handleMouseMove);
       card.removeEventListener('mouseleave', handleMouseLeave);
-      // Ensure it resets on unmount if it was in the middle of a tween
       gsap.set(card, { rotateX: 0, rotateY: 0 });
     };
   }, []);
@@ -80,21 +79,18 @@ const FeatureItem = memo<FeatureItemProps>(({ item, index, isActive, onClick, on
         }`}
       style={{ backdropFilter: 'blur(12px)', transformStyle: 'preserve-3d' }}
     >
-      {/* Animated gradient border for active */}
       {isActive && (
         <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-indigo-500/15 to-purple-500/10 animate-pulse" style={{ animationDuration: '3s' }} />
         </div>
       )}
 
-      {/* Progress indicator */}
       {isActive && (
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-100 dark:bg-gray-700/50 rounded-b-2xl overflow-hidden">
           <div ref={progressRef} className="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 origin-left scale-x-0" />
         </div>
       )}
 
-      {/* Icon */}
       <div
         className={`feature-icon relative w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-300 ${isActive
           ? 'bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 text-white shadow-lg shadow-blue-500/30 rotate-3'
@@ -107,7 +103,6 @@ const FeatureItem = memo<FeatureItemProps>(({ item, index, isActive, onClick, on
         )}
       </div>
 
-      {/* Content */}
       <div className="flex-1 min-w-0 relative z-10">
         <div className="flex items-center gap-2 mb-2">
           <h4 className={`font-semibold text-lg tracking-tight transition-colors duration-200 ${isActive ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-200'
@@ -126,7 +121,6 @@ const FeatureItem = memo<FeatureItemProps>(({ item, index, isActive, onClick, on
         </p>
       </div>
 
-      {/* Arrow indicator */}
       <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${isActive
         ? 'bg-blue-500 text-white'
         : 'bg-gray-100 dark:bg-gray-700/50 text-gray-400 dark:text-gray-500 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 group-hover:text-blue-500'
@@ -139,22 +133,78 @@ const FeatureItem = memo<FeatureItemProps>(({ item, index, isActive, onClick, on
 
 FeatureItem.displayName = 'FeatureItem';
 
-// Smooth text reveal for mobile
-const TypewriterText = ({ text }: { text: string }) => {
-  const [displayedText, setDisplayedText] = useState('');
+// GSAP Typewriter with erasure and precise cursor
+const TypewriterText = ({ text, onErasureComplete }: { text: string; onErasureComplete?: () => void }) => {
+  const textRef = useRef<HTMLSpanElement>(null);
+  const cursorRef = useRef<HTMLSpanElement>(null);
+  const lastTextRef = useRef("");
+  const isInitialMount = useRef(true);
 
   useLayoutEffect(() => {
-    setDisplayedText('');
-    let i = 0;
-    const timer = setInterval(() => {
-      setDisplayedText(text.substring(0, i + 1));
-      i++;
-      if (i === text.length) clearInterval(timer);
-    }, 25);
-    return () => clearInterval(timer);
-  }, [text]);
+    const textEl = textRef.current;
+    const cursorEl = cursorRef.current;
+    if (!textEl || !cursorEl) return;
 
-  return <span>{displayedText}</span>;
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline();
+
+      if (lastTextRef.current && lastTextRef.current !== text) {
+        const prevText = lastTextRef.current;
+        const eraseObj = { count: prevText.length };
+        tl.to(eraseObj, {
+          count: 0,
+          duration: Math.min(prevText.length * 0.008, 0.3),
+          ease: "none",
+          onUpdate: () => {
+            if (textEl) textEl.innerText = prevText.slice(0, Math.floor(eraseObj.count));
+          }
+        });
+
+        tl.call(() => {
+          onErasureComplete?.();
+        });
+
+        tl.to({}, { duration: 0.1 });
+      } else if (isInitialMount.current) {
+        isInitialMount.current = false;
+        onErasureComplete?.();
+      }
+
+      const typeObj = { count: 0 };
+      tl.to(typeObj, {
+        count: text.length,
+        duration: Math.min(text.length * 0.015, 0.8),
+        ease: "none",
+        onUpdate: () => {
+          if (textEl) textEl.innerText = text.slice(0, Math.ceil(typeObj.count));
+        },
+        onComplete: () => {
+          lastTextRef.current = text;
+        }
+      });
+
+      gsap.to(cursorEl, {
+        opacity: 0,
+        duration: 0.5,
+        repeat: -1,
+        yoyo: true,
+        ease: "steps(1)"
+      });
+    });
+
+    return () => ctx.revert();
+  }, [text, onErasureComplete]);
+
+  return (
+    <span className="relative inline">
+      <span ref={textRef} className="whitespace-pre-wrap" />
+      <span
+        ref={cursorRef}
+        className="inline-block w-[2px] h-[1.2em] bg-blue-500 ml-0.5 align-middle translate-y-[-1px] relative"
+        aria-hidden="true"
+      />
+    </span>
+  );
 };
 
 // Mobile title with animation
@@ -183,6 +233,8 @@ const IdentitySection: React.FC = () => {
   const badgeRef = useRef<HTMLDivElement>(null);
   const featureRefs = useRef<(HTMLDivElement | null)[]>([]);
   const mobileTabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const mobileTabContainerRef = useRef<HTMLDivElement>(null);
+  const mobileTabIndicatorRef = useRef<HTMLDivElement>(null);
   const sceneContainerRef = useRef<HTMLDivElement>(null);
   const progressTweenRef = useRef<gsap.core.Tween | null>(null);
   const delayedCallRef = useRef<gsap.core.Tween | null>(null);
@@ -190,6 +242,7 @@ const IdentitySection: React.FC = () => {
   const activeFeatureProgressRef = useRef<HTMLDivElement>(null);
 
   const [activeImage, setActiveImage] = useState(0);
+  const activeImageRef = useRef(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -197,30 +250,63 @@ const IdentitySection: React.FC = () => {
   const lastTransitionRef = useRef(0);
   const TRANSITION_DEBOUNCE = 150;
 
-  useLayoutEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
   const features = useMemo(() => [
     {
-      title: 'Web & Desktop Apps',
-      text: 'High-performance web and desktop experiences built to scale with your business.',
+      title: 'Web & Desktop Solutions',
+      text: 'We build high-performance web and desktop applications built to scale with your business.',
       icon: 'fa-laptop-code'
     },
     {
-      title: 'Mobile Applications',
-      text: 'Native and cross-platform mobile apps designed for engagement and retention.',
+      title: 'Mobile Solutions',
+      text: 'We build Native and cross-platform mobile applications designed for engagement and retention.',
       icon: 'fa-mobile-screen-button'
     },
     {
-      title: 'AI Integration',
-      text: 'Intelligent AI capabilities that automate workflows and elevate user experience.',
+      title: 'AI Solutions',
+      text: 'We build Intelligent AI capabilities that automate workflows and elevate user experience.',
       icon: 'fa-brain'
     }
   ], []);
+
+  const movePill = useCallback((toIndex: number) => {
+    const mobileTabs = mobileTabRefs.current;
+    const tabContainer = mobileTabContainerRef.current;
+    const indicator = mobileTabIndicatorRef.current;
+
+    if (tabContainer && mobileTabs[toIndex]) {
+      const tab = mobileTabs[toIndex];
+      const scrollLeft = tab.offsetLeft - (tabContainer.offsetWidth / 2) + (tab.offsetWidth / 2);
+
+      gsap.to(tabContainer, {
+        scrollLeft: scrollLeft,
+        duration: 0.5,
+        ease: 'power2.out',
+        overwrite: 'auto'
+      });
+
+      if (indicator) {
+        gsap.to(indicator, {
+          x: tab.offsetLeft,
+          width: tab.offsetWidth,
+          duration: 0.5,
+          ease: 'power3.out',
+          overwrite: 'auto'
+        });
+      }
+
+      mobileTabs.forEach((tabEl, i) => {
+        if (tabEl) {
+          gsap.to(tabEl, {
+            scale: i === toIndex ? 1 : 0.95,
+            opacity: i === toIndex ? 1 : 0.4,
+            duration: 0.4,
+            ease: 'power2.out',
+            overwrite: 'auto'
+          });
+        }
+      });
+    }
+  }, []);
 
   const animateTransition = useCallback((fromIndex: number, toIndex: number) => {
     const now = performance.now();
@@ -230,28 +316,12 @@ const IdentitySection: React.FC = () => {
     const container = sceneContainerRef.current;
     const toFeature = featureRefs.current[toIndex];
 
-    const addTween = <T extends gsap.core.Tween | gsap.core.Timeline>(tween: T): T => {
-      if (ctxRef.current && ctxRef.current.add) {
-        ctxRef.current.add(() => tween);
-      }
-      return tween;
-    };
-
-    const tl = addTween(gsap.timeline({
-      defaults: { overwrite: 'auto' }
-    }));
+    const tl = gsap.timeline({ defaults: { overwrite: 'auto' } });
+    if (ctxRef.current) ctxRef.current.add(() => tl);
 
     if (container) {
-      tl.to(container, {
-        scale: 0.98,
-        duration: 0.08,
-        ease: 'power2.in'
-      })
-        .to(container, {
-          scale: 1,
-          duration: 0.12,
-          ease: 'power2.out'
-        });
+      tl.to(container, { scale: 0.98, duration: 0.08, ease: 'power2.in' })
+        .to(container, { scale: 1, duration: 0.12, ease: 'power2.out' });
     }
 
     if (toFeature) {
@@ -265,13 +335,13 @@ const IdentitySection: React.FC = () => {
       }
     }
 
-    const mobileTabs = mobileTabRefs.current;
-    if (mobileTabs[toIndex]) {
-      mobileTabs[toIndex]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-    }
-
+    activeImageRef.current = toIndex;
     setActiveImage(toIndex);
   }, []);
+
+  const handleErasureComplete = useCallback(() => {
+    movePill(activeImageRef.current);
+  }, [movePill]);
 
   const startProgressAnimation = useCallback(() => {
     if (progressTweenRef.current) {
@@ -283,17 +353,18 @@ const IdentitySection: React.FC = () => {
       gsap.set(progressBar, { scaleX: 0 });
     }
 
-    progressTweenRef.current = gsap.to({ value: 0 }, {
+    const target = { value: 0 };
+    progressTweenRef.current = gsap.to(target, {
       value: 1,
       duration: AUTO_ROTATE_INTERVAL / 1000,
       ease: 'none',
-      onUpdate: function () {
+      onUpdate: () => {
         if (activeFeatureProgressRef.current) {
-          const progress = this.targets()[0].value;
-          activeFeatureProgressRef.current.style.transform = `scaleX(${progress})`;
+          activeFeatureProgressRef.current.style.transform = `scaleX(${target.value})`;
         }
       }
     });
+
   }, []);
 
   const startAutoRotate = useCallback(() => {
@@ -302,7 +373,7 @@ const IdentitySection: React.FC = () => {
     startProgressAnimation();
 
     const tick = () => {
-      const current = activeImage;
+      const current = activeImageRef.current;
       const next = (current + 1) % features.length;
 
       animateTransition(current, next);
@@ -312,7 +383,7 @@ const IdentitySection: React.FC = () => {
     };
 
     delayedCallRef.current = gsap.delayedCall(AUTO_ROTATE_INTERVAL / 1000, tick);
-  }, [activeImage, animateTransition, startProgressAnimation, features.length]);
+  }, [animateTransition, startProgressAnimation, features.length]);
 
   const stopAutoRotate = useCallback(() => {
     if (delayedCallRef.current) {
@@ -328,13 +399,13 @@ const IdentitySection: React.FC = () => {
   const handleFeatureInteraction = useCallback((index: number) => {
     setIsPaused(true);
     stopAutoRotate();
-    if (index !== activeImage) {
-      animateTransition(activeImage, index);
+    if (index !== activeImageRef.current) {
+      animateTransition(activeImageRef.current, index);
       if (activeFeatureProgressRef.current) {
         gsap.set(activeFeatureProgressRef.current, { scaleX: 0 });
       }
     }
-  }, [activeImage, animateTransition, stopAutoRotate]);
+  }, [animateTransition, stopAutoRotate]);
 
   const handleFeatureLeave = useCallback(() => {
     setIsPaused(false);
@@ -343,6 +414,35 @@ const IdentitySection: React.FC = () => {
   const setFeatureRef = useCallback((index: number) => (el: HTMLDivElement | null) => {
     featureRefs.current[index] = el;
   }, []);
+
+  // Resume auto-rotate after interaction
+  useEffect(() => {
+    let timeout: any;
+    if (isPaused) {
+      timeout = setTimeout(() => {
+        setIsPaused(false);
+      }, 8000);
+    }
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [isPaused]);
+
+  // Effects
+  useLayoutEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useLayoutEffect(() => {
+    const indicator = mobileTabIndicatorRef.current;
+    const tab = mobileTabRefs.current[activeImage];
+    if (indicator && tab) {
+      movePill(activeImage);
+    }
+  }, [activeImage, isMobile, movePill]);
 
   useLayoutEffect(() => {
     const section = sectionRef.current;
@@ -361,7 +461,6 @@ const IdentitySection: React.FC = () => {
         const { isMobile, isReduced } = context.conditions as { isMobile: boolean, isReduced: boolean };
         const durationMult = isMobile ? 0.8 : 1;
 
-        // Floating background orbs
         gsap.to(q('.bg-orb-1'), {
           y: -60, x: 40, rotation: 10, duration: 12, repeat: -1, yoyo: true, ease: "sine.inOut"
         });
@@ -483,19 +582,13 @@ const IdentitySection: React.FC = () => {
       ref={sectionRef}
       className="relative z-10 py-16 md:py-32 lg:py-40 px-6 overflow-hidden bg-gradient-to-b from-gray-50/50 via-white to-gray-50/30 dark:from-gray-900/50 dark:via-gray-950 dark:to-gray-900/30"
     >
-      {/* Premium background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Large parallax text */}
         <div className="parallax-text absolute -top-20 -left-10 text-[25vw] font-black text-gray-900/[0.02] dark:text-white/[0.015] select-none tracking-tighter leading-none">
           01
         </div>
-
-        {/* Animated gradient orbs */}
         <div className="bg-orb-1 absolute top-1/4 right-[10%] w-[500px] h-[500px] rounded-full blur-[100px] opacity-40 bg-gradient-to-br from-blue-400/30 via-indigo-400/20 to-purple-400/10 dark:from-blue-500/20 dark:via-indigo-500/15 dark:to-purple-500/10" />
         <div className="bg-orb-2 absolute bottom-1/3 left-[5%] w-[400px] h-[400px] rounded-full blur-[80px] opacity-35 bg-gradient-to-tr from-indigo-400/25 via-purple-400/15 to-pink-400/10 dark:from-indigo-500/15 dark:via-purple-500/10 dark:to-pink-500/5" />
         <div className="bg-orb-3 absolute top-2/3 right-1/4 w-[300px] h-[300px] rounded-full blur-[60px] opacity-30 bg-gradient-to-bl from-cyan-400/20 to-blue-400/15 dark:from-cyan-500/10 dark:to-blue-500/10" />
-
-        {/* Subtle grid pattern */}
         <div className="absolute inset-0 opacity-[0.015] dark:opacity-[0.02]" style={{
           backgroundImage: `linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)`,
           backgroundSize: '60px 60px'
@@ -503,8 +596,6 @@ const IdentitySection: React.FC = () => {
       </div>
 
       <div className="max-w-7xl mx-auto flex flex-col lg:grid lg:grid-cols-2 gap-10 lg:gap-20 items-center relative z-10">
-
-        {/* MOBILE HEADER */}
         <div className="lg:hidden w-full text-center mb-4 order-1">
           <div className="section-badge inline-flex items-center gap-2 mb-5 px-4 py-2 rounded-full bg-white/80 dark:bg-gray-800/80 border border-gray-200/50 dark:border-gray-700/50 shadow-sm backdrop-blur-sm">
             <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 animate-pulse" />
@@ -516,26 +607,32 @@ const IdentitySection: React.FC = () => {
           </h3>
         </div>
 
-        {/* MOBILE TABS */}
-        <div className="lg:hidden w-full order-2 mb-6">
-          <div className="flex p-1.5 bg-white/60 dark:bg-gray-800/60 backdrop-blur-md rounded-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-x-auto no-scrollbar gap-1.5 shadow-lg shadow-gray-500/5">
+        <div className="lg:hidden w-full order-2 mb-0">
+          <div
+            ref={mobileTabContainerRef}
+            className="relative flex p-1.5 bg-white/60 dark:bg-gray-800/60 backdrop-blur-md rounded-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-x-auto no-scrollbar gap-1.5 shadow-lg shadow-gray-500/5 scroll-px-4"
+          >
+            <div
+              ref={mobileTabIndicatorRef}
+              className="absolute top-1.5 bottom-1.5 left-0 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 shadow-md shadow-blue-500/25 pointer-events-none z-0"
+              style={{ width: 0 }}
+            />
             {features.map((item, i) => (
               <button
                 key={i}
                 ref={(el) => { mobileTabRefs.current[i] = el; }}
                 onClick={() => handleFeatureInteraction(i)}
-                className={`flex-1 min-w-[90px] py-3 px-4 rounded-xl text-xs font-semibold transition-all duration-200 whitespace-nowrap ${activeImage === i
-                  ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md shadow-blue-500/25'
+                className={`relative flex-none py-3 px-6 rounded-xl text-xs font-semibold whitespace-nowrap outline-none transition-colors duration-300 z-10 ${activeImage === i
+                  ? 'text-white'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100/50 dark:hover:bg-gray-700/30'
                   }`}
               >
-                {item.title.split(' ')[0]}
+                {item.title}
               </button>
             ))}
           </div>
         </div>
 
-        {/* LEFT CONTENT - Desktop */}
         <div className="hidden lg:block">
           <div ref={badgeRef} className="section-badge inline-flex items-center gap-3 mb-8 px-5 py-2.5 rounded-full bg-white/80 dark:bg-gray-800/80 border border-gray-200/50 dark:border-gray-700/50 shadow-lg shadow-gray-500/5 backdrop-blur-sm">
             <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 animate-pulse" />
@@ -570,7 +667,6 @@ const IdentitySection: React.FC = () => {
           </div>
         </div>
 
-        {/* RIGHT 3D SCENE */}
         <div className="relative w-full order-3 lg:order-none">
           <div className="scene-container relative aspect-square md:aspect-[4/4] lg:aspect-[4/5] rounded-3xl overflow-hidden bg-gradient-to-br from-gray-100/50 to-gray-50/30 dark:from-gray-800/50 dark:to-gray-900/30 shadow-2xl shadow-gray-900/10 dark:shadow-black/30 border border-gray-200/30 dark:border-gray-700/20">
             <div
@@ -584,11 +680,10 @@ const IdentitySection: React.FC = () => {
               <ServiceScene3D activeIndex={activeImage} isMobile={isMobile} isVisible={isVisible} />
             </div>
 
-            {/* Mobile info overlay */}
             <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-white via-white/95 to-transparent dark:from-gray-950 dark:via-gray-950/95 pt-20 lg:hidden flex flex-col items-center text-center z-10">
               <MobileTitle title={features[activeImage].title} />
               <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed max-w-[260px] mx-auto min-h-[2.5rem]">
-                <TypewriterText text={features[activeImage].text} />
+                <TypewriterText text={features[activeImage].text} onErasureComplete={handleErasureComplete} />
               </p>
               <div className="mt-5 flex gap-2">
                 {features.map((_, i) => (
@@ -605,16 +700,14 @@ const IdentitySection: React.FC = () => {
             </div>
           </div>
 
-          {/* Decorative elements */}
           <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[115%] aspect-square pointer-events-none">
             <div className="absolute inset-0 border border-gray-200/30 dark:border-gray-700/20 rounded-full" />
             <div className="absolute inset-6 border border-gray-200/20 dark:border-gray-700/15 rounded-full" />
           </div>
         </div>
-
       </div>
     </section>
   );
 };
 
-export default React.memo(IdentitySection);
+export default memo(IdentitySection);

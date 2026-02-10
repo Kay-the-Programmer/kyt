@@ -28,6 +28,7 @@ const HeroSection = () => {
   const bgLayer1Ref = useRef<HTMLDivElement>(null);
   const bgLayer2Ref = useRef<HTMLDivElement>(null);
   const scrollCueRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // State refs to avoid frequent callback recreation
   const frameCountRef = useRef(0);
@@ -116,11 +117,6 @@ const HeroSection = () => {
       // Logic checks using refs to avoid closure staleness
       if (isMobileRef.current) return;
 
-      // Frame skip - run every 2nd frame for 30fps update on 60fps screens
-      // This significantly reduces GPU load while keeping motion smooth enough
-      frameCountRef.current++;
-      if (frameCountRef.current % 2 !== 0) return;
-
       if (!globalMousePos.active || !isInViewRef.current || isReducedMotionRef.current) return;
 
       // Safety check for 0 division
@@ -131,13 +127,13 @@ const HeroSection = () => {
 
       const refs = quickToRefs.current;
 
-      // Batch updates
-      refs.contentX?.(xRel * 12);
-      refs.contentY?.(yRel * 12);
-      refs.bg1X?.(-xRel * 35);
-      refs.bg1Y?.(-yRel * 35);
-      refs.bg2X?.(-xRel * 70);
-      refs.bg2Y?.(-yRel * 70);
+      // Batch updates - Using slightly higher values for better responsiveness
+      refs.contentX?.(xRel * 15);
+      refs.contentY?.(yRel * 15);
+      refs.bg1X?.(-xRel * 40);
+      refs.bg1Y?.(-yRel * 40);
+      refs.bg2X?.(-xRel * 80);
+      refs.bg2Y?.(-yRel * 80);
     };
 
     gsap.ticker.add(updateParallax);
@@ -249,19 +245,19 @@ const HeroSection = () => {
         });
       }
 
-      // Scroll-linked exit animation - GPU-accelerated transforms only (no blur for performance)
-      if (content && !isMobile) {
-        gsap.to(content, {
-          y: -80,
+      // Scroll-linked exit animation - Separated onto scrollContainerRef to avoid conflict with mouse parallax
+      if (scrollContainerRef.current && !isMobile) {
+        gsap.to(scrollContainerRef.current, {
+          y: -100,
           opacity: 0,
-          scale: 0.95,
+          scale: 0.98,
           ease: 'none',
           force3D: true,
           scrollTrigger: {
             trigger: section,
             start: 'top top',
-            end: 'bottom 60%',
-            scrub: 0.8,
+            end: 'bottom 50%',
+            scrub: true, // Smoother scrub
             invalidateOnRefresh: true
           }
         });
@@ -343,60 +339,62 @@ const HeroSection = () => {
         />
       </div>
 
-      <div ref={contentRef} className="hero-section-content max-w-[95rem] w-full text-center relative z-10 will-change-transform px-2 sm:px-0">
-        <div className="hero-badge inline-flex items-center space-x-2 px-3 sm:px-6 py-1.5 sm:py-2 bg-white/10 dark:bg-blue-500/5 border border-gray-200/50 dark:border-blue-500/10 rounded-full mb-6 sm:mb-8 md:mb-12 mx-auto backdrop-blur-md">
-          <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.4em] sm:tracking-[0.7em] text-blue-600 dark:text-blue-400">
-            KYTRIQ TECHNOLOGIES
-          </span>
-        </div>
-
-        <h1
-          ref={titleRef}
-          onMouseEnter={() => handleTitleHover(true)}
-          onMouseLeave={() => handleTitleHover(false)}
-          className="hero-title text-4xl xs:text-5xl sm:text-6xl md:text-7xl lg:text-[9rem] font-heading font-black tracking-tighter leading-[0.85] text-gray-900 dark:text-white select-none flex flex-col items-center cursor-pointer transition-all duration-500"
-        >
-          <SplitText text="We Turn Ideas" className="part-1 block mb-1 sm:mb-2 md:mb-4" />
-          <SplitText text="Into Reality." className="part-2 block" isGradient={true} />
-        </h1>
-
-        <p className="hero-desc text-base sm:text-lg md:text-xl lg:text-2xl text-gray-400 dark:text-gray-300 max-w-3xl mx-auto mt-6 sm:mt-8 md:mt-12 lg:mt-16 font-light leading-relaxed tracking-tight px-2">
-          Engineering <span className="font-semibold text-blue-500">high-performance systems</span> with stunning designs.
-        </p>
-
-        <div className="hero-btns mt-8 sm:mt-10 md:mt-16 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-0 sm:space-x-8 px-4 sm:px-0">
-          <Link
-            to="/contact"
-            data-analytics="hero_build_cta"
-            className="group relative overflow-hidden inline-block w-full sm:w-auto px-8 sm:px-12 py-4 sm:py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-bold transition-all duration-700 text-center shadow-3xl shadow-blue-500/30 hover:scale-105 active:scale-95"
-          >
-            <span className="relative z-10 text-base sm:text-lg flex items-center justify-center space-x-2">
-              <span>Let's Build</span>
-              <i className="fa-solid fa-arrow-right transition-transform group-hover:translate-x-1" />
+      <div ref={scrollContainerRef} className="hero-scroll-container absolute inset-0 flex items-center justify-center will-change-transform">
+        <div ref={contentRef} className="hero-section-content max-w-[95rem] w-full text-center relative z-10 will-change-transform px-2 sm:px-0">
+          <div className="hero-badge inline-flex items-center space-x-2 px-3 sm:px-6 py-1.5 sm:py-2 bg-white/10 dark:bg-blue-500/5 border border-gray-200/50 dark:border-blue-500/10 rounded-full mb-6 sm:mb-8 md:mb-12 mx-auto backdrop-blur-md">
+            <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.4em] sm:tracking-[0.7em] text-blue-600 dark:text-blue-400">
+              KYTRIQ TECHNOLOGIES
             </span>
-          </Link>
-          <button
-            className="group w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-transparent border border-gray-300/50 dark:border-gray-800 text-gray-700 dark:text-gray-300 rounded-full font-semibold transition-all duration-500 hover:border-blue-500 hover:text-blue-500 text-base sm:text-base"
-            onClick={handleExploreClick}
-            data-analytics="hero_explore_more"
-          >
-            Explore More
-          </button>
-        </div>
+          </div>
 
-        {/* Scroll Cue */}
-        <div
-          ref={scrollCueRef}
-          className="scroll-cue absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-0 cursor-pointer"
-          onClick={handleExploreClick}
-          role="button"
-          aria-label="Scroll to explore"
-          tabIndex={0}
-          onKeyDown={(e) => e.key === 'Enter' && handleExploreClick()}
-        >
-          <span className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">Scroll</span>
-          <div className="w-6 h-10 border-2 border-gray-300/50 dark:border-gray-600/50 rounded-full flex justify-center pt-2">
-            <div className="w-1.5 h-3 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full" />
+          <h1
+            ref={titleRef}
+            onMouseEnter={() => handleTitleHover(true)}
+            onMouseLeave={() => handleTitleHover(false)}
+            className="hero-title text-4xl xs:text-5xl sm:text-6xl md:text-7xl lg:text-[9rem] font-heading font-black tracking-tighter leading-[0.85] text-gray-900 dark:text-white select-none flex flex-col items-center cursor-pointer transition-all duration-500"
+          >
+            <SplitText text="We Turn Ideas" className="part-1 block mb-1 sm:mb-2 md:mb-4" />
+            <SplitText text="Into Reality." className="part-2 block" isGradient={true} />
+          </h1>
+
+          <p className="hero-desc text-base sm:text-lg md:text-xl lg:text-2xl text-gray-400 dark:text-gray-300 max-w-3xl mx-auto mt-6 sm:mt-8 md:mt-12 lg:mt-16 font-light leading-relaxed tracking-tight px-2">
+            Engineering <span className="font-semibold text-blue-500">high-performance systems</span> with stunning designs.
+          </p>
+
+          <div className="hero-btns mt-8 sm:mt-10 md:mt-16 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-0 sm:space-x-8 px-4 sm:px-0">
+            <Link
+              to="/contact"
+              data-analytics="hero_build_cta"
+              className="group relative overflow-hidden inline-block w-full sm:w-auto px-8 sm:px-12 py-4 sm:py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-bold transition-all duration-700 text-center shadow-3xl shadow-blue-500/30 hover:scale-105 active:scale-95"
+            >
+              <span className="relative z-10 text-base sm:text-lg flex items-center justify-center space-x-2">
+                <span>Let's Build</span>
+                <i className="fa-solid fa-arrow-right transition-transform group-hover:translate-x-1" />
+              </span>
+            </Link>
+            <button
+              className="group w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-transparent border border-gray-300/50 dark:border-gray-800 text-gray-700 dark:text-gray-300 rounded-full font-semibold transition-all duration-500 hover:border-blue-500 hover:text-blue-500 text-base sm:text-base"
+              onClick={handleExploreClick}
+              data-analytics="hero_explore_more"
+            >
+              Explore More
+            </button>
+          </div>
+
+          {/* Scroll Cue */}
+          <div
+            ref={scrollCueRef}
+            className="scroll-cue absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-0 cursor-pointer"
+            onClick={handleExploreClick}
+            role="button"
+            aria-label="Scroll to explore"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && handleExploreClick()}
+          >
+            <span className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">Scroll</span>
+            <div className="w-6 h-10 border-2 border-gray-300/50 dark:border-gray-600/50 rounded-full flex justify-center pt-2">
+              <div className="w-1.5 h-3 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full" />
+            </div>
           </div>
         </div>
       </div>

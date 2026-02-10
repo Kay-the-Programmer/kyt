@@ -10,7 +10,6 @@ import { trackScrollMilestone } from '../utils/analytics';
 // Modular Components
 import InteractiveHeroBackground from '../components/home/InteractiveHeroBackground';
 import HeroSection from '../components/home/HeroSection';
-import StorytellingOverlay from '../components/home/StorytellingOverlay';
 // Lazy load non-critical sections
 const IdentitySection = React.lazy(() => import('../components/home/IdentitySection'));
 const PortfolioScroll = React.lazy(() => import('../components/home/PortfolioScroll'));
@@ -59,16 +58,46 @@ const LazySection: React.FC<LazySectionInternalProps> = ({
   );
 };
 
+const HeroSectionMemo = React.memo(HeroSection);
+
+const AmbientParticles = () => {
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  useEffect(() => {
+    const trigger = ScrollTrigger.create({
+      start: 0,
+      end: 'max',
+      onUpdate: (self) => setScrollProgress(self.progress)
+    });
+    return () => trigger.kill();
+  }, []);
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-[1] overflow-hidden">
+      {[...Array(6)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute w-2 h-2 rounded-full bg-blue-500/20 dark:bg-blue-400/30 animate-float"
+          style={{
+            left: `${15 + i * 15}%`,
+            top: `${20 + (i % 3) * 25}%`,
+            animationDelay: `${i * 0.5}s`,
+            animationDuration: `${4 + i}s`,
+            transform: `translateY(${scrollProgress * (i % 2 ? -50 : 50)}px)`,
+            transition: 'transform 0.5s ease-out'
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
 const Home: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isPageTransition = useTransition();
   const glowXTo = useRef<gsap.QuickToFunc | null>(null);
   const glowYTo = useRef<gsap.QuickToFunc | null>(null);
   useSharedMousePos();
-
-  // Scroll progress state for storytelling
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [activeSection, setActiveSection] = useState('Home');
 
   // SEO Configuration
   useSEO({
@@ -198,14 +227,6 @@ const Home: React.FC = () => {
         });
       }
 
-      // Global scroll progress tracker
-      ScrollTrigger.create({
-        trigger: container,
-        start: 'top top',
-        end: 'bottom bottom',
-        onUpdate: (self) => setScrollProgress(self.progress)
-      });
-
       // Section tracking for active labels
       const sectionMap = [
         { id: 'hero', label: 'Home' },
@@ -224,15 +245,13 @@ const Home: React.FC = () => {
             start: 'top 50%',
             end: 'bottom 50%',
             onEnter: () => {
-              setActiveSection(label);
               // Track milestone when entering a section (only once)
               const sectionSlug = label.toLowerCase().replace(/\s+/g, '_');
               if (!trackedSections.has(sectionSlug)) {
                 trackedSections.add(sectionSlug);
                 trackScrollMilestone(sectionSlug);
               }
-            },
-            onEnterBack: () => setActiveSection(label)
+            }
           });
         }
       });
@@ -253,67 +272,19 @@ const Home: React.FC = () => {
   return (
     <div ref={containerRef} className="relative bg-white dark:bg-brand-dark text-gray-900 dark:text-white transition-colors duration-500">
       <InteractiveHeroBackground />
-      <StorytellingOverlay />
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="hero-bg-glow absolute -top-[20%] -right-[10%] w-[100vw] h-[100vw] bg-blue-600/5 dark:bg-blue-500/10 rounded-full blur-[120px] opacity-0"></div>
         <div className="hero-bg-glow absolute -bottom-[30%] -left-[10%] w-[100vw] h-[100vw] bg-purple-600/5 dark:bg-purple-500/10 rounded-full blur-[150px] opacity-0"></div>
       </div>
 
-      {/* Scroll Progress Indicators - Enhanced Visibility */}
-      <div className="fixed top-0 left-0 right-0 h-1 z-50 pointer-events-none">
-        <div
-          className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 origin-left shadow-[0_0_20px_rgba(99,102,241,0.5)]"
-          style={{ transform: `scaleX(${scrollProgress})`, willChange: 'transform' }}
-        />
-      </div>
-
-      {/* Vertical Progress with Enhanced Section Label */}
-      <div className="fixed left-8 top-1/2 -translate-y-1/2 z-50 hidden lg:flex flex-col items-center gap-6">
-        <div className="relative h-40 w-1 bg-gray-200/50 dark:bg-gray-700/50 rounded-full overflow-hidden backdrop-blur-sm">
-          <div
-            className="absolute bottom-0 w-full bg-gradient-to-t from-blue-500 via-purple-500 to-pink-500 rounded-full transition-all duration-150 shadow-[0_0_15px_rgba(99,102,241,0.6)]"
-            style={{ height: `${scrollProgress * 100}%`, willChange: 'height' }}
-          />
-          {/* Progress nodes */}
-          <div className={`absolute left-1/2 -translate-x-1/2 w-3 h-3 rounded-full border-2 transition-all duration-300 ${scrollProgress > 0 ? 'bg-blue-500 border-blue-500 scale-110' : 'bg-gray-300 border-gray-300'}`} style={{ top: '0%' }} />
-          <div className={`absolute left-1/2 -translate-x-1/2 w-3 h-3 rounded-full border-2 transition-all duration-300 ${scrollProgress > 0.25 ? 'bg-purple-500 border-purple-500 scale-110' : 'bg-gray-300 border-gray-300'}`} style={{ top: '33%' }} />
-          <div className={`absolute left-1/2 -translate-x-1/2 w-3 h-3 rounded-full border-2 transition-all duration-300 ${scrollProgress > 0.5 ? 'bg-pink-500 border-pink-500 scale-110' : 'bg-gray-300 border-gray-300'}`} style={{ top: '66%' }} />
-          <div className={`absolute left-1/2 -translate-x-1/2 w-3 h-3 rounded-full border-2 transition-all duration-300 ${scrollProgress > 0.9 ? 'bg-indigo-500 border-indigo-500 scale-110' : 'bg-gray-300 border-gray-300'}`} style={{ top: '100%', transform: 'translate(-50%, -50%)' }} />
-        </div>
-        <div className="flex flex-col items-center gap-2">
-          <span className="text-xs font-black uppercase tracking-[0.3em] text-blue-600 dark:text-blue-400 whitespace-nowrap">
-            {activeSection}
-          </span>
-          <span className="text-[10px] text-gray-400 font-medium">
-            {Math.round(scrollProgress * 100)}%
-          </span>
-        </div>
-      </div>
-
-      {/* Floating Ambient Particles - Scroll-responsive */}
-      <div className="fixed inset-0 pointer-events-none z-[1] overflow-hidden">
-        {[...Array(6)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-2 h-2 rounded-full bg-blue-500/20 dark:bg-blue-400/30 animate-float"
-            style={{
-              left: `${15 + i * 15}%`,
-              top: `${20 + (i % 3) * 25}%`,
-              animationDelay: `${i * 0.5}s`,
-              animationDuration: `${4 + i}s`,
-              transform: `translateY(${scrollProgress * (i % 2 ? -50 : 50)}px)`,
-              transition: 'transform 0.5s ease-out'
-            }}
-          />
-        ))}
-      </div>
+      <AmbientParticles />
 
       {/* Hero Section handles its own entrance */}
       <div id="hero">
-        <HeroSection />
+        <HeroSectionMemo />
       </div>
 
-      <LazySection id="identity" minHeight="min-h-screen">
+      <LazySection id="identity" minHeight="min-h-screen" rootMargin="600px">
         <IdentitySection />
       </LazySection>
 

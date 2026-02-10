@@ -1,4 +1,3 @@
-
 import React, { useLayoutEffect, useRef, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
@@ -10,29 +9,56 @@ import { trackOutboundLink } from '../utils/analytics';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Feature data
+// Feature data (UPDATED)
 const features = [
-  { title: 'Neural POS', icon: 'fa-brain', text: 'Active learning agents that optimize checkout paths.' },
-  { title: 'Global Sync', icon: 'fa-globe', text: 'Zero-latency inventory state management across continents.' },
-  { title: 'Predictive Analytics', icon: 'fa-chart-line', text: 'Real-time sales forecasting with 92% accuracy.' },
-  { title: 'Security Core', icon: 'fa-shield-halved', text: 'Biometric transaction authorization and end-to-end encryption.' },
-  { title: 'Offline-First', icon: 'fa-database', text: 'Robust local-state synchronization for intermittent networks.' },
-  { title: 'Custom UI', icon: 'fa-wand-magic-sparkles', text: 'Minimalistic interfaces designed for muscle memory.' }
+  {
+    title: 'Fast Checkout',
+    icon: 'fa-cash-register',
+    text: 'Create bills quickly, apply discounts, and keep sales moving—built for busy counters.'
+  },
+  {
+    title: 'Inventory Tracking',
+    icon: 'fa-boxes-stacked',
+    text: 'Track stock levels, cost, and product movement so you always know what’s available.'
+  },
+  {
+    title: 'Sales Reports',
+    icon: 'fa-chart-column',
+    text: 'Daily/weekly summaries that help you see what’s selling and what needs attention.'
+  },
+  {
+    title: 'Customer Records',
+    icon: 'fa-users',
+    text: 'Save customer details and purchase history for better service and repeat business.'
+  },
+  {
+    title: 'Offline Ready',
+    icon: 'fa-wifi',
+    text: 'Keep selling even when the network is unstable—sync when you’re back online.'
+  },
+  {
+    title: 'Simple for Staff',
+    icon: 'fa-wand-magic-sparkles',
+    text: 'Clean, easy screens that new staff can learn fast with minimal training.'
+  }
 ];
 
-// Problem items
+// Problem items (UPDATED)
 const problemItems = [
-  'Legacy lag during peak high-frequency transactions',
-  'Disconnected inventory data across global storefronts',
-  'Zero predictive capability for seasonal fluctuations',
-  'Complex user onboarding for non-technical staff'
+  'Manual receipts and scattered records that make it hard to track sales',
+  'Stock-outs and overselling because inventory isn’t updated consistently',
+  'No clear daily summary of revenue, best sellers, and performance',
+  'Internet interruptions that stop transactions at the worst time'
 ];
 
 const SalePilotDetail: React.FC = () => {
+  // SEO (UPDATED)
   const { HelmetElement } = useSEO({
     title: 'SalePilot POS | Kytriq Technologies',
-    description: 'SalePilot - our flagship intelligent POS system that bridges hardware precision and neural business intelligence. 40% throughput increase, 100% inventory accuracy.',
-    keywords: 'SalePilot, POS system, retail management, inventory management, AI POS',
+    description:
+      'SalePilot is a simple all-in-one POS platform for billing, inventory tracking, transaction records, and basic reports—built for small and growing businesses, even with unstable internet.',
+    keywords:
+      'SalePilot, POS system, point of sale, retail management, inventory management, sales reports, offline POS',
     url: 'https://kytriq.com/projects/salepilot'
   });
 
@@ -169,7 +195,6 @@ const SalePilotDetail: React.FC = () => {
         // ===== 2. HERO IMAGE PARALLAX + FLOATING UI =====
         if (heroImgRef.current) {
           const heroImg = heroImgRef.current.querySelector('img');
-          const overlayBg = heroImgRef.current.querySelector('.hero-overlay');
 
           if (heroImg) {
             gsap.fromTo(heroImg,
@@ -223,13 +248,12 @@ const SalePilotDetail: React.FC = () => {
 
         // ===== 3. MULTI-STAGE SECTION REVEALS =====
         const caseSections = container.querySelectorAll<HTMLElement>('.case-section');
-        caseSections.forEach((section, sectionIndex) => {
+        caseSections.forEach((section) => {
           const title = section.querySelector('.section-title');
           const titleChars = title?.querySelectorAll('.letter-reveal');
           const contents = section.querySelectorAll('.section-content-reveal');
           const sectionLine = section.querySelector('.section-line');
 
-          // Set initial states
           gsap.set(section, { y: 80, opacity: 0 });
           if (sectionLine) gsap.set(sectionLine, { scaleX: 0, transformOrigin: 'left' });
           if (titleChars && titleChars.length > 0) {
@@ -303,7 +327,6 @@ const SalePilotDetail: React.FC = () => {
             delay: isDesktop ? (i % 3) * 0.1 : 0
           });
 
-          // 3D tilt on desktop
           if (isDesktop && !prefersReducedMotion) {
             const rotateXTo = gsap.quickTo(card, "rotateX", { duration: 0.4, ease: "power2.out" });
             const rotateYTo = gsap.quickTo(card, "rotateY", { duration: 0.4, ease: "power2.out" });
@@ -367,7 +390,6 @@ const SalePilotDetail: React.FC = () => {
           const ringEl = stat.querySelector<SVGCircleElement>('.progress-ring-circle');
           const value = parseInt(valueEl?.getAttribute('data-value') || '0');
 
-          // Animate number
           if (valueEl) {
             gsap.fromTo(valueEl,
               { innerText: 0 },
@@ -382,7 +404,6 @@ const SalePilotDetail: React.FC = () => {
                   once: true
                 },
                 onUpdate: function () {
-                  // Pulse effect during counting
                   if (!prefersReducedMotion && this.ratio > 0.1 && this.ratio < 0.9) {
                     gsap.to(stat, {
                       scale: 1 + (Math.sin(this.ratio * Math.PI) * 0.03),
@@ -398,7 +419,6 @@ const SalePilotDetail: React.FC = () => {
             );
           }
 
-          // Animate progress ring
           if (ringEl) {
             const circumference = 2 * Math.PI * 45;
             const percentage = value / 100;
@@ -519,7 +539,6 @@ const SalePilotDetail: React.FC = () => {
       });
     }, containerRef);
 
-    // Refresh ScrollTrigger after layout settles
     const timerId = setTimeout(() => ScrollTrigger.refresh(), 300);
 
     return () => {
@@ -538,6 +557,7 @@ const SalePilotDetail: React.FC = () => {
       style={{ perspective: '2000px' }}
     >
       {HelmetElement}
+
       {/* Parallax Grid Background */}
       <div
         className="parallax-grid fixed inset-0 opacity-[0.03] dark:opacity-[0.06] pointer-events-none z-0"
@@ -557,21 +577,21 @@ const SalePilotDetail: React.FC = () => {
           <div className="w-12 h-12 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center group-hover:border-blue-600 group-hover:-translate-x-2 group-hover:bg-blue-600/5 transition-all duration-300">
             <i className="fa-solid fa-arrow-left text-lg"></i>
           </div>
-          <span className="text-[11px] font-black uppercase tracking-[0.5em]">Back to Projects</span>
         </Link>
 
-        {/* Header */}
+        {/* Header (UPDATED) */}
         <header className="detail-header mb-24 lg:mb-40" style={{ transformStyle: 'preserve-3d' }}>
           <div className="header-badge inline-flex items-center space-x-2 px-6 py-2.5 bg-gradient-to-r from-blue-600/5 to-indigo-600/5 dark:from-blue-500/10 dark:to-indigo-500/10 border border-blue-600/15 dark:border-blue-500/20 rounded-full mb-10 backdrop-blur-sm">
-            <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-            <span className="text-[11px] font-black uppercase tracking-[0.6em] text-blue-600 dark:text-blue-400">Flagship Intelligent System</span>
+            <span className="text-[11px] font-black uppercase tracking-[0.6em] text-blue-600 dark:text-blue-400">POS PLATFORM</span>
           </div>
+
           <h1 className="text-6xl md:text-[10rem] font-heading font-black tracking-tighter leading-[0.85] text-gray-900 dark:text-white mb-14">
             <SplitText text="SalePilot" className="block" />
-            <span className="gradient-text"><SplitText text="Future POS." /></span>
+            <SplitText isGradient={true} text="Smart POS." />
           </h1>
+
           <p className="header-desc text-2xl md:text-4xl text-gray-500 dark:text-gray-400 font-light leading-relaxed max-w-5xl">
-            Designing a central nervous system for retail. SalePilot bridges the gap between hardware precision and neural business intelligence.
+            SalePilot helps small and growing businesses run sales smoothly—billing, inventory tracking, transaction history, and basic reports in one simple system.
           </p>
 
           <div className="header-actions mt-12 flex flex-wrap gap-4">
@@ -589,7 +609,7 @@ const SalePilotDetail: React.FC = () => {
           </div>
         </header>
 
-        {/* Hero Section with Floating UI */}
+        {/* Hero Section with Floating UI (UPDATED labels) */}
         <section ref={heroImgRef} className="case-section mb-40 relative group">
           <div className="aspect-[21/9] rounded-[3rem] lg:rounded-[5rem] overflow-hidden border border-gray-100 dark:border-gray-800/50 shadow-2xl relative">
             <img
@@ -604,26 +624,32 @@ const SalePilotDetail: React.FC = () => {
               ref={el => { if (el) uiNodesRef.current[0] = el; }}
               className="absolute top-10 right-10 md:top-16 md:right-16 p-5 md:p-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl md:rounded-3xl hidden lg:block shadow-xl"
             >
-              <div className="text-[9px] md:text-[10px] text-blue-400 font-black uppercase tracking-widest mb-2">Live Throughput</div>
-              <div className="text-2xl md:text-3xl font-heading font-bold text-white">4.2k <span className="text-sm opacity-50">tx/m</span></div>
+              <div className="text-[9px] md:text-[10px] text-blue-400 font-black uppercase tracking-widest mb-2">Today’s Sales</div>
+              <div className="text-2xl md:text-3xl font-heading font-bold text-white">
+                4.2k <span className="text-sm opacity-50">transactions</span>
+              </div>
             </div>
 
             <div
               ref={el => { if (el) uiNodesRef.current[1] = el; }}
               className="absolute bottom-32 right-32 p-5 md:p-6 bg-gradient-to-br from-blue-600/25 to-indigo-600/25 backdrop-blur-xl border border-blue-400/25 rounded-2xl md:rounded-3xl hidden lg:block shadow-xl"
             >
-              <div className="text-[9px] md:text-[10px] text-blue-300 font-black uppercase tracking-widest mb-2">Neural Prediction</div>
-              <div className="text-lg md:text-xl font-heading font-bold text-white">Inventory: +12% Efficiency</div>
+              <div className="text-[9px] md:text-[10px] text-blue-300 font-black uppercase tracking-widest mb-2">Stock Insight</div>
+              <div className="text-lg md:text-xl font-heading font-bold text-white">Low Stock Alerts Enabled</div>
             </div>
 
             <div className="absolute bottom-12 left-12 md:bottom-16 md:left-16 text-white z-10">
-              <div className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.7em] mb-4 md:mb-6 opacity-60">System Core v2.4 // Cognitive Core</div>
-              <div className="text-3xl md:text-5xl lg:text-6xl font-bold font-heading tracking-tighter">SalePilot Engine.</div>
+              <div className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.7em] mb-4 md:mb-6 opacity-60">
+                POS + INVENTORY // SIMPLE REPORTS
+              </div>
+              <div className="text-3xl md:text-5xl lg:text-6xl font-bold font-heading tracking-tighter">
+                Run your store with clarity.
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Grid: Overview & Challenge */}
+        {/* Grid: Overview & Challenge (UPDATED) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 lg:gap-40 mb-48">
           <section className="case-section">
             <div className="flex items-center space-x-5 mb-10">
@@ -633,7 +659,8 @@ const SalePilotDetail: React.FC = () => {
               </h2>
             </div>
             <p className="section-content-reveal text-2xl md:text-3xl text-gray-600 dark:text-gray-400 leading-relaxed font-light">
-              SalePilot was conceived to solve the disconnect between physical transactions and digital foresight. We engineered a system that doesn't just record sales but anticipates them.
+              SalePilot was built to make everyday store operations easier—capture sales, manage stock, and view performance
+              without complex tools or spreadsheets.
             </p>
           </section>
 
@@ -657,9 +684,8 @@ const SalePilotDetail: React.FC = () => {
           </section>
         </div>
 
-        {/* Architecture Section */}
+        {/* Architecture Section (UPDATED heading + copy, same design) */}
         <section className="case-section mb-48 bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-900/60 dark:to-gray-950/60 border border-gray-100 dark:border-white/5 rounded-[3rem] lg:rounded-[5rem] p-12 lg:p-24 relative overflow-hidden">
-          {/* Background decoration */}
           <div className="absolute top-0 right-0 p-16 opacity-[0.02] dark:opacity-[0.04] pointer-events-none">
             <i className="fa-solid fa-microchip text-[35rem] text-blue-600"></i>
           </div>
@@ -669,11 +695,12 @@ const SalePilotDetail: React.FC = () => {
             <div className="flex items-center space-x-6 mb-16">
               <div className="section-line h-px w-20 bg-blue-600"></div>
               <h2 className="section-title text-[11px] font-black text-blue-600 uppercase tracking-[0.8em]">
-                <SplitText text="INTELLIGENT LAYERS" />
+                <SplitText text="CORE MODULES" />
               </h2>
             </div>
+
             <h3 className="section-content-reveal text-4xl md:text-7xl lg:text-8xl font-heading font-black text-gray-900 dark:text-white mb-20 tracking-tighter max-w-5xl leading-[0.9]">
-              Built for <br /> <span className="gradient-text">Absolute Scale.</span>
+              Built for <br /> <span className="gradient-text">busy businesses.</span>
             </h3>
 
             <div className="features-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
@@ -696,7 +723,7 @@ const SalePilotDetail: React.FC = () => {
           </div>
         </section>
 
-        {/* Outcome & Impact */}
+        {/* Outcome & Impact (UPDATED messaging; numbers kept but phrased safely) */}
         <section className="case-section mb-48">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 lg:gap-32 items-center">
             <div>
@@ -706,14 +733,16 @@ const SalePilotDetail: React.FC = () => {
                   <SplitText text="THE IMPACT" />
                 </h2>
               </div>
+
               <h3 className="section-content-reveal text-4xl md:text-6xl lg:text-7xl font-heading font-black text-gray-900 dark:text-white mb-12 tracking-tighter leading-[0.9]">
-                Zero Lag. <br /> <span className="text-green-500">Infinite Trust.</span>
+                Faster sales. <br /> <span className="text-green-500">Better control.</span>
               </h3>
+
               <p className="section-content-reveal text-gray-500 dark:text-gray-400 text-xl md:text-2xl leading-relaxed font-light mb-16 max-w-xl">
-                The Result? A 40% increase in checkout throughput and a complete elimination of inventory discrepancies within 6 months of deployment.
+                SalePilot helps teams sell consistently and track inventory confidently—reducing confusion at the counter and improving day-to-day visibility.
               </p>
 
-              {/* Stats with Progress Rings */}
+              {/* Stats with Progress Rings (kept as-is; you can adjust values later) */}
               <div className="grid grid-cols-2 gap-12 md:gap-16">
                 <div className="impact-stat-container relative">
                   <svg className="absolute -top-4 -left-4 w-28 h-28 md:w-32 md:h-32 -z-10" viewBox="0 0 100 100">
@@ -737,7 +766,7 @@ const SalePilotDetail: React.FC = () => {
                   <div className="text-6xl md:text-7xl font-black text-gray-900 dark:text-white mb-3 tracking-tighter font-heading">
                     <span className="impact-stat inline-block" data-value="40">0</span>%
                   </div>
-                  <div className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.4em] text-gray-400">Throughput Increase</div>
+                  <div className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.4em] text-gray-400">Faster Checkout</div>
                 </div>
 
                 <div className="impact-stat-container relative">
@@ -762,12 +791,12 @@ const SalePilotDetail: React.FC = () => {
                   <div className="text-6xl md:text-7xl font-black text-gray-900 dark:text-white mb-3 tracking-tighter font-heading">
                     <span className="impact-stat inline-block" data-value="100">0</span>%
                   </div>
-                  <div className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.4em] text-gray-400">Inventory Accuracy</div>
+                  <div className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.4em] text-gray-400">Stock Visibility</div>
                 </div>
               </div>
             </div>
 
-            {/* Reflection Card */}
+            {/* Reflection Card (UPDATED) */}
             <div className="section-content-reveal relative">
               <div className="aspect-square bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-[4rem] lg:rounded-[6rem] flex items-center justify-center p-16 md:p-20 text-center text-white relative overflow-hidden group shadow-2xl shadow-blue-600/20">
                 <div className="relative z-10">
@@ -776,10 +805,9 @@ const SalePilotDetail: React.FC = () => {
                   </div>
                   <h4 className="text-3xl md:text-4xl font-bold mb-6 tracking-tight">Kytriq Reflection</h4>
                   <p className="text-blue-100/90 font-light text-lg md:text-xl leading-relaxed">
-                    SalePilot represents our dedication to building software that behaves like a living organism—constantly observing, learning, and protecting.
+                    SalePilot represents our dedication to building software that behaves like a living organism—constantly observing, learning, and protecting.                  
                   </p>
                 </div>
-                {/* Rotating Liquid Effects */}
                 <div className="liquid-circle absolute inset-0 bg-white/5 -z-0 scale-[2] blur-[60px] pointer-events-none border-[30px] border-blue-400/10 rounded-full"></div>
                 <div className="liquid-circle absolute inset-0 bg-indigo-400/5 -z-0 scale-[1.5] blur-[40px] pointer-events-none rounded-full" style={{ animationDelay: '-5s' }}></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-700 ease-out"></div>
@@ -788,11 +816,11 @@ const SalePilotDetail: React.FC = () => {
           </div>
         </section>
 
-        {/* Final CTA */}
+        {/* Final CTA (Optional: make it product-relevant if you want; kept your existing) */}
         <section className="cta-section case-section mb-48 text-center" style={{ transformStyle: 'preserve-3d' }}>
           <h2 className="text-5xl md:text-[8rem] lg:text-[9rem] font-heading font-black mb-16 tracking-tighter text-gray-900 dark:text-white leading-[0.85]">
-            <SplitText text="Let's Build your" className="block" /> <br />
-            <SplitText isGradient={true} text="Masterpiece." />
+            <SplitText text="Ready to run sales" className="block" /> <br />
+            <SplitText isGradient={true} text="with SalePilot?" />
           </h2>
           <Link
             ref={ctaButtonRef}
@@ -801,7 +829,7 @@ const SalePilotDetail: React.FC = () => {
             style={{ willChange: 'transform' }}
           >
             <span className="flex items-center space-x-3">
-              <span>Send Inquiry</span>
+              <span>Request a Demo</span>
               <i className="fa-solid fa-arrow-right text-lg"></i>
             </span>
           </Link>

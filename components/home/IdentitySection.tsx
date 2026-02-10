@@ -601,8 +601,8 @@ const IdentitySection: React.FC = () => {
             <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">What we do</span>
           </div>
           <h3 className="section-title text-4xl font-heading font-bold text-gray-900 dark:text-white leading-tight" style={{ perspective: '800px' }}>
-            <SplitText text="Professional" className="block" /> <br />
-            <SplitText isGradient={true} text="Software Development" />
+            <SplitText text="Architecting" className="block" /> <br />
+            <SplitText isGradient={true} text="Digital Solutions" />
           </h3>
         </div>
 

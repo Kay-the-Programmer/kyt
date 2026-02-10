@@ -230,11 +230,11 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
             {/* Content */}
             <div className="max-w-7xl w-full text-center relative z-10 stats-container">
                 {/* Headline Section */}
-                <div ref={headlineRef} className="flex flex-col items-center justify-center mb-10 sm:mb-16 md:mb-24">
-                    <div className="w-10 sm:w-14 h-px bg-blue-600 mb-6 sm:mb-8" />
-                    <h2 className="text-3xl sm:text-5xl md:text-7xl lg:text-[8.5rem] font-heading font-black text-gray-900 dark:text-white tracking-tighter leading-[0.9]">
+                <div ref={headlineRef} className="flex flex-col items-center justify-center mb-12 sm:mb-16 md:mb-24">
+                    <div className="w-12 sm:w-14 h-px bg-blue-600 mb-6 sm:mb-8" />
+                    <h2 className="text-4xl sm:text-5xl md:text-7xl lg:text-[8.5rem] font-heading font-black text-gray-900 dark:text-white tracking-tighter leading-none sm:leading-[0.9]">
                         <SplitText text="Architecting" className="inline-block" />
-                        <br/>
+                        <br />
                         <span className="text-blue-600 inline-block">
                             <SplitText text="Absolute Trust." />
                         </span>
@@ -242,12 +242,12 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
                 </div>
 
                 {/* Stats Cards Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-10 mt-6 sm:mt-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-6 lg:gap-10 mt-6 sm:mt-8">
                     {STATS_DATA.map((stat, i) => (
                         <div
                             key={stat.label}
                             ref={(el) => setCardRef(el, i)}
-                            className="reveal-target magnetic-area group relative p-6 sm:p-8 md:p-10 lg:p-14 bg-gray-50/80 dark:bg-white/[0.02] backdrop-blur-sm border border-gray-100 dark:border-white/5 rounded-2xl sm:rounded-3xl lg:rounded-[4rem] transition-all duration-300 ease-out lg:hover:bg-white dark:lg:hover:bg-white/[0.04] lg:hover:shadow-2xl lg:hover:shadow-blue-600/10 z-20 active:scale-[0.98] lg:hover:-translate-y-3 lg:hover:scale-[1.02]"
+                            className="reveal-target magnetic-area group relative p-8 sm:p-8 md:p-10 lg:p-14 bg-gray-50/80 dark:bg-white/[0.02] backdrop-blur-sm border border-gray-100 dark:border-white/5 rounded-3xl lg:rounded-[4rem] transition-all duration-300 ease-out lg:hover:bg-white dark:lg:hover:bg-white/[0.04] lg:hover:shadow-2xl lg:hover:shadow-blue-600/10 z-20 active:scale-[0.98] lg:hover:-translate-y-3 lg:hover:scale-[1.02]"
                             style={CARD_STYLE}
                         >
                             {/* Icon */}
@@ -256,17 +256,17 @@ const StatsPanel = React.forwardRef<HTMLDivElement, StatsPanelProps>(({
                             </div>
 
                             {/* Value */}
-                            <div className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-gray-900 dark:text-white mb-2 sm:mb-4 tracking-tighter font-heading">
+                            <div className="text-3xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-gray-900 dark:text-white mb-2 sm:mb-4 tracking-tighter font-heading">
                                 {stat.value}
                             </div>
 
                             {/* Label */}
-                            <div className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] sm:tracking-[0.4em] text-blue-600 mb-4 sm:mb-6">
+                            <div className="text-[11px] sm:text-[10px] font-black uppercase tracking-[0.3em] sm:tracking-[0.4em] text-blue-600 mb-4 sm:mb-6">
                                 {stat.label}
                             </div>
 
                             {/* Description */}
-                            <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-light leading-relaxed max-w-[280px] mx-auto">
+                            <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-sm font-light leading-relaxed max-w-[280px] mx-auto">
                                 {stat.desc}
                             </p>
 

@@ -21,6 +21,12 @@ const throttle = <T extends (...args: unknown[]) => void>(fn: T, delay: number):
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Typing effect constants
+const TYPING_FULL_TEXT = 'Engineering high-performance systems with stunning designs.';
+const TYPING_HIGHLIGHT_PHRASE = 'high-performance systems';
+const TYPING_SPEED_MS = 40;
+const TYPING_START_DELAY_MS = 1800;
+
 const HeroSection = () => {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
@@ -38,6 +44,10 @@ const HeroSection = () => {
 
   // State for hooks that require re-render/logic updates
   const [isMobile, setIsMobile] = useState(false);
+
+  // Typing effect state
+  const [displayedText, setDisplayedText] = useState('');
+  const [isTypingDone, setIsTypingDone] = useState(false);
 
   const isPageTransition = useTransition();
 
@@ -101,6 +111,29 @@ const HeroSection = () => {
     }
 
     return () => observer.disconnect();
+  }, []);
+
+  // Typing effect
+  useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
+    const startTimeout = setTimeout(() => {
+      let i = 0;
+      intervalId = setInterval(() => {
+        i++;
+        setDisplayedText(TYPING_FULL_TEXT.slice(0, i));
+        if (i >= TYPING_FULL_TEXT.length) {
+          if (intervalId) clearInterval(intervalId);
+          intervalId = null;
+          setIsTypingDone(true);
+        }
+      }, TYPING_SPEED_MS);
+    }, TYPING_START_DELAY_MS);
+
+    return () => {
+      clearTimeout(startTimeout);
+      if (intervalId) clearInterval(intervalId);
+    };
   }, []);
 
   // Parallax Ticker - Persistent Reference
@@ -340,9 +373,9 @@ const HeroSection = () => {
       </div>
 
       <div ref={scrollContainerRef} className="hero-scroll-container absolute inset-0 flex items-center justify-center will-change-transform">
-        <div ref={contentRef} className="hero-section-content max-w-[95rem] w-full text-center relative z-10 will-change-transform px-2 sm:px-0">
-          <div className="hero-badge inline-flex items-center space-x-2 px-3 sm:px-6 py-1.5 sm:py-2 bg-white/10 dark:bg-blue-500/5 border border-gray-200/50 dark:border-blue-500/10 rounded-full mb-6 sm:mb-8 md:mb-12 mx-auto backdrop-blur-md">
-            <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.4em] sm:tracking-[0.7em] text-blue-600 dark:text-blue-400">
+        <div ref={contentRef} className="hero-section-content max-w-[95rem] w-full text-center relative z-10 will-change-transform px-3 sm:px-0">
+          <div className="hero-badge inline-flex items-center space-x-2 px-4 sm:px-6 py-1.5 sm:py-2 bg-white/10 dark:bg-blue-500/5 border border-gray-200/50 dark:border-blue-500/10 rounded-full mb-4 sm:mb-8 md:mb-12 mx-auto backdrop-blur-md">
+            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] sm:tracking-[0.7em] text-blue-600 dark:text-blue-400">
               KYTRIQ TECHNOLOGIES
             </span>
           </div>
@@ -351,14 +384,45 @@ const HeroSection = () => {
             ref={titleRef}
             onMouseEnter={() => handleTitleHover(true)}
             onMouseLeave={() => handleTitleHover(false)}
-            className="hero-title text-4xl xs:text-5xl sm:text-6xl md:text-7xl lg:text-[9rem] font-heading font-black tracking-tighter leading-[0.85] text-gray-900 dark:text-white select-none flex flex-col items-center cursor-pointer transition-all duration-500"
+            className="hero-title font-heading font-black tracking-tighter leading-[0.85] text-gray-900 dark:text-white select-none flex flex-col items-center cursor-pointer transition-all duration-500"
+            style={{ fontSize: 'clamp(3.2rem, 10vw, 9rem)' }}
           >
             <SplitText text="We Turn Ideas" className="part-1 block mb-1 sm:mb-2 md:mb-4" />
             <SplitText text="Into Reality." className="part-2 block" isGradient={true} />
           </h1>
 
-          <p className="hero-desc text-base sm:text-lg md:text-xl lg:text-2xl text-gray-400 dark:text-gray-300 max-w-3xl mx-auto mt-6 sm:mt-8 md:mt-12 lg:mt-16 font-light leading-relaxed tracking-tight px-2">
-            Engineering <span className="font-semibold text-blue-500">high-performance systems</span> with stunning designs.
+          <p className="hero-desc text-gray-400 dark:text-gray-300 max-w-3xl mx-auto mt-5 sm:mt-8 md:mt-12 lg:mt-16 font-light leading-relaxed tracking-tight px-2 min-h-[2em]"
+            style={{ fontSize: 'clamp(1rem, 2.5vw, 1.5rem)' }}
+          >
+            {displayedText.length > 0 && (() => {
+              const highlightStart = TYPING_FULL_TEXT.indexOf(TYPING_HIGHLIGHT_PHRASE);
+              const highlightEnd = highlightStart + TYPING_HIGHLIGHT_PHRASE.length;
+              const currentLen = displayedText.length;
+
+              if (currentLen <= highlightStart) {
+                return <>{displayedText}</>;
+              } else if (currentLen <= highlightEnd) {
+                return (
+                  <>
+                    {TYPING_FULL_TEXT.slice(0, highlightStart)}
+                    <span className="font-semibold text-blue-500">{displayedText.slice(highlightStart)}</span>
+                  </>
+                );
+              } else {
+                return (
+                  <>
+                    {TYPING_FULL_TEXT.slice(0, highlightStart)}
+                    <span className="font-semibold text-blue-500">{TYPING_HIGHLIGHT_PHRASE}</span>
+                    {displayedText.slice(highlightEnd)}
+                  </>
+                );
+              }
+            })()}
+            <span
+              className={`inline-block w-[2px] h-[1.1em] bg-blue-500 ml-[2px] align-middle ${isTypingDone ? 'animate-blink-cursor' : ''
+                }`}
+              style={{ opacity: displayedText.length === 0 ? 0 : 1 }}
+            />
           </p>
 
           <div className="hero-btns mt-8 sm:mt-10 md:mt-16 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-0 sm:space-x-8 px-4 sm:px-0">

@@ -148,6 +148,16 @@ body {
   will-change: transform, opacity;
 }
 
+/* Blinking cursor for typing effect */
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-blink-cursor {
+  animation: blink-cursor 0.8s step-end infinite;
+}
+
 /* Pulse animation for nodes - GPU accelerated */
 @keyframes pulse {
 

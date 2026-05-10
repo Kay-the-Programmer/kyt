@@ -59,7 +59,7 @@ const SalePilotDetail: React.FC = () => {
       'SalePilot is a simple all-in-one POS platform for billing, inventory tracking, transaction records, and basic reports—built for small and growing businesses, even with unstable internet.',
     keywords:
       'SalePilot, POS system, point of sale, retail management, inventory management, sales reports, offline POS',
-    url: 'https://kytriq.com/projects/salepilot'
+    url: 'https://www.kytriq.com/projects/salepilot'
   });
 
   const containerRef = useRef<HTMLDivElement>(null);

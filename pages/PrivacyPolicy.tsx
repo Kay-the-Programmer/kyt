@@ -14,6 +14,7 @@ const PrivacyPolicy: React.FC = () => {
         title: 'Privacy Policy | Kytriq Technologies',
         description: 'Our privacy policy explains how we collect, use, and protect your information at Kytriq Technologies.',
         keywords: 'privacy policy, data protection, Kytriq privacy',
+        url: 'https://www.kytriq.com/privacy-policy'
     });
 
     useEffect(() => {

@@ -81,7 +81,7 @@ const About: React.FC = () => {
     title: 'About Us | Kytriq Technologies',
     description: 'Learn about Kytriq Technologies - a software development company with the heart of a pioneer and precision of a master engineer. We architect digital life.',
     keywords: 'about Kytriq, software company, AI solutions, digital innovation, tech startup',
-    url: 'https://kytriq.com/about'
+    url: 'https://www.kytriq.com/about'
   });
 
   // Memoized styles for parallax layers

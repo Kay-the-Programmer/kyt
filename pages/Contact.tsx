@@ -65,6 +65,7 @@ const Contact: React.FC = () => {
     title: 'Contact Us | Kytriq Technologies',
     description: 'Get in touch with Kytriq Technologies. Reach out to us via email, phone, or WhatsApp.',
     keywords: 'contact Kytriq, software inquiry, AI consultation, Kytriq phone, Kytriq email',
+    url: 'https://www.kytriq.com/contact'
   });
 
   const sectionRef = useRef<HTMLDivElement>(null);

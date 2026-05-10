@@ -14,6 +14,7 @@ const TermsConditions: React.FC = () => {
         title: 'Terms and Conditions | Kytriq Technologies',
         description: 'The terms and conditions for using Kytriq Technologies services and website.',
         keywords: 'terms and conditions, legal, service agreement, Kytriq terms',
+        url: 'https://www.kytriq.com/terms-conditions'
     });
 
     useEffect(() => {

@@ -50,7 +50,7 @@ const Projects: React.FC = () => {
     description:
       'Explore our selected work and flagship intelligent systems. We specialize in software designed for absolute stability and sub-millisecond precision.',
     keywords: 'software projects, case studies, SalePilot, POS system, portfolio',
-    url: 'https://kytriq.com/projects'
+    url: 'https://www.kytriq.com/projects'
   });
 
   const prefersReducedMotion = useMemo(() => {

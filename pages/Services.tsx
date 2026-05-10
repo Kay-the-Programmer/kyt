@@ -201,7 +201,7 @@ const Services: React.FC = () => {
     title: 'Services | Kytriq Technologies',
     description: 'Explore our elite software services: AI Integration, Web & Mobile Apps, Software Development, Strategic Design, Native Performance, and Security Core.',
     keywords: 'software services, AI integration, web development, mobile apps, UI/UX design, cybersecurity',
-    url: 'https://kytriq.com/services'
+    url: 'https://www.kytriq.com/services'
   });
 
   // Detect mobile on mount and resize

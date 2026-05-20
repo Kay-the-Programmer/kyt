@@ -1,0 +1,61 @@
+{
+  "$comment": "Single source of truth for per-route SEO metadata. Consumed by scripts/prerender-seo.mjs at build time to emit a distinct dist/<route>/index.html per page, so Googlebot sees unique <title>/<meta>/canonical in the initial HTML instead of identical SPA shells.",
+  "routes": [
+    {
+      "path": "/",
+      "title": "Kytriq Technologies | Bringing Digital Ideas to Life",
+      "description": "Kytriq Technologies is a software development company specializing in AI integration, web application development, mobile apps, and strategic digital design. We bring your digital ideas to life.",
+      "keywords": "Kytriq, software development, AI integration, web development, digital transformation",
+      "url": "https://www.kytriq.com/"
+    },
+    {
+      "path": "/about",
+      "title": "About Us | Kytriq Technologies",
+      "description": "Learn about Kytriq Technologies - a software development company with the heart of a pioneer and precision of a master engineer. We architect digital life.",
+      "keywords": "about Kytriq, software company, AI solutions, digital innovation, tech startup",
+      "url": "https://www.kytriq.com/about"
+    },
+    {
+      "path": "/services",
+      "title": "Services | Kytriq Technologies",
+      "description": "Explore our elite software services: AI Integration, Web & Mobile Apps, Software Development, Strategic Design, Native Performance, and Security Core.",
+      "keywords": "software services, AI integration, web development, mobile apps, UI/UX design, cybersecurity",
+      "url": "https://www.kytriq.com/services"
+    },
+    {
+      "path": "/projects",
+      "title": "Projects | Kytriq Technologies",
+      "description": "Explore our selected work and flagship intelligent systems. We specialize in software designed for absolute stability and sub-millisecond precision.",
+      "keywords": "software projects, case studies, SalePilot, POS system, portfolio",
+      "url": "https://www.kytriq.com/projects"
+    },
+    {
+      "path": "/projects/salepilot",
+      "title": "SalePilot POS | Kytriq Technologies",
+      "description": "SalePilot is a simple all-in-one POS platform for billing, inventory tracking, transaction records, and basic reports - built for small and growing businesses, even with unstable internet.",
+      "keywords": "SalePilot, POS system, point of sale, retail management, inventory management, sales reports, offline POS",
+      "url": "https://www.kytriq.com/projects/salepilot"
+    },
+    {
+      "path": "/contact",
+      "title": "Contact Us | Kytriq Technologies",
+      "description": "Get in touch with Kytriq Technologies. Reach out to us via email, phone, or WhatsApp.",
+      "keywords": "contact Kytriq, software inquiry, AI consultation, Kytriq phone, Kytriq email",
+      "url": "https://www.kytriq.com/contact"
+    },
+    {
+      "path": "/privacy-policy",
+      "title": "Privacy Policy | Kytriq Technologies",
+      "description": "Our privacy policy explains how we collect, use, and protect your information at Kytriq Technologies.",
+      "keywords": "privacy policy, data protection, Kytriq privacy",
+      "url": "https://www.kytriq.com/privacy-policy"
+    },
+    {
+      "path": "/terms-conditions",
+      "title": "Terms and Conditions | Kytriq Technologies",
+      "description": "The terms and conditions for using Kytriq Technologies services and website.",
+      "keywords": "terms and conditions, legal, service agreement, Kytriq terms",
+      "url": "https://www.kytriq.com/terms-conditions"
+    }
+  ]
+}

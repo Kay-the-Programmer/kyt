@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import SplitText from '../../SplitText';
-import salePilotImg from '../../../assets/ads.png';
+import salePilotImg from '../../../assets/ads.webp';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -203,7 +203,7 @@ const SalePilotPanel: React.FC<SalePilotPanelProps> = ({ registerMagneticArea })
                                 src={salePilotImg}
                                 width="1200"
                                 height="900"
-                                className="w-full h-full object-cover grayscale opacity-90 transition-all duration-1000 hover:grayscale-0"
+                                className="w-full h-full object-cover grayscale opacity-90 transition-[filter] duration-700 hover:grayscale-0"
                                 alt="SalePilot Hub"
                                 decoding="async"
                             />

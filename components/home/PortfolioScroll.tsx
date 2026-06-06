@@ -328,6 +328,7 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
             const images = q('img, .floating-card');
 
             const tl = gsap.timeline({
+              defaults: { force3D: true },
               scrollTrigger: {
                 trigger: container,
                 start: "top 60%", // Triggers when top of container is 60% down viewport
@@ -368,27 +369,32 @@ const PortfolioScroll = React.forwardRef<HTMLDivElement>((props, ref) => {
             }
 
             if (images.length) {
+              // Rise + scale reveal (no filter:blur) keeps the entrance smooth
+              // on lower-end devices while preserving the same feel.
               tl.fromTo(images,
-                { opacity: 0, scale: 0.9, filter: 'blur(10px)' },
-                { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 1, ease: 'power2.out' },
+                { opacity: 0, scale: 0.9, y: 24 },
+                { opacity: 1, scale: 1, y: 0, duration: 1, ease: 'power3.out' },
                 0.3
               );
             }
 
             // 2. Scroll Exit / Re-entry (Backward Support)
-            // As we scroll right (away), animate out.
+            // As we scroll right (away), fade + scale + slide out. Transform and
+            // opacity only (no filter:blur) so this scrubbed tween stays fully
+            // GPU-composited — the previous blur was recomputed every scroll
+            // frame across the whole panel, which caused the jank.
             gsap.to(panel, {
               opacity: 0,
-              scale: 0.95,
-              filter: 'blur(5px)',
+              scale: 0.96,
               x: -100,
               ease: 'none',
+              force3D: true,
               scrollTrigger: {
                 trigger: panel,
                 containerAnimation: scrollTween,
                 start: 'left left', // When panel left edge hits viewport left
                 end: 'right left', // When panel right edge hits viewport left
-                scrub: true,
+                scrub: 1, // Smoothed scrub for a fluid exit
                 invalidateOnRefresh: true,
                 onEnter: () => trackScrollMilestone('portfolio_salepilot')
               }

@@ -120,6 +120,28 @@ const Home: React.FC = () => {
     );
     if (heroElement) visibilityObserver.observe(heroElement);
 
+    // Keep ScrollTrigger measurements accurate as lazy sections mount, images
+    // decode, and web fonts swap in. Without this, reveal triggers below a
+    // newly-grown section keep stale start positions and fire at the wrong
+    // scroll point (too early/late) or get skipped entirely.
+    ScrollTrigger.config({ ignoreMobileResize: true });
+
+    let refreshTimer: number | undefined;
+    const scheduleRefresh = () => {
+      window.clearTimeout(refreshTimer);
+      refreshTimer = window.setTimeout(() => ScrollTrigger.refresh(), 120);
+    };
+
+    // Fires on initial observe and whenever the page height changes (a lazy
+    // section swapping its placeholder for real content, an image decoding...).
+    const resizeObserver = new ResizeObserver(scheduleRefresh);
+    resizeObserver.observe(container);
+
+    // Web fonts reflow every heading once they swap in — recompute afterwards.
+    if (document.fonts?.status !== 'loaded') {
+      document.fonts?.ready.then(() => ScrollTrigger.refresh()).catch(() => { });
+    }
+
     const ctx = gsap.context(() => {
       const glows = document.querySelectorAll('.hero-bg-glow');
 
@@ -265,6 +287,8 @@ const Home: React.FC = () => {
 
     return () => {
       visibilityObserver.disconnect();
+      resizeObserver.disconnect();
+      window.clearTimeout(refreshTimer);
       ctx.revert();
     };
   }, [isPageTransition]);

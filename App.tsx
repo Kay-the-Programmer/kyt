@@ -4,7 +4,6 @@ import { TransitionContext, TransitionProvider, useTransition } from './Transiti
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import Navbar from './components/Navbar';
-import AiAssistant from './components/AiAssistant';
 import ScrollToTopButton from './components/ScrollToTopButton';
 import TransitionOverlay from './components/TransitionOverlay';
 import ScrollToTop from './components/ScrollToTop';
@@ -24,6 +23,10 @@ const SalePilotDetail = React.lazy(() => import('./pages/SalePilotDetail'));
 const PrivacyPolicy = React.lazy(() => import('./pages/PrivacyPolicy'));
 const TermsConditions = React.lazy(() => import('./pages/TermsConditions'));
 
+// AI assistant is only needed once the user opens it — keep it (and the
+// @google/genai SDK it pulls in) off the initial bundle.
+const AiAssistant = React.lazy(() => import('./components/AiAssistant'));
+
 // Register plugins for global use
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
@@ -35,6 +38,8 @@ const AppContent: React.FC = () => {
   const location = useLocation();
   const isPageTransition = useTransition();
   const [isAiOpen, setIsAiOpen] = useState(false);
+  // Once true, the assistant stays mounted so chat history survives close/reopen.
+  const [aiLoaded, setAiLoaded] = useState(false);
   useSharedMousePos();
 
   useEffect(() => {
@@ -131,7 +136,7 @@ const AppContent: React.FC = () => {
         <ScrollToTop />
         <TransitionOverlay />
         <div className="flex flex-col min-h-screen">
-          <Navbar onAiToggle={() => setIsAiOpen(!isAiOpen)} isAiOpen={isAiOpen} />
+          <Navbar onAiToggle={() => { setIsAiOpen((o) => !o); setAiLoaded(true); }} isAiOpen={isAiOpen} />
           <main ref={mainRef} className="flex-grow">
             <Suspense fallback={
               <div className="flex-grow flex items-center justify-center min-h-[60vh]">
@@ -150,7 +155,11 @@ const AppContent: React.FC = () => {
               </Routes>
             </Suspense>
           </main>
-          <AiAssistant isOpen={isAiOpen} onToggle={() => setIsAiOpen(false)} />
+          {aiLoaded && (
+            <Suspense fallback={null}>
+              <AiAssistant isOpen={isAiOpen} onToggle={() => setIsAiOpen(false)} />
+            </Suspense>
+          )}
           <ScrollToTopButton />
         </div>
       </div>

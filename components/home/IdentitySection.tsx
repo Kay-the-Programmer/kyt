@@ -2,11 +2,18 @@ import React, { useLayoutEffect, useRef, useState, useCallback, useMemo, memo, u
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import SplitText from '../SplitText';
-import ServiceScene3D from './ServiceScene3D';
+import ServiceSceneSVG from './svg/ServiceSceneSVG';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const AUTO_ROTATE_INTERVAL = 5000;
+
+// Per-service accent used to theme the scene container (glow + status dot).
+const ACCENTS = [
+  { dot: '#3b82f6', glow: 'radial-gradient(circle at 50% 42%, rgba(59,130,246,0.40), transparent 70%)' },
+  { dot: '#8b5cf6', glow: 'radial-gradient(circle at 50% 42%, rgba(139,92,246,0.40), transparent 70%)' },
+  { dot: '#38bdf8', glow: 'radial-gradient(circle at 50% 42%, rgba(56,189,248,0.40), transparent 70%)' },
+] as const;
 
 // Premium Feature Card with glass morphism
 interface FeatureItemProps {
@@ -667,16 +674,60 @@ const IdentitySection: React.FC = () => {
         </div>
 
         <div className="relative w-full order-3 lg:order-none">
-          <div className="scene-container relative aspect-square md:aspect-[4/4] lg:aspect-[4/5] rounded-3xl overflow-hidden bg-gradient-to-br from-gray-100/50 to-gray-50/30 dark:from-gray-800/50 dark:to-gray-900/30 shadow-2xl shadow-gray-900/10 dark:shadow-black/30 border border-gray-200/30 dark:border-gray-700/20">
+          {/* Accent halo that shifts with the active service */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-4 -z-10 blur-3xl opacity-70 transition-[background] duration-700 ease-out"
+            style={{ background: ACCENTS[activeImage].glow }}
+          />
+
+          <div className="scene-container group relative aspect-square md:aspect-[4/4] lg:aspect-[4/5] rounded-[2rem] overflow-hidden bg-gradient-to-br from-white/70 to-gray-50/40 dark:from-gray-800/40 dark:to-gray-950/60 shadow-2xl shadow-gray-900/10 dark:shadow-black/40 border border-gray-200/40 dark:border-white/[0.06] backdrop-blur-sm">
+            {/* Inner grid texture */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 pointer-events-none opacity-[0.05] dark:opacity-[0.07]"
+              style={{
+                backgroundImage: 'linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)',
+                backgroundSize: '38px 38px',
+              }}
+            />
+
+            {/* Reactive corner bloom */}
+            <div
+              aria-hidden="true"
+              className="absolute -top-1/4 -right-1/4 w-2/3 h-2/3 rounded-full blur-3xl opacity-50 pointer-events-none transition-[background] duration-700"
+              style={{ background: ACCENTS[activeImage].glow }}
+            />
+
+            {/* Desktop HUD: live status + scene index */}
+            <div className="hidden lg:flex absolute top-0 inset-x-0 z-20 items-center justify-between px-5 py-5 pointer-events-none">
+              <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white/70 dark:bg-white/[0.06] border border-gray-200/60 dark:border-white/10 backdrop-blur-md shadow-sm">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping" style={{ backgroundColor: ACCENTS[activeImage].dot }} />
+                  <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: ACCENTS[activeImage].dot }} />
+                </span>
+                <span className="text-xs font-semibold tracking-wide text-gray-700 dark:text-gray-200">
+                  {features[activeImage].title}
+                </span>
+              </div>
+              <span className="font-mono text-xs font-bold tabular-nums text-gray-400 dark:text-gray-500">
+                0{activeImage + 1}<span className="text-gray-300 dark:text-gray-600"> / 0{features.length}</span>
+              </span>
+            </div>
+
+            {/* Corner brackets (desktop) */}
+            <div aria-hidden="true" className="hidden lg:block absolute bottom-4 left-4 w-8 h-8 border-l-2 border-b-2 border-gray-300/40 dark:border-white/10 rounded-bl-xl pointer-events-none" />
+            <div aria-hidden="true" className="hidden lg:block absolute bottom-4 right-4 w-8 h-8 border-r-2 border-b-2 border-gray-300/40 dark:border-white/10 rounded-br-xl pointer-events-none" />
+
             <div
               ref={sceneContainerRef}
-              className="w-full h-full overflow-hidden rounded-3xl relative cursor-grab active:cursor-grabbing touch-none"
+              className="w-full h-full overflow-hidden rounded-[2rem] relative cursor-grab active:cursor-grabbing touch-none"
               onMouseEnter={() => setIsPaused(true)}
               onMouseLeave={() => setIsPaused(false)}
               onTouchStart={() => setIsPaused(true)}
               onTouchEnd={() => setIsPaused(false)}
             >
-              <ServiceScene3D activeIndex={activeImage} isMobile={isMobile} isVisible={isVisible} />
+              <ServiceSceneSVG activeIndex={activeImage} isMobile={isMobile} isVisible={isVisible} />
             </div>
 
             <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-white via-white/95 to-transparent dark:from-gray-950 dark:via-gray-950/95 pt-20 lg:hidden flex flex-col items-center text-center z-10">

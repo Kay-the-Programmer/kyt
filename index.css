@@ -1,11 +1,24 @@
 @import "tailwindcss";
 
+/* Dark mode is toggled via a `.dark` class on <html> (see theme script in
+   index.html), so opt out of Tailwind v4's default prefers-color-scheme. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* stylelint-disable-next-line at-rule-no-unknown */
 @theme {
+  /* Fonts must match what index.html actually loads (Inter + Space Grotesk). */
   --font-sans: "Inter", sans-serif;
-  --font-heading: "Outfit", sans-serif;
-  --color-brand-dark: #0a0a0a;
+  --font-heading: "Space Grotesk", sans-serif;
+
+  /* Brand palette — values mirror the former cdn.tailwindcss.com config so the
+     migration to build-time Tailwind is visually identical. */
+  --color-brand-blue: #2563eb;
+  --color-brand-dark: #030712;
   --color-brand-primary: #2563eb;
+
+  /* Custom breakpoint + shadow previously defined in the inline CDN config. */
+  --breakpoint-xs: 375px;
+  --shadow-3xl: 0 35px 60px -15px rgba(0, 0, 0, 0.3);
 }
 
 @layer utilities {

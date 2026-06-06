@@ -805,7 +805,7 @@ const SalePilotDetail: React.FC = () => {
                   </div>
                   <h4 className="text-3xl md:text-4xl font-bold mb-6 tracking-tight">Kytriq Reflection</h4>
                   <p className="text-blue-100/90 font-light text-lg md:text-xl leading-relaxed">
-                    SalePilot represents our dedication to building software that behaves like a living organism—constantly observing, learning, and protecting.                  
+                    SalePilot represents our dedication to building software that is functional and optimised to solves real problems.
                   </p>
                 </div>
                 <div className="liquid-circle absolute inset-0 bg-white/5 -z-0 scale-[2] blur-[60px] pointer-events-none border-[30px] border-blue-400/10 rounded-full"></div>
